@@ -1,0 +1,567 @@
+@import '../styles/variables.scss';
+@import '../styles/mixins.scss';
+
+.family-album-detail {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 32px;
+  padding-bottom: 60px;
+}
+
+.loading-page,
+.not-found {
+  @include flex-center;
+  flex-direction: column;
+  gap: 20px;
+  min-height: 400px;
+
+  p {
+    color: $text-secondary;
+    font-size: 16px;
+  }
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid $border-color;
+  border-top-color: $accent-gold;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  color: $text-secondary;
+  font-size: 14px;
+}
+
+.back-btn {
+  @include inline-flex-center;
+  padding: 10px 24px;
+  @include glass;
+  color: $text-primary;
+  border-radius: $radius-full;
+  transition: all $transition-fast;
+
+  &:hover {
+    border-color: rgba(255, 215, 0, 0.3);
+  }
+}
+
+.album-header {
+  display: flex;
+  gap: 32px;
+  margin-bottom: 48px;
+  padding: 32px;
+  @include glass;
+  border-radius: $radius-lg;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
+}
+
+.album-header-cover {
+  width: 280px;
+  height: 220px;
+  border-radius: $radius-md;
+  overflow: hidden;
+  flex-shrink: 0;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.header-cover-placeholder {
+  width: 100%;
+  height: 100%;
+  @include flex-center;
+  background: linear-gradient(135deg, rgba(255, 182, 193, 0.2), rgba(255, 215, 0, 0.2));
+  font-size: 64px;
+  color: $accent-pink;
+}
+
+.album-header-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.back-link {
+  align-self: flex-start;
+  color: $text-muted;
+  font-size: 14px;
+  margin-bottom: 16px;
+  transition: color $transition-fast;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  &:hover {
+    color: $accent-gold;
+  }
+}
+
+.album-name {
+  font-size: 36px;
+  margin-bottom: 12px;
+  font-family: $font-serif;
+  @include text-gradient($accent-warm, $accent-pink);
+}
+
+.album-description {
+  color: $text-secondary;
+  font-size: 15px;
+  line-height: 1.7;
+  margin-bottom: 24px;
+}
+
+.album-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: auto;
+}
+
+.action-btn {
+  @include inline-flex-center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: $radius-full;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all $transition-normal;
+
+  .action-icon {
+    font-size: 16px;
+  }
+
+  &.timeline {
+    background: linear-gradient(135deg, $accent-gold, $accent-warm);
+    color: $bg-primary;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: $shadow-glow;
+    }
+  }
+
+  &.edit {
+    @include glass;
+    color: $text-primary;
+
+    &:hover {
+      border-color: rgba(255, 215, 0, 0.3);
+      transform: translateY(-2px);
+    }
+  }
+
+  &.members {
+    @include glass;
+    color: $text-primary;
+
+    &:hover {
+      border-color: rgba(221, 160, 221, 0.3);
+      transform: translateY(-2px);
+    }
+  }
+}
+
+.detail-section {
+  margin-bottom: 48px;
+}
+
+.section-header {
+  @include flex-between;
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid $border-light;
+}
+
+.section-title {
+  @include flex-center;
+  gap: 10px;
+  font-size: 20px;
+
+  .title-icon {
+    color: $accent-gold;
+  }
+}
+
+.section-link {
+  color: $text-muted;
+  font-size: 14px;
+  transition: color $transition-fast;
+
+  &:hover {
+    color: $accent-gold;
+  }
+}
+
+.section-link-btn {
+  padding: 6px 16px;
+  background: linear-gradient(135deg, $accent-gold, $accent-warm);
+  color: $bg-primary;
+  border-radius: $radius-full;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all $transition-fast;
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+}
+
+.empty-inline {
+  @include flex-center;
+  flex-direction: column;
+  gap: 12px;
+  padding: 40px;
+  @include glass;
+  border-radius: $radius-md;
+
+  p {
+    color: $text-muted;
+    font-size: 14px;
+  }
+}
+
+.link-btn {
+  padding: 8px 20px;
+  background: linear-gradient(135deg, $accent-gold, $accent-warm);
+  color: $bg-primary;
+  border-radius: $radius-full;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all $transition-fast;
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+}
+
+.members-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.member-card {
+  @include glass;
+  border-radius: $radius-md;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: relative;
+  transition: all $transition-normal;
+
+  &:hover {
+    border-color: rgba(255, 215, 0, 0.2);
+    transform: translateY(-2px);
+  }
+}
+
+.member-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(221, 160, 221, 0.2));
+  @include flex-center;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.avatar-placeholder {
+  font-size: 22px;
+  font-weight: 600;
+  color: $accent-gold;
+  font-family: $font-serif;
+}
+
+.member-info {
+  flex: 1;
+  min-width: 0;
+
+  h4 {
+    font-size: 15px;
+    color: $text-primary;
+    margin-bottom: 4px;
+  }
+}
+
+.member-role {
+  display: inline-block;
+  padding: 2px 8px;
+  background: rgba(255, 215, 0, 0.15);
+  color: $accent-gold;
+  border-radius: $radius-sm;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.member-date {
+  display: block;
+  color: $text-muted;
+  font-size: 12px;
+}
+
+.member-remove {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(255, 80, 80, 0.8);
+  color: white;
+  font-size: 16px;
+  line-height: 1;
+  opacity: 0;
+  transition: all $transition-fast;
+  @include flex-center;
+
+  .member-card:hover & {
+    opacity: 1;
+  }
+
+  &:hover {
+    background: rgba(255, 60, 60, 1);
+  }
+}
+
+.add-exhibition-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 100;
+  @include flex-center;
+  padding: 20px;
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  width: 100%;
+  max-width: 600px;
+  max-height: 80vh;
+  @include glass;
+  border-radius: $radius-lg;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  @include flex-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid $border-light;
+
+  h3 {
+    font-size: 18px;
+    color: $text-primary;
+  }
+}
+
+.modal-close {
+  width: 32px;
+  height: 32px;
+  @include flex-center;
+  color: $text-muted;
+  font-size: 24px;
+  border-radius: 50%;
+  transition: all $transition-fast;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: $text-primary;
+  }
+}
+
+.modal-body {
+  padding: 16px 24px 24px;
+  overflow-y: auto;
+  @include scrollbar-hide;
+}
+
+.exhibition-select-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.exhibition-select-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: $radius-md;
+  border: 1px solid transparent;
+  transition: all $transition-fast;
+
+  &:hover {
+    border-color: rgba(255, 215, 0, 0.2);
+    background: rgba(255, 255, 255, 0.06);
+  }
+}
+
+.select-cover {
+  width: 64px;
+  height: 48px;
+  border-radius: $radius-sm;
+  overflow: hidden;
+  flex-shrink: 0;
+  @include flex-center;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(221, 160, 221, 0.15));
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  span {
+    font-size: 22px;
+    color: $accent-gold;
+  }
+}
+
+.select-info {
+  flex: 1;
+  min-width: 0;
+
+  h4 {
+    font-size: 14px;
+    color: $text-primary;
+    margin-bottom: 4px;
+  }
+
+  p {
+    font-size: 12px;
+    color: $text-muted;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.add-btn {
+  padding: 6px 16px;
+  background: linear-gradient(135deg, $accent-gold, $accent-warm);
+  color: $bg-primary;
+  border-radius: $radius-full;
+  font-size: 13px;
+  font-weight: 500;
+  flex-shrink: 0;
+  transition: all $transition-fast;
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+}
+
+.exhibition-archive-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.exhibition-archive-card {
+  @include glass;
+  border-radius: $radius-md;
+  overflow: hidden;
+  transition: all $transition-normal;
+  position: relative;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: $shadow-lg;
+    border-color: rgba(255, 215, 0, 0.2);
+  }
+}
+
+.archive-cover {
+  position: relative;
+  height: 160px;
+  overflow: hidden;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform $transition-slow;
+  }
+
+  &:hover img {
+    transform: scale(1.05);
+  }
+}
+
+.archive-cover-placeholder {
+  width: 100%;
+  height: 100%;
+  @include flex-center;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(221, 160, 221, 0.15));
+  font-size: 36px;
+  color: $accent-gold;
+}
+
+.archive-remove {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 4px 12px;
+  background: rgba(255, 80, 80, 0.9);
+  color: white;
+  border-radius: $radius-sm;
+  font-size: 12px;
+  opacity: 0;
+  transition: opacity $transition-fast;
+
+  .exhibition-archive-card:hover & {
+    opacity: 1;
+  }
+
+  &:hover {
+    background: rgba(255, 60, 60, 1);
+  }
+}
+
+.archive-content {
+  padding: 16px;
+}
+
+.archive-title {
+  font-size: 16px;
+  color: $text-primary;
+  margin-bottom: 6px;
+}
+
+.archive-desc {
+  font-size: 13px;
+  color: $text-secondary;
+  margin-bottom: 10px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.archive-date {
+  font-size: 12px;
+  color: $text-muted;
+}

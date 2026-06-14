@@ -6,6 +6,11 @@ import CreateExhibition from './pages/CreateExhibition.jsx';
 import ExhibitionDetail from './pages/ExhibitionDetail.jsx';
 import TimelinePlayer from './pages/TimelinePlayer.jsx';
 import ShareLanding from './pages/ShareLanding.jsx';
+import FamilyAlbumHome from './pages/FamilyAlbumHome.jsx';
+import FamilyAlbumDetail from './pages/FamilyAlbumDetail.jsx';
+import CreateFamilyAlbum from './pages/CreateFamilyAlbum.jsx';
+import FamilyMemberManager from './pages/FamilyMemberManager.jsx';
+import FamilyTimeline from './pages/FamilyTimeline.jsx';
 import './styles/App.scss';
 
 function App() {
@@ -35,6 +40,12 @@ function App() {
           <Route path="/exhibition/:id" element={<ExhibitionDetail />} />
           <Route path="/exhibition/:id/player" element={<TimelinePlayer />} />
           <Route path="/share/:code" element={<ShareLanding />} />
+          <Route path="/family-albums" element={<FamilyAlbumHome />} />
+          <Route path="/family-albums/create" element={<CreateFamilyAlbum />} />
+          <Route path="/family-albums/:id" element={<FamilyAlbumDetail />} />
+          <Route path="/family-albums/:id/edit" element={<CreateFamilyAlbum />} />
+          <Route path="/family-albums/:id/timeline" element={<FamilyTimeline />} />
+          <Route path="/family-members" element={<FamilyMemberManager />} />
         </Routes>
       </main>
     </div>

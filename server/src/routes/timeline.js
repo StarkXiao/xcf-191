@@ -3,12 +3,30 @@ import { getCollection, saveCollection } from '../storage.js';
 
 export default async function timelineRoutes(fastify) {
   fastify.get('/', async (request) => {
-    const { exhibitionId } = request.query;
+    const { exhibitionId, familyAlbumId } = request.query;
     let timelines = getCollection('timelines');
-    if (exhibitionId) {
+    const exhibitions = getCollection('exhibitions');
+    if (familyAlbumId) {
+      const albums = getCollection('familyAlbums');
+      const album = albums.find(a => a.id === familyAlbumId);
+      if (album && album.exhibitionIds) {
+        timelines = timelines.filter(t => album.exhibitionIds.includes(t.exhibitionId));
+      } else {
+        timelines = [];
+      }
+    } else if (exhibitionId) {
       timelines = timelines.filter(t => t.exhibitionId === exhibitionId);
     }
-    return timelines.sort((a, b) => new Date(a.eventDate) - new Date(b.eventDate));
+    return timelines
+      .map(t => {
+        const exhibition = exhibitions.find(e => e.id === t.exhibitionId);
+        return {
+          ...t,
+          exhibitionTitle: exhibition ? exhibition.title : null,
+          exhibitionCover: exhibition ? exhibition.coverImage : null
+        };
+      })
+      .sort((a, b) => new Date(a.eventDate) - new Date(b.eventDate));
   });
 
   fastify.get('/:id', async (request, reply) => {

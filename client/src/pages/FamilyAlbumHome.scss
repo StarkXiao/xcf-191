@@ -1,0 +1,336 @@
+@import '../styles/variables.scss';
+@import '../styles/mixins.scss';
+
+.family-album-home {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+
+.family-hero {
+  text-align: center;
+  padding: 40px 20px 60px;
+}
+
+.family-hero-title {
+  font-size: 48px;
+  line-height: 1.4;
+  margin-bottom: 24px;
+  font-family: $font-serif;
+
+  .family-title-line {
+    display: block;
+  }
+
+  .family-title-line:first-child {
+    @include text-gradient($accent-warm, $accent-pink);
+  }
+
+  .family-title-line:last-child {
+    @include text-gradient($accent-gold, $accent-purple);
+  }
+}
+
+.family-hero-subtitle {
+  color: $text-secondary;
+  font-size: 16px;
+  margin-bottom: 40px;
+  letter-spacing: 1px;
+}
+
+.family-hero-actions {
+  @include flex-center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.family-hero-btn {
+  @include inline-flex-center;
+  gap: 10px;
+  padding: 14px 36px;
+  border-radius: $radius-full;
+  font-size: 16px;
+  font-weight: 500;
+  transition: all $transition-normal;
+
+  .btn-icon {
+    font-size: 18px;
+  }
+
+  &.primary {
+    background: linear-gradient(135deg, $accent-pink, $accent-warm);
+    color: $bg-primary;
+
+    &:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 0 20px rgba(255, 182, 193, 0.3);
+    }
+  }
+
+  &.secondary {
+    @include glass;
+    color: $text-primary;
+
+    &:hover {
+      transform: translateY(-3px);
+      border-color: rgba(255, 215, 0, 0.3);
+    }
+  }
+}
+
+.nav-quick-links {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-bottom: 48px;
+}
+
+.quick-link-card {
+  @include glass;
+  border-radius: $radius-lg;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  transition: all $transition-normal;
+
+  &:hover {
+    transform: translateY(-4px);
+    border-color: rgba(255, 215, 0, 0.2);
+    box-shadow: $shadow-lg;
+  }
+}
+
+.quick-link-icon {
+  width: 56px;
+  height: 56px;
+  @include flex-center;
+  border-radius: $radius-md;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(221, 160, 221, 0.15));
+  font-size: 28px;
+  color: $accent-gold;
+  flex-shrink: 0;
+}
+
+.quick-link-info {
+  h3 {
+    font-size: 18px;
+    color: $text-primary;
+    margin-bottom: 6px;
+  }
+
+  p {
+    font-size: 14px;
+    color: $text-secondary;
+    margin: 0;
+  }
+}
+
+.album-section {
+  margin-top: 40px;
+}
+
+.section-header {
+  @include flex-between;
+  margin-bottom: 32px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid $border-light;
+}
+
+.section-title {
+  @include flex-center;
+  gap: 12px;
+  font-size: 24px;
+
+  .title-icon {
+    color: $accent-pink;
+    font-size: 20px;
+  }
+}
+
+.section-count {
+  color: $text-muted;
+  font-size: 14px;
+}
+
+.loading-wrap {
+  @include flex-center;
+  flex-direction: column;
+  gap: 16px;
+  padding: 80px 0;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid $border-color;
+  border-top-color: $accent-gold;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  color: $text-secondary;
+  font-size: 14px;
+}
+
+.empty-state {
+  @include flex-center;
+  flex-direction: column;
+  gap: 20px;
+  padding: 80px 0;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 64px;
+  color: $accent-gold;
+  opacity: 0.5;
+}
+
+.empty-text {
+  color: $text-secondary;
+  font-size: 16px;
+}
+
+.empty-btn {
+  @include inline-flex-center;
+  padding: 12px 32px;
+  background: linear-gradient(135deg, $accent-gold, $accent-warm);
+  color: $bg-primary;
+  border-radius: $radius-full;
+  font-size: 15px;
+  font-weight: 500;
+  transition: all $transition-normal;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $shadow-glow;
+  }
+}
+
+.album-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 24px;
+}
+
+.album-card {
+  @include glass;
+  border-radius: $radius-lg;
+  overflow: hidden;
+  transition: all $transition-normal;
+  cursor: pointer;
+  position: relative;
+
+  &:hover {
+    transform: translateY(-8px);
+    box-shadow: $shadow-lg;
+    border-color: rgba(255, 182, 193, 0.2);
+  }
+}
+
+.album-cover {
+  position: relative;
+  height: 200px;
+  overflow: hidden;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform $transition-slow;
+  }
+
+  &:hover img {
+    transform: scale(1.05);
+  }
+}
+
+.album-cover-placeholder {
+  width: 100%;
+  height: 100%;
+  @include flex-center;
+  font-size: 48px;
+  color: $accent-pink;
+  opacity: 0.6;
+}
+
+.album-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, 0.6));
+  opacity: 0;
+  transition: opacity $transition-normal;
+  @include flex-center;
+  justify-content: flex-end;
+  padding: 16px;
+
+  .album-card:hover & {
+    opacity: 1;
+  }
+}
+
+.album-delete {
+  padding: 6px 14px;
+  background: rgba(255, 80, 80, 0.9);
+  color: white;
+  border-radius: $radius-sm;
+  font-size: 13px;
+  transition: background $transition-fast;
+
+  &:hover {
+    background: rgba(255, 60, 60, 1);
+  }
+}
+
+.album-content {
+  padding: 20px;
+}
+
+.album-title {
+  font-size: 18px;
+  margin-bottom: 8px;
+  color: $text-primary;
+  font-family: $font-serif;
+}
+
+.album-desc {
+  color: $text-secondary;
+  font-size: 14px;
+  margin-bottom: 16px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.album-stats {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.stat-item {
+  @include flex-center;
+  gap: 6px;
+  color: $text-muted;
+  font-size: 13px;
+
+  .stat-icon {
+    color: $accent-gold;
+  }
+}
+
+.album-meta {
+  @include flex-between;
+}
+
+.album-date {
+  color: $text-muted;
+  font-size: 12px;
+}

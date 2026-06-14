@@ -24,7 +24,7 @@ export const materialApi = {
 };
 
 export const timelineApi = {
-  list: (exhibitionId) => request.get('/timelines', { params: { exhibitionId } }).then(r => r.data),
+  list: (exhibitionId, familyAlbumId) => request.get('/timelines', { params: { exhibitionId, familyAlbumId } }).then(r => r.data),
   get: (id) => request.get(`/timelines/${id}`).then(r => r.data),
   create: (data) => request.post('/timelines', data).then(r => r.data),
   update: (id, data) => request.put(`/timelines/${id}`, data).then(r => r.data),
@@ -69,6 +69,28 @@ export const memoryMapApi = {
   getMarkers: (exhibitionId, filters) => request.get(`/memory-maps/${exhibitionId}/markers`, { params: filters }).then(r => r.data),
   search: (exhibitionId, params) => request.get(`/memory-maps/${exhibitionId}/search`, { params }).then(r => r.data),
   aggregate: (exhibitionId) => request.get(`/memory-maps/${exhibitionId}/aggregate`).then(r => r.data)
+};
+
+export const familyAlbumApi = {
+  list: () => request.get('/family-albums').then(r => r.data),
+  get: (id) => request.get(`/family-albums/${id}`).then(r => r.data),
+  create: (data) => request.post('/family-albums', data).then(r => r.data),
+  update: (id, data) => request.put(`/family-albums/${id}`, data).then(r => r.data),
+  remove: (id) => request.delete(`/family-albums/${id}`).then(r => r.data),
+  addExhibition: (id, exhibitionId) => request.post(`/family-albums/${id}/exhibitions`, { exhibitionId }).then(r => r.data),
+  removeExhibition: (id, exhibitionId) => request.delete(`/family-albums/${id}/exhibitions/${exhibitionId}`).then(r => r.data),
+  addMember: (id, memberId) => request.post(`/family-albums/${id}/members`, { memberId }).then(r => r.data),
+  removeMember: (id, memberId) => request.delete(`/family-albums/${id}/members/${memberId}`).then(r => r.data)
+};
+
+export const familyMemberApi = {
+  list: (familyAlbumId) => request.get('/family-members', { params: { familyAlbumId } }).then(r => r.data),
+  get: (id) => request.get(`/family-members/${id}`).then(r => r.data),
+  create: (data) => request.post('/family-members', data).then(r => r.data),
+  update: (id, data) => request.put(`/family-members/${id}`, data).then(r => r.data),
+  remove: (id) => request.delete(`/family-members/${id}`).then(r => r.data),
+  addRelation: (id, memberId, type) => request.post(`/family-members/${id}/relations`, { memberId, type }).then(r => r.data),
+  removeRelation: (id, memberId) => request.delete(`/family-members/${id}/relations/${memberId}`).then(r => r.data)
 };
 
 export default request;

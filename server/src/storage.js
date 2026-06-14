@@ -11,7 +11,9 @@ const defaultDB = {
   messages: [],
   shares: [],
   shareViews: [],
-  memoryMaps: []
+  memoryMaps: [],
+  familyAlbums: [],
+  familyMembers: []
 };
 
 export const initStorage = () => {

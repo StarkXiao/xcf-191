@@ -1,0 +1,449 @@
+@import '../styles/variables.scss';
+@import '../styles/mixins.scss';
+
+.family-timeline {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 32px;
+  padding-bottom: 80px;
+}
+
+.loading-page {
+  @include flex-center;
+  flex-direction: column;
+  gap: 20px;
+  min-height: 400px;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid $border-color;
+  border-top-color: $accent-gold;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  color: $text-secondary;
+  font-size: 14px;
+}
+
+.timeline-header {
+  text-align: center;
+  padding: 32px 0 48px;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: $text-muted;
+  font-size: 14px;
+  margin-bottom: 20px;
+  transition: color $transition-fast;
+  text-align: left;
+
+  &:hover {
+    color: $accent-gold;
+  }
+}
+
+.timeline-title {
+  @include flex-center;
+  gap: 12px;
+  justify-content: center;
+  font-size: 32px;
+  margin-bottom: 12px;
+  font-family: $font-serif;
+  @include text-gradient($accent-gold, $accent-warm);
+
+  .title-icon {
+    font-size: 28px;
+  }
+}
+
+.timeline-subtitle {
+  color: $text-secondary;
+  font-size: 15px;
+  margin-bottom: 24px;
+}
+
+.timeline-stats {
+  @include flex-center;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.stat-badge {
+  @include inline-flex-center;
+  gap: 6px;
+  padding: 6px 16px;
+  @include glass;
+  border-radius: $radius-full;
+  font-size: 13px;
+  color: $text-secondary;
+
+  .stat-icon {
+    color: $accent-gold;
+  }
+}
+
+.empty-state {
+  @include flex-center;
+  flex-direction: column;
+  gap: 16px;
+  padding: 80px 20px;
+  text-align: center;
+  @include glass;
+  border-radius: $radius-lg;
+}
+
+.empty-icon {
+  font-size: 64px;
+  color: $accent-gold;
+  opacity: 0.5;
+}
+
+.empty-text {
+  color: $text-primary;
+  font-size: 18px;
+  margin: 0;
+}
+
+.empty-hint {
+  color: $text-muted;
+  font-size: 14px;
+  margin: 0;
+}
+
+.empty-links {
+  @include flex-center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.empty-link-btn {
+  padding: 8px 20px;
+  @include glass;
+  color: $text-primary;
+  border-radius: $radius-full;
+  font-size: 13px;
+  transition: all $transition-fast;
+
+  &:hover {
+    border-color: rgba(255, 215, 0, 0.3);
+    transform: translateY(-1px);
+  }
+}
+
+.timeline-container {
+  position: relative;
+  padding: 20px 0;
+}
+
+.timeline-container::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, rgba(255, 215, 0, 0.3), rgba(221, 160, 221, 0.3));
+  transform: translateX(-50%);
+
+  @media (max-width: 768px) {
+    left: 24px;
+  }
+}
+
+.year-group {
+  margin-bottom: 48px;
+}
+
+.year-marker {
+  @include flex-center;
+  gap: 12px;
+  margin-bottom: 32px;
+  position: relative;
+  z-index: 2;
+
+  .year-text {
+    @include inline-flex-center;
+    padding: 8px 24px;
+    background: linear-gradient(135deg, $accent-gold, $accent-warm);
+    color: $bg-primary;
+    border-radius: $radius-full;
+    font-size: 18px;
+    font-weight: 600;
+    font-family: $font-serif;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+  }
+
+  .year-count {
+    color: $text-muted;
+    font-size: 13px;
+  }
+}
+
+.year-timeline {
+  position: relative;
+}
+
+.timeline-item {
+  width: 50%;
+  padding: 0 32px 32px;
+  position: relative;
+  box-sizing: border-box;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    padding-left: 56px;
+    padding-right: 0;
+  }
+
+  &.left {
+    margin-left: 0;
+    padding-right: 40px;
+    text-align: right;
+
+    @media (max-width: 768px) {
+      padding-right: 0;
+      text-align: left;
+    }
+  }
+
+  &.right {
+    margin-left: 50%;
+    padding-left: 40px;
+
+    @media (max-width: 768px) {
+      margin-left: 0;
+      padding-left: 56px;
+    }
+  }
+}
+
+.timeline-dot {
+  position: absolute;
+  top: 20px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, $accent-gold, $accent-warm);
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.5);
+  z-index: 3;
+
+  .left & {
+    right: -8px;
+
+    @media (max-width: 768px) {
+      left: 16px;
+      right: auto;
+    }
+  }
+
+  .right & {
+    left: -8px;
+
+    @media (max-width: 768px) {
+      left: 16px;
+    }
+  }
+}
+
+.timeline-card {
+  @include glass;
+  border-radius: $radius-md;
+  padding: 20px;
+  cursor: pointer;
+  transition: all $transition-normal;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: $shadow-lg;
+    border-color: rgba(255, 215, 0, 0.2);
+  }
+}
+
+.card-date {
+  @include flex-center;
+  gap: 4px;
+  margin-bottom: 10px;
+
+  .left & {
+    justify-content: flex-end;
+
+    @media (max-width: 768px) {
+      justify-content: flex-start;
+    }
+  }
+
+  .date-month {
+    font-size: 14px;
+    color: $accent-gold;
+    font-weight: 500;
+  }
+
+  .date-day {
+    font-size: 14px;
+    color: $text-secondary;
+  }
+}
+
+.card-exhibition-tag {
+  @include inline-flex-center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: rgba(135, 206, 235, 0.12);
+  color: $accent-blue;
+  border-radius: $radius-sm;
+  font-size: 12px;
+  margin-bottom: 10px;
+
+  .tag-icon {
+    font-size: 12px;
+  }
+
+  .left & {
+    margin-left: auto;
+
+    @media (max-width: 768px) {
+      margin-left: 0;
+    }
+  }
+}
+
+.card-title {
+  font-size: 16px;
+  color: $text-primary;
+  margin-bottom: 8px;
+  font-family: $font-serif;
+}
+
+.card-desc {
+  font-size: 13px;
+  color: $text-secondary;
+  line-height: 1.6;
+  margin: 0 0 8px 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.card-location {
+  @include flex-center;
+  gap: 6px;
+  font-size: 12px;
+  color: $text-muted;
+
+  .left & {
+    justify-content: flex-end;
+
+    @media (max-width: 768px) {
+      justify-content: flex-start;
+    }
+  }
+
+  .location-icon {
+    font-size: 12px;
+  }
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  z-index: 100;
+  @include flex-center;
+  padding: 20px;
+  backdrop-filter: blur(6px);
+}
+
+.timeline-modal {
+  width: 100%;
+  max-width: 520px;
+  @include glass;
+  border-radius: $radius-lg;
+  overflow: hidden;
+  position: relative;
+}
+
+.modal-header {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+}
+
+.modal-close {
+  width: 36px;
+  height: 36px;
+  @include flex-center;
+  background: rgba(0, 0, 0, 0.3);
+  color: $text-muted;
+  font-size: 24px;
+  border-radius: 50%;
+  transition: all $transition-fast;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: $text-primary;
+  }
+}
+
+.modal-body {
+  padding: 32px;
+}
+
+.detail-date {
+  font-size: 14px;
+  color: $accent-gold;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.detail-exhibition {
+  @include inline-flex-center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: rgba(135, 206, 235, 0.12);
+  color: $accent-blue;
+  border-radius: $radius-sm;
+  font-size: 13px;
+  margin-bottom: 16px;
+
+  .detail-tag-icon {
+    font-size: 12px;
+  }
+}
+
+.detail-title {
+  font-size: 24px;
+  color: $text-primary;
+  margin-bottom: 16px;
+  font-family: $font-serif;
+}
+
+.detail-desc {
+  font-size: 15px;
+  color: $text-secondary;
+  line-height: 1.8;
+  margin: 0 0 16px 0;
+  white-space: pre-wrap;
+}
+
+.detail-location {
+  @include flex-center;
+  gap: 8px;
+  font-size: 14px;
+  color: $text-muted;
+}
