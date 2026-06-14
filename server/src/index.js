@@ -49,6 +49,7 @@ fastify.register(memoryMapRoutes, { prefix: '/api/memory-maps' });
 fastify.register(familyAlbumRoutes, { prefix: '/api/family-albums' });
 fastify.register(familyMemberRoutes, { prefix: '/api/family-members' });
 
+
 fastify.get('/api/health', async () => {
   return { status: 'ok', time: new Date().toISOString() };
 });

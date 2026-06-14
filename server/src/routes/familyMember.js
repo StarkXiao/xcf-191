@@ -14,7 +14,18 @@ export default async function familyMemberRoutes(fastify) {
         members = [];
       }
     }
-    return members.sort((a, b) => {
+    const allMembers = getCollection('familyMembers');
+    const membersWithRelations = members.map(member => {
+      const relations = (member.relations || []).map(rel => {
+        const relatedMember = allMembers.find(m => m.id === rel.memberId);
+        return {
+          ...rel,
+          member: relatedMember ? { id: relatedMember.id, name: relatedMember.name, avatar: relatedMember.avatar } : null
+        };
+      });
+      return { ...member, relations };
+    });
+    return membersWithRelations.sort((a, b) => {
       if (a.birthDate && b.birthDate) {
         return new Date(a.birthDate) - new Date(b.birthDate);
       }
