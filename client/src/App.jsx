@@ -1,13 +1,25 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import Header from './components/Header.jsx';
 import Home from './pages/Home.jsx';
 import CreateExhibition from './pages/CreateExhibition.jsx';
 import ExhibitionDetail from './pages/ExhibitionDetail.jsx';
 import TimelinePlayer from './pages/TimelinePlayer.jsx';
+import ShareLanding from './pages/ShareLanding.jsx';
 import './styles/App.scss';
 
 function App() {
+  const location = useLocation();
+  const isSharePage = location.pathname.startsWith('/share/');
+
+  if (isSharePage) {
+    return (
+      <Routes>
+        <Route path="/share/:code" element={<ShareLanding />} />
+      </Routes>
+    );
+  }
+
   return (
     <div className="app">
       <div className="stars-bg">
@@ -22,6 +34,7 @@ function App() {
           <Route path="/create" element={<CreateExhibition />} />
           <Route path="/exhibition/:id" element={<ExhibitionDetail />} />
           <Route path="/exhibition/:id/player" element={<TimelinePlayer />} />
+          <Route path="/share/:code" element={<ShareLanding />} />
         </Routes>
       </main>
     </div>

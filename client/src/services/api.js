@@ -49,4 +49,18 @@ export const fileApi = {
   remove: (type, filename) => request.delete(`/files/${type}/${filename}`).then(r => r.data)
 };
 
+export const shareApi = {
+  list: (exhibitionId) => request.get('/shares', { params: { exhibitionId } }).then(r => r.data),
+  get: (id) => request.get(`/shares/${id}`).then(r => r.data),
+  create: (data) => request.post('/shares', data).then(r => r.data),
+  update: (id, data) => request.put(`/shares/${id}`, data).then(r => r.data),
+  remove: (id) => request.delete(`/shares/${id}`).then(r => r.data),
+  disable: (id) => request.post(`/shares/${id}/disable`).then(r => r.data),
+  enable: (id) => request.post(`/shares/${id}/enable`).then(r => r.data),
+  getStats: (id) => request.get(`/shares/${id}/stats`).then(r => r.data),
+  getByCode: (code) => request.get(`/shares/code/${code}`).then(r => r.data),
+  verifyCode: (code, password) => request.post(`/shares/code/${code}/verify`, { password }).then(r => r.data),
+  getPreview: (code) => request.get(`/shares/code/${code}/preview`).then(r => r.data)
+};
+
 export default request;

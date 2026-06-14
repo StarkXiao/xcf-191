@@ -8,7 +8,9 @@ const defaultDB = {
   exhibitions: [],
   materials: [],
   timelines: [],
-  messages: []
+  messages: [],
+  shares: [],
+  shareViews: []
 };
 
 export const initStorage = () => {

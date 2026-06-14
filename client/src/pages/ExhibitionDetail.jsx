@@ -4,6 +4,7 @@ import { exhibitionApi, materialApi, timelineApi, fileApi } from '../services/ap
 import MaterialManager from '../components/MaterialManager.jsx';
 import TimelineEditor from '../components/TimelineEditor.jsx';
 import MessageBoard from '../components/MessageBoard.jsx';
+import ShareManager from '../components/ShareManager.jsx';
 import './ExhibitionDetail.scss';
 
 function ExhibitionDetail() {
@@ -42,7 +43,8 @@ function ExhibitionDetail() {
   const tabs = [
     { key: 'materials', name: '素材管理', icon: '❋' },
     { key: 'timeline', name: '时间轴', icon: '⌛' },
-    { key: 'messages', name: '访客留言', icon: '✉' }
+    { key: 'messages', name: '访客留言', icon: '✉' },
+    { key: 'share', name: '公开分享', icon: '✦' }
   ];
 
   if (loading) {
@@ -122,6 +124,12 @@ function ExhibitionDetail() {
         )}
         {activeTab === 'messages' && (
           <MessageBoard exhibitionId={id} />
+        )}
+        {activeTab === 'share' && (
+          <ShareManager
+            exhibitionId={id}
+            exhibitionTitle={exhibition?.title}
+          />
         )}
       </div>
     </div>
