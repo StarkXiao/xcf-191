@@ -1,0 +1,92 @@
+@import '../styles/variables.scss';
+@import '../styles/mixins.scss';
+
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  @include glass;
+  border-bottom: 1px solid $border-light;
+}
+
+.header-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 32px;
+  height: 72px;
+  @include flex-between;
+}
+
+.logo {
+  @include flex-center;
+  gap: 10px;
+  transition: opacity $transition-fast;
+
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+.logo-icon {
+  font-size: 28px;
+  @include text-gradient($accent-gold, $accent-warm);
+  animation: pulse 3s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.logo-text {
+  font-family: $font-serif;
+  font-size: 22px;
+  font-weight: 600;
+  @include text-gradient($accent-gold, $accent-purple);
+  letter-spacing: 2px;
+}
+
+.nav {
+  @include flex-center;
+  gap: 8px;
+}
+
+.nav-link {
+  padding: 8px 20px;
+  border-radius: $radius-full;
+  color: $text-secondary;
+  font-size: 14px;
+  transition: all $transition-fast;
+
+  &:hover {
+    color: $text-primary;
+    background: rgba(255, 255, 255, 0.05);
+  }
+}
+
+.nav-btn {
+  padding: 10px 24px;
+  border-radius: $radius-full;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all $transition-fast;
+}
+
+.create-btn {
+  @include flex-center;
+  gap: 6px;
+  background: linear-gradient(135deg, $accent-gold, $accent-warm);
+  color: $bg-primary;
+
+  .btn-icon {
+    font-size: 18px;
+    font-weight: 300;
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $shadow-glow;
+  }
+}

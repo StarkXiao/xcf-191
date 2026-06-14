@@ -1,0 +1,35 @@
+$bg-primary: #0a0a1a;
+$bg-secondary: #151530;
+$bg-card: rgba(30, 30, 60, 0.6);
+$bg-card-hover: rgba(40, 40, 80, 0.8);
+
+$text-primary: #f0f0ff;
+$text-secondary: #b0b0d0;
+$text-muted: #8080a0;
+
+$accent-gold: #ffd700;
+$accent-warm: #f4a460;
+$accent-blue: #87ceeb;
+$accent-purple: #dda0dd;
+$accent-pink: #ffb6c1;
+$accent-green: #98fb98;
+
+$border-color: rgba(255, 255, 255, 0.1);
+$border-light: rgba(255, 255, 255, 0.05);
+
+$shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+$shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+$shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+$shadow-glow: 0 0 20px rgba(255, 215, 0, 0.2);
+
+$radius-sm: 6px;
+$radius-md: 12px;
+$radius-lg: 20px;
+$radius-full: 9999px;
+
+$transition-fast: 0.15s ease;
+$transition-normal: 0.3s ease;
+$transition-slow: 0.5s ease;
+
+$font-serif: 'Noto Serif SC', serif;
+$font-sans: 'Noto Sans SC', sans-serif;

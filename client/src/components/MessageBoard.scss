@@ -1,0 +1,199 @@
+@import '../styles/variables.scss';
+@import '../styles/mixins.scss';
+
+.message-board {
+  max-width: 720px;
+  margin: 0 auto;
+
+  .board-header {
+    margin-bottom: 24px;
+  }
+
+  .board-hint {
+    color: $text-secondary;
+    font-size: 14px;
+    text-align: center;
+  }
+}
+
+.message-form {
+  @include glass;
+  border-radius: $radius-lg;
+  padding: 24px;
+  margin-bottom: 36px;
+
+  .form-row {
+    margin-bottom: 14px;
+  }
+}
+
+.author-input {
+  width: 100%;
+  padding: 12px 16px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid $border-color;
+  border-radius: $radius-sm;
+  color: $text-primary;
+  font-size: 14px;
+  outline: none;
+  transition: border-color $transition-fast;
+
+  &::placeholder {
+    color: $text-muted;
+  }
+
+  &:focus {
+    border-color: $accent-gold;
+  }
+}
+
+.content-textarea {
+  width: 100%;
+  padding: 14px 16px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid $border-color;
+  border-radius: $radius-sm;
+  color: $text-primary;
+  font-size: 14px;
+  outline: none;
+  resize: vertical;
+  min-height: 100px;
+  transition: border-color $transition-fast;
+  font-family: inherit;
+
+  &::placeholder {
+    color: $text-muted;
+  }
+
+  &:focus {
+    border-color: $accent-gold;
+  }
+}
+
+.form-actions {
+  @include flex-between;
+}
+
+.char-count {
+  color: $text-muted;
+  font-size: 12px;
+}
+
+.submit-btn {
+  padding: 10px 28px;
+  background: linear-gradient(135deg, $accent-gold, $accent-warm);
+  color: $bg-primary;
+  border-radius: $radius-full;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all $transition-fast;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: $shadow-glow;
+  }
+}
+
+.messages-list {
+  .list-header {
+    @include flex-center;
+    gap: 10px;
+    color: $text-secondary;
+    font-size: 14px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid $border-light;
+  }
+
+  .list-count {
+    padding: 2px 10px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: $radius-full;
+    font-size: 12px;
+    color: $text-muted;
+  }
+}
+
+.message-item {
+  @include glass;
+  border-radius: $radius-md;
+  padding: 18px 20px;
+  margin-bottom: 14px;
+  position: relative;
+  transition: all $transition-fast;
+
+  &:hover {
+    transform: translateX(4px);
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+}
+
+.msg-avatar {
+  position: absolute;
+  left: 20px;
+  top: 18px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  @include flex-center;
+  color: $bg-primary;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.msg-content {
+  margin-left: 56px;
+}
+
+.msg-header {
+  @include flex-center;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.msg-author {
+  color: $text-primary;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.msg-time {
+  color: $text-muted;
+  font-size: 12px;
+}
+
+.msg-text {
+  color: $text-secondary;
+  font-size: 14px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.msg-delete {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  width: 28px;
+  height: 28px;
+  @include flex-center;
+  border-radius: 50%;
+  color: $text-muted;
+  font-size: 18px;
+  opacity: 0;
+  transition: all $transition-fast;
+
+  .message-item:hover & {
+    opacity: 1;
+  }
+
+  &:hover {
+    background: rgba(255, 80, 80, 0.2);
+    color: #ff8080;
+  }
+}
