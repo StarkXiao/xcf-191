@@ -1,22 +1,12 @@
 import { v4 as uuidv4 } from 'uuid';
-import { fileURLToPath } from 'url';
-import { dirname, join, extname } from 'path';
+import { extname, join } from 'path';
 import fs from 'fs';
 import { pipeline } from 'stream/promises';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-const UPLOADS_DIR = join(__dirname, '..', '..', 'uploads');
-
-if (!fs.existsSync(UPLOADS_DIR)) {
-  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
-}
+import { UPLOADS_DIR, ensureDir } from '../config.js';
 
 const ensureSubDir = (subDir) => {
   const dir = join(UPLOADS_DIR, subDir);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
+  ensureDir(dir);
   return dir;
 };
 

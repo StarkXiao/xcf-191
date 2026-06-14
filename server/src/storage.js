@@ -1,11 +1,7 @@
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
 import fs from 'fs';
+import { DATA_DIR } from './config.js';
+import { join } from 'path';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const DATA_DIR = join(__dirname, '..', 'data');
 const DB_FILE = join(DATA_DIR, 'db.json');
 
 const defaultDB = {
@@ -16,9 +12,6 @@ const defaultDB = {
 };
 
 export const initStorage = () => {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  }
   if (!fs.existsSync(DB_FILE)) {
     fs.writeFileSync(DB_FILE, JSON.stringify(defaultDB, null, 2));
   }
