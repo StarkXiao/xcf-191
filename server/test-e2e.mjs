@@ -48,9 +48,23 @@ async function getPageTitle(port) {
   }
 }
 
-async function findPort(ports, healthPath = '/') {
+async function verifyBackendPort(port, healthPath) {
+  try {
+    const ctrl = new AbortController();
+    const timeout = setTimeout(() => ctrl.abort(), 2000);
+    const res = await fetch(`http://localhost:${port}${healthPath}`, { signal: ctrl.signal });
+    clearTimeout(timeout);
+    if (res.status !== 200) return false;
+    const data = await res.json();
+    return data.status === 'ok';
+  } catch {
+    return false;
+  }
+}
+
+async function findBackendPort(ports, healthPath) {
   for (const port of ports) {
-    if (await checkPort(port, healthPath)) {
+    if (await verifyBackendPort(port, healthPath)) {
       return port;
     }
   }
@@ -67,12 +81,12 @@ async function findFrontendPort(ports, expectedTitle) {
   return null;
 }
 
-async function waitForService(name, ports, healthPath, maxRetries = 15, expectedTitle = null) {
+async function waitForService(name, ports, healthPath, maxRetries = 15, verifyFn = null) {
   log('info', `检测${name}服务...`);
   for (let i = 0; i < maxRetries; i++) {
     let port;
-    if (expectedTitle) {
-      port = await findFrontendPort(ports, expectedTitle);
+    if (verifyFn) {
+      port = await verifyFn(ports, healthPath);
     } else {
       port = await findPort(ports, healthPath);
     }
@@ -370,14 +384,15 @@ async function runAllTests() {
   console.log('║           星屑纪念馆 - 端到端自测脚本                       ║');
   console.log('╚══════════════════════════════════════════════════════════════╝');
 
-  const backendPort = await waitForService('后端', BACKEND_PORTS, '/api/health');
+  const backendPort = await waitForService('后端', BACKEND_PORTS, '/api/health', 15, findBackendPort);
   if (!backendPort) {
     log('fail', '无法连接后端服务，请先启动: cd server && npm start');
     process.exit(1);
   }
   const API_BASE = `http://localhost:${backendPort}`;
 
-  const frontendPort = await waitForService('前端', FRONTEND_PORTS, '/', 15, '星屑纪念馆');
+  const frontendVerifyFn = (ports) => findFrontendPort(ports, '星屑纪念馆');
+  const frontendPort = await waitForService('前端', FRONTEND_PORTS, '/', 15, frontendVerifyFn);
   if (!frontendPort) {
     log('warn', '无法连接前端服务，前端页面验证将跳过。请先启动: cd client && npm run dev');
   }
