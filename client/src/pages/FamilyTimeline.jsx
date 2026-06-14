@@ -40,6 +40,24 @@ function FamilyTimeline() {
     };
   };
 
+  const formatLocation = (location) => {
+    if (!location) return '';
+    if (typeof location === 'string') return location;
+    if (typeof location === 'object') {
+      const parts = [];
+      if (location.name) parts.push(location.name);
+      if (location.city && location.city !== location.name) parts.push(location.city);
+      if (location.address && !parts.some(p => location.address.includes(p))) {
+        parts.push(location.address);
+      }
+      if (parts.length > 0) return parts.join(' · ');
+      if (location.lat !== undefined && location.lng !== undefined) {
+        return `${parseFloat(location.lat).toFixed(3)}, ${parseFloat(location.lng).toFixed(3)}`;
+      }
+    }
+    return '';
+  };
+
   const groupTimelinesByYear = () => {
     const groups = {};
     timelines.forEach(t => {
@@ -143,7 +161,7 @@ function FamilyTimeline() {
                         {t.location && (
                           <div className="card-location">
                             <span className="location-icon">📍</span>
-                            {t.location}
+                            {formatLocation(t.location)}
                           </div>
                         )}
                       </div>
@@ -178,7 +196,7 @@ function FamilyTimeline() {
               )}
               {selectedTimeline.location && (
                 <div className="detail-location">
-                  <span>📍</span> {selectedTimeline.location}
+                  <span>📍</span> {formatLocation(selectedTimeline.location)}
                 </div>
               )}
             </div>
