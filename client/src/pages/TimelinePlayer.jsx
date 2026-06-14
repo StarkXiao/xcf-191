@@ -129,6 +129,16 @@ function TimelinePlayer() {
         <div className="node-date">{formatDate(currentNode.eventDate)}</div>
         <h2 className="node-title">{currentNode.title}</h2>
 
+        {currentNode.location && (
+          <div className="node-location-display">
+            <span className="loc-icon">📍</span>
+            <span className="loc-text">
+              {currentNode.location.name || currentNode.location.address || `${currentNode.location.lat.toFixed(4)}, ${currentNode.location.lng.toFixed(4)}`}
+              {currentNode.location.city && ` (${currentNode.location.city})`}
+            </span>
+          </div>
+        )}
+
         {nodeMaterials.length > 0 && (
           <div className="node-materials-area">
             {nodeMaterials.map(mat => {

@@ -9,6 +9,7 @@ import timelineRoutes from './routes/timeline.js';
 import messageRoutes from './routes/message.js';
 import fileRoutes from './routes/file.js';
 import shareRoutes from './routes/share.js';
+import memoryMapRoutes from './routes/memoryMap.js';
 import { initStorage } from './storage.js';
 import { UPLOADS_DIR } from './config.js';
 
@@ -42,6 +43,7 @@ fastify.register(timelineRoutes, { prefix: '/api/timelines' });
 fastify.register(messageRoutes, { prefix: '/api/messages' });
 fastify.register(fileRoutes, { prefix: '/api/files' });
 fastify.register(shareRoutes, { prefix: '/api/shares' });
+fastify.register(memoryMapRoutes, { prefix: '/api/memory-maps' });
 
 fastify.get('/api/health', async () => {
   return { status: 'ok', time: new Date().toISOString() };

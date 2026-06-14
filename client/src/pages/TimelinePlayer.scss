@@ -123,6 +123,27 @@
   text-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
 }
 
+.node-location-display {
+  @include inline-flex-center;
+  gap: 8px;
+  padding: 8px 20px;
+  background: rgba(135, 206, 235, 0.15);
+  border-radius: $radius-full;
+  color: $accent-blue;
+  font-size: 15px;
+  max-width: 600px;
+}
+
+.loc-icon {
+  font-size: 18px;
+}
+
+.loc-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .node-materials-area {
   @include flex-center;
   flex-wrap: wrap;

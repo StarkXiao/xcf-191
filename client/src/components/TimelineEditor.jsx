@@ -8,7 +8,8 @@ function TimelineEditor({ exhibitionId, materials, timelines, onTimelinesChange,
     title: '',
     description: '',
     eventDate: new Date().toISOString().split('T')[0],
-    materialIds: []
+    materialIds: [],
+    location: null
   });
 
   const openModal = (item = null) => {
@@ -18,7 +19,8 @@ function TimelineEditor({ exhibitionId, materials, timelines, onTimelinesChange,
         title: item.title,
         description: item.description,
         eventDate: item.eventDate.split('T')[0],
-        materialIds: [...(item.materialIds || [])]
+        materialIds: [...(item.materialIds || [])],
+        location: item.location ? { ...item.location } : null
       });
     } else {
       setEditing(null);
@@ -26,7 +28,8 @@ function TimelineEditor({ exhibitionId, materials, timelines, onTimelinesChange,
         title: '',
         description: '',
         eventDate: new Date().toISOString().split('T')[0],
-        materialIds: []
+        materialIds: [],
+        location: null
       });
     }
     setModal(true);
@@ -52,17 +55,28 @@ function TimelineEditor({ exhibitionId, materials, timelines, onTimelinesChange,
       alert('请输入标题');
       return;
     }
+    const locationData = form.location && form.location.lat !== '' && form.location.lng !== ''
+      ? {
+          name: form.location.name,
+          address: form.location.address,
+          city: form.location.city,
+          lat: parseFloat(form.location.lat),
+          lng: parseFloat(form.location.lng)
+        }
+      : null;
     try {
       if (editing) {
         await timelineApi.update(editing.id, {
           ...form,
-          eventDate: new Date(form.eventDate).toISOString()
+          eventDate: new Date(form.eventDate).toISOString(),
+          location: locationData
         });
       } else {
         await timelineApi.create({
           exhibitionId,
           ...form,
-          eventDate: new Date(form.eventDate).toISOString()
+          eventDate: new Date(form.eventDate).toISOString(),
+          location: locationData
         });
       }
       const updated = await timelineApi.list(exhibitionId);
@@ -71,6 +85,24 @@ function TimelineEditor({ exhibitionId, materials, timelines, onTimelinesChange,
     } catch (err) {
       console.error('保存失败:', err);
     }
+  };
+
+  const toggleLocation = () => {
+    setForm(prev => ({
+      ...prev,
+      location: prev.location
+        ? null
+        : { name: '', address: '', city: '', lat: '', lng: '' }
+    }));
+  };
+
+  const updateLocation = (field, value) => {
+    setForm(prev => ({
+      ...prev,
+      location: prev.location
+        ? { ...prev.location, [field]: value }
+        : { name: '', address: '', city: '', lat: '', lng: '', [field]: value }
+    }));
   };
 
   const handleDelete = async (id) => {
@@ -133,6 +165,14 @@ function TimelineEditor({ exhibitionId, materials, timelines, onTimelinesChange,
                 <div className="node-card">
                   <div className="node-date">{formatDate(node.eventDate)}</div>
                   <h3 className="node-title">{node.title}</h3>
+                  {node.location && (
+                    <div className="node-location">
+                      <span className="location-icon">📍</span>
+                      <span className="location-text">
+                        {node.location.name || node.location.address || `${node.location.lat.toFixed(3)}, ${node.location.lng.toFixed(3)}`}
+                      </span>
+                    </div>
+                  )}
                   {node.description && <p className="node-desc">{node.description}</p>}
                   {nodeMats.length > 0 && (
                     <div className="node-materials">
@@ -189,6 +229,77 @@ function TimelineEditor({ exhibitionId, materials, timelines, onTimelinesChange,
                   rows={4}
                 />
               </div>
+              <div className="form-row">
+                <label className="toggle-label">
+                  <input
+                    type="checkbox"
+                    checked={form.location !== null}
+                    onChange={toggleLocation}
+                  />
+                  <span>绑定地点信息</span>
+                </label>
+              </div>
+              {form.location && (
+                <div className="location-editor">
+                  <div className="location-grid">
+                    <div className="form-row">
+                      <label>地点名称</label>
+                      <input
+                        type="text"
+                        placeholder="如：外滩、埃菲尔铁塔"
+                        value={form.location.name}
+                        onChange={(e) => updateLocation('name', e.target.value)}
+                        maxLength={100}
+                      />
+                    </div>
+                    <div className="form-row">
+                      <label>城市</label>
+                      <input
+                        type="text"
+                        placeholder="如：上海、巴黎"
+                        value={form.location.city}
+                        onChange={(e) => updateLocation('city', e.target.value)}
+                        maxLength={50}
+                      />
+                    </div>
+                  </div>
+                  <div className="form-row">
+                    <label>详细地址</label>
+                    <input
+                      type="text"
+                      placeholder="完整的地址信息"
+                      value={form.location.address}
+                      onChange={(e) => updateLocation('address', e.target.value)}
+                      maxLength={200}
+                    />
+                  </div>
+                  <div className="location-grid">
+                    <div className="form-row">
+                      <label>纬度 *</label>
+                      <input
+                        type="number"
+                        step="0.000001"
+                        placeholder="如：31.2397"
+                        value={form.location.lat}
+                        onChange={(e) => updateLocation('lat', e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="form-row">
+                      <label>经度 *</label>
+                      <input
+                        type="number"
+                        step="0.000001"
+                        placeholder="如：121.4998"
+                        value={form.location.lng}
+                        onChange={(e) => updateLocation('lng', e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+                  <p className="hint-text">提示：经纬度可通过地图软件或在线工具查询，中国范围约为纬度 18-54，经度 73-135</p>
+                </div>
+              )}
               <div className="form-row">
                 <label>关联素材</label>
                 {materials.length === 0 ? (

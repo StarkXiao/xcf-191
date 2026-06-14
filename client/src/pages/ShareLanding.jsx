@@ -366,6 +366,15 @@ function ShareLanding() {
                       <div className="timeline-content">
                         <div className="timeline-time">{formatDate(t.eventDate)}</div>
                         <h4 className="timeline-title">{t.title}</h4>
+                        {t.location && (
+                          <div className="timeline-location">
+                            <span className="tl-loc-icon">📍</span>
+                            <span className="tl-loc-text">
+                              {t.location.name || t.location.address || `${t.location.lat.toFixed(4)}, ${t.location.lng.toFixed(4)}`}
+                              {t.location.city && ` (${t.location.city})`}
+                            </span>
+                          </div>
+                        )}
                         {t.description && <p className="timeline-desc">{t.description}</p>}
                         {nodeMaterials.length > 0 && (
                           <div className="timeline-materials">

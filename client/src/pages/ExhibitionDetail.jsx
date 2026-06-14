@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { exhibitionApi, materialApi, timelineApi, fileApi } from '../services/api.js';
+import { exhibitionApi, materialApi, timelineApi, fileApi, memoryMapApi } from '../services/api.js';
 import MaterialManager from '../components/MaterialManager.jsx';
 import TimelineEditor from '../components/TimelineEditor.jsx';
+import MemoryMap from '../components/MemoryMap.jsx';
 import MessageBoard from '../components/MessageBoard.jsx';
 import ShareManager from '../components/ShareManager.jsx';
 import './ExhibitionDetail.scss';
@@ -43,6 +44,7 @@ function ExhibitionDetail() {
   const tabs = [
     { key: 'materials', name: '素材管理', icon: '❋' },
     { key: 'timeline', name: '时间轴', icon: '⌛' },
+    { key: 'memorymap', name: '回忆地图', icon: '🗺️' },
     { key: 'messages', name: '访客留言', icon: '✉' },
     { key: 'share', name: '公开分享', icon: '✦' }
   ];
@@ -120,6 +122,14 @@ function ExhibitionDetail() {
             timelines={timelines}
             onTimelinesChange={setTimelines}
             timelineApi={timelineApi}
+          />
+        )}
+        {activeTab === 'memorymap' && (
+          <MemoryMap
+            exhibitionId={id}
+            memoryMapApi={memoryMapApi}
+            timelineApi={timelineApi}
+            materialApi={materialApi}
           />
         )}
         {activeTab === 'messages' && (

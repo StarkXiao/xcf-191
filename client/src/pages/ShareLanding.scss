@@ -702,6 +702,28 @@
   color: #fff;
 }
 
+.timeline-location {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: rgba(135, 206, 235, 0.12);
+  border-radius: 20px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: #87ceeb;
+}
+
+.tl-loc-icon {
+  font-size: 14px;
+}
+
+.tl-loc-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .timeline-desc {
   font-size: 14px;
   color: rgba(255, 255, 255, 0.65);

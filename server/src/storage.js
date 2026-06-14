@@ -10,7 +10,8 @@ const defaultDB = {
   timelines: [],
   messages: [],
   shares: [],
-  shareViews: []
+  shareViews: [],
+  memoryMaps: []
 };
 
 export const initStorage = () => {

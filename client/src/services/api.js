@@ -63,4 +63,12 @@ export const shareApi = {
   getPreview: (code) => request.get(`/shares/code/${code}/preview`).then(r => r.data)
 };
 
+export const memoryMapApi = {
+  get: (exhibitionId) => request.get(`/memory-maps/${exhibitionId}`).then(r => r.data),
+  update: (exhibitionId, data) => request.put(`/memory-maps/${exhibitionId}`, data).then(r => r.data),
+  getMarkers: (exhibitionId, filters) => request.get(`/memory-maps/${exhibitionId}/markers`, { params: filters }).then(r => r.data),
+  search: (exhibitionId, params) => request.get(`/memory-maps/${exhibitionId}/search`, { params }).then(r => r.data),
+  aggregate: (exhibitionId) => request.get(`/memory-maps/${exhibitionId}/aggregate`).then(r => r.data)
+};
+
 export default request;
