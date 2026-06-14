@@ -296,7 +296,9 @@ export default async function shareRoutes(fastify) {
 
     const materials = getCollection('materials').filter(m => m.exhibitionId === share.exhibitionId);
     const timelines = share.allowTimeline
-      ? getCollection('timelines').filter(t => t.exhibitionId === share.exhibitionId)
+      ? getCollection('timelines')
+          .filter(t => t.exhibitionId === share.exhibitionId)
+          .sort((a, b) => new Date(a.eventDate) - new Date(b.eventDate))
       : [];
     const messages = share.allowMessages
       ? getCollection('messages').filter(m => m.exhibitionId === share.exhibitionId)

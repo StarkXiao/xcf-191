@@ -355,24 +355,59 @@ function ShareLanding() {
             </h3>
             <div className="timeline-list">
               {timelines
-                .sort((a, b) => new Date(a.time) - new Date(b.time))
-                .map((t) => (
-                  <div key={t.id} className="timeline-node">
-                    <div className="timeline-dot"></div>
-                    <div className="timeline-content">
-                      <div className="timeline-time">{formatDate(t.time)}</div>
-                      <h4 className="timeline-title">{t.title}</h4>
-                      {t.description && <p className="timeline-desc">{t.description}</p>}
-                      {t.mediaUrl && (
-                        <div className="timeline-media">
-                          {t.mediaType === 'image' && <img src={t.mediaUrl} alt="" />}
-                          {t.mediaType === 'video' && <video src={t.mediaUrl} controls />}
-                          {t.mediaType === 'audio' && <audio src={t.mediaUrl} controls />}
-                        </div>
-                      )}
+                .sort((a, b) => new Date(a.eventDate) - new Date(b.eventDate))
+                .map((t) => {
+                  const nodeMaterials = (t.materialIds || [])
+                    .map(mid => materials.find(m => m.id === mid))
+                    .filter(Boolean);
+                  return (
+                    <div key={t.id} className="timeline-node">
+                      <div className="timeline-dot"></div>
+                      <div className="timeline-content">
+                        <div className="timeline-time">{formatDate(t.eventDate)}</div>
+                        <h4 className="timeline-title">{t.title}</h4>
+                        {t.description && <p className="timeline-desc">{t.description}</p>}
+                        {nodeMaterials.length > 0 && (
+                          <div className="timeline-materials">
+                            {nodeMaterials.map(mat => (
+                              <div key={mat.id} className="timeline-mat-item">
+                                {mat.type === 'image' && (
+                                  <img src={mat.url} alt={mat.title || ''} />
+                                )}
+                                {mat.type === 'video' && (
+                                  <video src={mat.url} controls preload="metadata" />
+                                )}
+                                {mat.type === 'audio' && (
+                                  <div className="mat-audio-inline">
+                                    <span className="mat-audio-icon">🎵</span>
+                                    <audio src={mat.url} controls />
+                                  </div>
+                                )}
+                                {mat.type === 'text' && (
+                                  <div className="mat-text-inline">
+                                    <p>{mat.content || mat.description || ''}</p>
+                                  </div>
+                                )}
+                                <span className="mat-label">{mat.title || ''}</span>
+                                {share.allowDownload && mat.url && mat.type !== 'text' && (
+                                  <a
+                                    href={mat.url}
+                                    download
+                                    className="download-link"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
+                                    ⬇ 下载
+                                  </a>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
             </div>
           </section>
         )}

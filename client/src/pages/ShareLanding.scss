@@ -726,6 +726,84 @@
   }
 }
 
+.timeline-materials {
+  margin-top: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.timeline-mat-item {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  overflow: hidden;
+  max-width: 220px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: rgba(139, 92, 246, 0.3);
+  }
+
+  img {
+    width: 100%;
+    max-height: 160px;
+    object-fit: cover;
+    display: block;
+  }
+
+  video {
+    width: 100%;
+    max-height: 160px;
+    display: block;
+  }
+
+  .mat-audio-inline {
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    .mat-audio-icon {
+      font-size: 24px;
+      flex-shrink: 0;
+    }
+
+    audio {
+      width: 140px;
+      height: 36px;
+    }
+  }
+
+  .mat-text-inline {
+    padding: 12px 14px;
+
+    p {
+      margin: 0;
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.75);
+      line-height: 1.7;
+      white-space: pre-wrap;
+    }
+  }
+
+  .mat-label {
+    display: block;
+    padding: 6px 12px;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.55);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .download-link {
+    display: inline-flex;
+    margin: 0 0 6px 12px;
+    font-size: 11px;
+  }
+}
+
 .message-form-wrap {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
