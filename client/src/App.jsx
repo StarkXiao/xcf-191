@@ -20,6 +20,8 @@ import MemorialRitualPlayer from './pages/MemorialRitualPlayer.jsx';
 import CollectionHome from './pages/CollectionHome.jsx';
 import CollectionEditor from './pages/CollectionEditor.jsx';
 import CollectionDetail from './pages/CollectionDetail.jsx';
+import GrowthTrajectoryHome from './pages/GrowthTrajectoryHome.jsx';
+import GrowthTrajectoryPlayer from './pages/GrowthTrajectoryPlayer.jsx';
 import './styles/App.scss';
 
 function App() {
@@ -67,6 +69,8 @@ function App() {
           <Route path="/collections/create" element={<CollectionEditor />} />
           <Route path="/collections/:id" element={<CollectionDetail />} />
           <Route path="/collections/:id/edit" element={<CollectionEditor />} />
+          <Route path="/growth-trajectory" element={<GrowthTrajectoryHome />} />
+          <Route path="/growth-trajectory/:id/player" element={<GrowthTrajectoryPlayer />} />
         </Routes>
       </main>
     </div>

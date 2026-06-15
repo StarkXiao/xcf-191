@@ -197,4 +197,13 @@ export const collectionApi = {
   getByEvent: () => request.get('/collections/aggregate/by-event').then(r => r.data)
 };
 
+export const growthTrajectoryApi = {
+  getStageRanges: () => request.get('/growth-trajectories/stage-ranges').then(r => r.data),
+  getStages: (exhibitionId) => request.get(`/growth-trajectories/${exhibitionId}/stages`).then(r => r.data),
+  getPlaylist: (exhibitionId) => request.get(`/growth-trajectories/${exhibitionId}/playlist`).then(r => r.data),
+  setCover: (exhibitionId, stageKey, coverImage) =>
+    request.post(`/growth-trajectories/${exhibitionId}/cover`, { stageKey, coverImage }).then(r => r.data),
+  getCovers: (exhibitionId) => request.get(`/growth-trajectories/${exhibitionId}/covers`).then(r => r.data)
+};
+
 export default request;

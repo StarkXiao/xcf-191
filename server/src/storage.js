@@ -21,7 +21,8 @@ const defaultDB = {
   memorialRituals: [],
   ritualMessages: [],
   ritualPlayStates: [],
-  collections: []
+  collections: [],
+  growthTrajectoryCovers: []
 };
 
 export const initStorage = () => {
