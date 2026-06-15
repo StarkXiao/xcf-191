@@ -16,6 +16,7 @@ function Header() {
           <Link to="/" className="nav-link">展厅列表</Link>
           <Link to="/family-albums" className="nav-link">家庭纪念册</Link>
           <Link to="/family-members" className="nav-link">家庭成员</Link>
+          <Link to="/backup" className="nav-link">备份管理</Link>
           <button className="nav-btn create-btn" onClick={() => navigate('/create')}>
             <span className="btn-icon">+</span>
             创建展厅

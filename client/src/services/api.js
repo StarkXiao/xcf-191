@@ -93,4 +93,28 @@ export const familyMemberApi = {
   removeRelation: (id, memberId) => request.delete(`/family-members/${id}/relations/${memberId}`).then(r => r.data)
 };
 
+export const backupApi = {
+  listExports: () => request.get('/backup/exports').then(r => r.data),
+  exportExhibition: (exhibitionId) => request.post(`/backup/export/exhibition/${exhibitionId}`).then(r => r.data),
+  exportAll: () => request.post('/backup/export/all').then(r => r.data),
+  downloadExport: (filename) => `${request.defaults.baseURL}/backup/exports/download/${filename}`,
+  deleteExport: (filename) => request.delete(`/backup/exports/${filename}`).then(r => r.data),
+  generateStatic: (exhibitionId) => request.post(`/backup/static/exhibition/${exhibitionId}`).then(r => r.data),
+  analyzeBackup: (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return request.post('/backup/import/analyze', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    }).then(r => r.data);
+  },
+  executeImport: (params) => request.post('/backup/import/execute', params).then(r => r.data),
+  verifyChecksums: (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return request.post('/backup/verify/checksums', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    }).then(r => r.data);
+  }
+};
+
 export default request;

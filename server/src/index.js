@@ -12,6 +12,7 @@ import shareRoutes from './routes/share.js';
 import memoryMapRoutes from './routes/memoryMap.js';
 import familyAlbumRoutes from './routes/familyAlbum.js';
 import familyMemberRoutes from './routes/familyMember.js';
+import exportBackupRoutes from './routes/exportBackup.js';
 import { initStorage } from './storage.js';
 import { UPLOADS_DIR } from './config.js';
 
@@ -48,6 +49,7 @@ fastify.register(shareRoutes, { prefix: '/api/shares' });
 fastify.register(memoryMapRoutes, { prefix: '/api/memory-maps' });
 fastify.register(familyAlbumRoutes, { prefix: '/api/family-albums' });
 fastify.register(familyMemberRoutes, { prefix: '/api/family-members' });
+fastify.register(exportBackupRoutes, { prefix: '/api/backup' });
 
 
 fastify.get('/api/health', async () => {
