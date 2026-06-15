@@ -246,6 +246,16 @@ export const opsApi = {
 
   getAbnormalFiles: () => request.get('/ops/files/abnormal').then(r => r.data),
   repairFile: (data) => request.post('/ops/files/repair', data).then(r => r.data),
+  uploadRepairFile: (materialId, file, onProgress) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return request.post(`/ops/files/upload-repair?materialId=${materialId}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      onUploadProgress: onProgress
+    }).then(r => r.data);
+  },
+  bindOrphanFile: (materialId, orphanUrl) =>
+    request.post('/ops/files/bind-orphan', { materialId, orphanUrl }).then(r => r.data),
   cleanupOrphans: (urls) => request.post('/ops/files/orphan-cleanup', { urls }).then(r => r.data),
   getRepairLogs: (params) => request.get('/ops/repair-logs', { params }).then(r => r.data),
 

@@ -1,8 +1,9 @@
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import { join, extname } from 'path';
+import { pipeline } from 'stream/promises';
 import { getCollection, saveCollection } from '../storage.js';
-import { UPLOADS_DIR } from '../config.js';
+import { UPLOADS_DIR, ensureDir } from '../config.js';
 
 export default async function opsRoutes(fastify) {
 
@@ -369,8 +370,18 @@ export default async function opsRoutes(fastify) {
       if (!newUrl) {
         return { error: '替换操作需要提供 newUrl' };
       }
+      const oldUrl = materials[index].url;
+      if (oldUrl && oldUrl.startsWith('/uploads/')) {
+        const oldRelativePath = oldUrl.replace('/uploads/', '');
+        const oldFilePath = join(UPLOADS_DIR, oldRelativePath);
+        if (fs.existsSync(oldFilePath)) {
+          try { fs.unlinkSync(oldFilePath); } catch {}
+        }
+      }
       materials[index].url = newUrl;
+      materials[index].updatedAt = new Date().toISOString();
       log.result = 'replaced';
+      log.oldFileDeleted = true;
     } else if (action === 'remove') {
       if (materials[index].url && materials[index].url.startsWith('/uploads/')) {
         const relativePath = materials[index].url.replace('/uploads/', '');
@@ -437,6 +448,164 @@ export default async function opsRoutes(fastify) {
 
     saveCollection('fileRepairLogs', repairLogs);
     return { success: true, cleaned };
+  });
+
+  fastify.post('/files/upload-repair', async (request, reply) => {
+    const materialId = request.query.materialId;
+    if (!materialId) {
+      reply.code(400);
+      return { error: '缺少 materialId 参数' };
+    }
+
+    const materials = getCollection('materials');
+    const index = materials.findIndex(m => m.id === materialId);
+    if (index === -1) {
+      reply.code(404);
+      return { error: '素材不存在' };
+    }
+
+    const parts = request.files();
+    let uploadedFile = null;
+
+    for await (const part of parts) {
+      if (!part.file) continue;
+
+      const originalExt = extname(part.filename || '').toLowerCase();
+      const fileId = uuidv4();
+      const fileName = `${fileId}${originalExt}`;
+
+      let subDir = 'others';
+      if (['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'].includes(originalExt)) {
+        subDir = 'images';
+      } else if (['.mp3', '.wav', '.ogg', '.m4a', '.aac'].includes(originalExt)) {
+        subDir = 'audios';
+      } else if (['.mp4', '.webm', '.mov'].includes(originalExt)) {
+        subDir = 'videos';
+      }
+
+      const targetDir = join(UPLOADS_DIR, subDir);
+      ensureDir(targetDir);
+      const filePath = join(targetDir, fileName);
+
+      await pipeline(part.file, fs.createWriteStream(filePath));
+
+      uploadedFile = {
+        id: fileId,
+        filename: part.filename,
+        url: `/uploads/${subDir}/${fileName}`,
+        type: subDir,
+        size: fs.statSync(filePath).size
+      };
+      break;
+    }
+
+    if (!uploadedFile) {
+      reply.code(400);
+      return { error: '未上传文件' };
+    }
+
+    const oldUrl = materials[index].url;
+    let oldFileDeleted = false;
+    if (oldUrl && oldUrl.startsWith('/uploads/')) {
+      const oldRelativePath = oldUrl.replace('/uploads/', '');
+      const oldFilePath = join(UPLOADS_DIR, oldRelativePath);
+      if (fs.existsSync(oldFilePath)) {
+        try { fs.unlinkSync(oldFilePath); oldFileDeleted = true; } catch {}
+      }
+    }
+
+    materials[index].url = uploadedFile.url;
+    materials[index].updatedAt = new Date().toISOString();
+    saveCollection('materials', materials);
+
+    const repairLogs = getCollection('fileRepairLogs');
+    const log = {
+      id: uuidv4(),
+      materialId,
+      materialTitle: materials[index].title,
+      action: 'upload-replace',
+      oldUrl: oldUrl,
+      newUrl: uploadedFile.url,
+      result: 'replaced',
+      oldFileDeleted,
+      uploadedFilename: uploadedFile.filename,
+      fileSize: uploadedFile.size,
+      createdAt: new Date().toISOString()
+    };
+    repairLogs.push(log);
+    saveCollection('fileRepairLogs', repairLogs);
+
+    return {
+      success: true,
+      result: 'replaced',
+      material: materials[index],
+      uploadedFile,
+      oldFileDeleted
+    };
+  });
+
+  fastify.post('/files/bind-orphan', async (request, reply) => {
+    const { materialId, orphanUrl } = request.body;
+    if (!materialId || !orphanUrl) {
+      reply.code(400);
+      return { error: '缺少 materialId 或 orphanUrl' };
+    }
+
+    const materials = getCollection('materials');
+    const index = materials.findIndex(m => m.id === materialId);
+    if (index === -1) {
+      reply.code(404);
+      return { error: '素材不存在' };
+    }
+
+    if (!orphanUrl.startsWith('/uploads/')) {
+      reply.code(400);
+      return { error: 'orphanUrl 格式无效' };
+    }
+
+    const relativePath = orphanUrl.replace('/uploads/', '');
+    const filePath = join(UPLOADS_DIR, relativePath);
+    if (!fs.existsSync(filePath)) {
+      reply.code(404);
+      return { error: '孤立文件不存在' };
+    }
+
+    const oldUrl = materials[index].url;
+    let oldFileDeleted = false;
+    if (oldUrl && oldUrl.startsWith('/uploads/')) {
+      const oldRelativePath = oldUrl.replace('/uploads/', '');
+      const oldFilePath = join(UPLOADS_DIR, oldRelativePath);
+      if (fs.existsSync(oldFilePath)) {
+        try { fs.unlinkSync(oldFilePath); oldFileDeleted = true; } catch {}
+      }
+    }
+
+    materials[index].url = orphanUrl;
+    materials[index].updatedAt = new Date().toISOString();
+    saveCollection('materials', materials);
+
+    const repairLogs = getCollection('fileRepairLogs');
+    const log = {
+      id: uuidv4(),
+      materialId,
+      materialTitle: materials[index].title,
+      action: 'bind-orphan',
+      oldUrl: oldUrl,
+      newUrl: orphanUrl,
+      result: 'replaced',
+      oldFileDeleted,
+      fileSize: fs.statSync(filePath).size,
+      createdAt: new Date().toISOString()
+    };
+    repairLogs.push(log);
+    saveCollection('fileRepairLogs', repairLogs);
+
+    return {
+      success: true,
+      result: 'replaced',
+      material: materials[index],
+      oldFileDeleted
+    };
   });
 
   fastify.get('/reviews', async (request) => {
