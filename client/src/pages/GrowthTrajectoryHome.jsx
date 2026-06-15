@@ -10,6 +10,10 @@ function GrowthTrajectoryHome() {
   const [selectedExhibition, setSelectedExhibition] = useState(null);
   const [stagesData, setStagesData] = useState(null);
   const [stageCovers, setStageCovers] = useState({});
+  const [coverPickerOpen, setCoverPickerOpen] = useState(false);
+  const [pickerStage, setPickerStage] = useState(null);
+  const [selectedCoverUrl, setSelectedCoverUrl] = useState('');
+  const [savingCover, setSavingCover] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -41,7 +45,7 @@ function GrowthTrajectoryHome() {
         growthTrajectoryApi.getCovers(exhibition.id)
       ]);
       setStagesData(stages);
-      setStageCovers(covers);
+      setStageCovers(covers || {});
     } catch (err) {
       console.error('加载阶段数据失败:', err);
     }
@@ -51,6 +55,73 @@ function GrowthTrajectoryHome() {
     if (selectedExhibition) {
       navigate(`/growth-trajectory/${selectedExhibition.id}/player`);
     }
+  };
+
+  const openCoverPicker = (stage) => {
+    setPickerStage(stage);
+    setSelectedCoverUrl(stageCovers[stage.key] || '');
+    setCoverPickerOpen(true);
+  };
+
+  const closeCoverPicker = () => {
+    if (savingCover) return;
+    setCoverPickerOpen(false);
+    setPickerStage(null);
+    setSelectedCoverUrl('');
+  };
+
+  const saveCover = async () => {
+    if (!pickerStage || !selectedExhibition) return;
+    setSavingCover(true);
+    try {
+      await growthTrajectoryApi.setCover(
+        selectedExhibition.id,
+        pickerStage.stageKey,
+        selectedCoverUrl
+      );
+      setStageCovers(prev => {
+        const next = { ...prev };
+        if (selectedCoverUrl) {
+          next[pickerStage.stageKey] = selectedCoverUrl;
+        } else {
+          delete next[pickerStage.stageKey];
+        }
+        return next;
+      });
+      setCoverPickerOpen(false);
+      setPickerStage(null);
+      setSelectedCoverUrl('');
+    } catch (err) {
+      console.error('保存封面失败:', err);
+    } finally {
+      setSavingCover(false);
+    }
+  };
+
+  const clearCover = async () => {
+    if (!pickerStage || !selectedExhibition) return;
+    setSavingCover(true);
+    try {
+      await growthTrajectoryApi.setCover(
+        selectedExhibition.id,
+        pickerStage.stageKey,
+        ''
+      );
+      setStageCovers(prev => {
+        const next = { ...prev };
+        delete next[pickerStage.stageKey];
+        return next;
+      });
+      setSelectedCoverUrl('');
+    } catch (err) {
+      console.error('清除封面失败:', err);
+    } finally {
+      setSavingCover(false);
+    }
+  };
+
+  const getEffectiveCover = (stage) => {
+    return stageCovers[stage.key] || stage.coverImage;
   };
 
   if (loading) {
@@ -147,43 +218,153 @@ function GrowthTrajectoryHome() {
               </div>
 
               <div className="stages-timeline">
-                {stagesData.stages.map((stage, idx) => (
-                  <div key={stage.key} className="stage-item" style={{ '--stage-color': stage.color }}>
-                    <div className="stage-line" />
-                    <div className="stage-node">
-                      <span className="stage-icon">{stage.icon}</span>
-                    </div>
-                    <div className="stage-content">
-                      <div className="stage-cover">
-                        {stageCovers[stage.key] || stage.coverImage ? (
-                          <img src={stageCovers[stage.key] || stage.coverImage} alt={stage.name} />
-                        ) : (
-                          <div className="cover-placeholder">
-                            <span>{stage.icon}</span>
+                {stagesData.stages.map((stage, idx) => {
+                  const effectiveCover = getEffectiveCover(stage);
+                  const hasCustomCover = !!stageCovers[stage.key];
+                  return (
+                    <div key={stage.key} className="stage-item" style={{ '--stage-color': stage.color }}>
+                      <div className="stage-line" />
+                      <div className="stage-node">
+                        <span className="stage-icon">{stage.icon}</span>
+                      </div>
+                      <div className="stage-content">
+                        <div className="stage-cover-wrap">
+                          <div className="stage-cover">
+                            {effectiveCover ? (
+                              <img src={effectiveCover} alt={stage.name} />
+                            ) : (
+                              <div className="cover-placeholder">
+                                <span>{stage.icon}</span>
+                              </div>
+                            )}
+                            {hasCustomCover && (
+                              <div className="cover-tag-badge">✨ 自定义</div>
+                            )}
                           </div>
-                        )}
-                      </div>
-                      <div className="stage-info">
-                        <div className="stage-header-row">
-                          <span className="stage-order">第{idx + 1}章</span>
-                          <h3 className="stage-name">{stage.name}</h3>
+                          <button
+                            className="set-cover-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openCoverPicker(stage);
+                            }}
+                            title="设置章节封面"
+                          >
+                            🎨 设置封面
+                          </button>
                         </div>
-                        <p className="stage-description">{stage.description}</p>
-                        <p className="stage-summary">{stage.summary}</p>
-                        {stage.dateRange && (
-                          <p className="stage-date-range">📅 {stage.dateRange}</p>
-                        )}
-                        <div className="stage-tags">
-                          <span className="tag">📌 {stage.nodeCount} 个瞬间</span>
-                          <span className="tag">🎞️ {stage.materialCount} 份素材</span>
+                        <div className="stage-info">
+                          <div className="stage-header-row">
+                            <span className="stage-order">第{idx + 1}章</span>
+                            <h3 className="stage-name">{stage.name}</h3>
+                          </div>
+                          <p className="stage-description">{stage.description}</p>
+                          <p className="stage-summary">{stage.summary}</p>
+                          {stage.dateRange && (
+                            <p className="stage-date-range">📅 {stage.dateRange}</p>
+                          )}
+                          <div className="stage-tags">
+                            <span className="tag">📌 {stage.nodeCount} 个瞬间</span>
+                            <span className="tag">🎞️ {stage.materialCount} 份素材</span>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {coverPickerOpen && pickerStage && (
+        <div className="cover-picker-modal" onClick={closeCoverPicker}>
+          <div className="cover-picker" onClick={e => e.stopPropagation()}>
+            <div className="picker-header">
+              <h3>
+                <span className="picker-icon">{pickerStage.icon}</span>
+                选择「{pickerStage.name}」封面
+              </h3>
+              <button className="picker-close" onClick={closeCoverPicker} disabled={savingCover}>
+                ✕
+              </button>
+            </div>
+
+            <div className="picker-current">
+              <div className="picker-current-label">
+                当前封面 {stageCovers[pickerStage.key] && <span className="custom-hint">（自定义）</span>}
+              </div>
+              <div className="picker-current-preview">
+                {getEffectiveCover(pickerStage) ? (
+                  <img src={getEffectiveCover(pickerStage)} alt="" />
+                ) : (
+                  <div className="preview-placeholder">
+                    <span>{pickerStage.icon}</span>
+                    <span>暂无封面</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="picker-section-title">
+              从本阶段图片素材中选择
+            </div>
+
+            <div className="picker-candidates">
+              {(pickerStage.candidateCovers || []).length === 0 ? (
+                <div className="no-candidates">
+                  <div className="no-cand-icon">🖼️</div>
+                  <p>本阶段暂无图片素材</p>
+                  <p className="hint">先在时间节点中上传图片吧</p>
+                </div>
+              ) : (
+                (pickerStage.candidateCovers || []).map((cand, i) => (
+                  <button
+                    key={i}
+                    className={`candidate-item ${selectedCoverUrl === cand.url ? 'selected' : ''}`}
+                    onClick={() => setSelectedCoverUrl(cand.url)}
+                  >
+                    <img src={cand.url} alt={cand.title} />
+                    <div className="candidate-info">
+                      {cand.age !== undefined && (
+                        <span className="cand-age">{cand.age}岁</span>
+                      )}
+                      {cand.title && <span className="cand-title">{cand.title}</span>}
+                    </div>
+                    {selectedCoverUrl === cand.url && (
+                      <div className="cand-selected-mark">✓</div>
+                    )}
+                  </button>
+                ))
+              )}
+            </div>
+
+            <div className="picker-footer">
+              <button
+                className="picker-clear"
+                onClick={clearCover}
+                disabled={savingCover || !stageCovers[pickerStage.key]}
+              >
+                🗑️ 清除自定义封面
+              </button>
+              <div className="picker-actions">
+                <button
+                  className="picker-cancel"
+                  onClick={closeCoverPicker}
+                  disabled={savingCover}
+                >
+                  取消
+                </button>
+                <button
+                  className="picker-save"
+                  onClick={saveCover}
+                  disabled={savingCover || selectedCoverUrl === stageCovers[pickerStage.key]}
+                >
+                  {savingCover ? '保存中...' : '✓ 保存封面'}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

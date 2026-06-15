@@ -8,36 +8,70 @@ function GrowthTrajectoryPlayer() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [playData, setPlayData] = useState(null);
+  const [stageCovers, setStageCovers] = useState({});
   const [currentIdx, setCurrentIdx] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const [progress, setProgress] = useState(0);
   const [playSpeed, setPlaySpeed] = useState(1);
+  const [waitingMedia, setWaitingMedia] = useState(false);
   const audioRefs = useRef({});
   const videoRefs = useRef({});
   const timerRef = useRef(null);
   const progressRef = useRef(null);
+  const mediaEndedCountRef = useRef(0);
+  const totalMediaRef = useRef(0);
+  const mediaTimeoutRef = useRef(null);
 
   useEffect(() => {
     loadPlaylist();
     return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-      if (progressRef.current) clearInterval(progressRef.current);
+      clearAllTimers();
     };
   }, [id]);
 
   useEffect(() => {
     stopAllMedia();
     resetProgress();
-    if (isPlaying) {
+    clearAllTimers();
+    setWaitingMedia(false);
+    mediaEndedCountRef.current = 0;
+    totalMediaRef.current = 0;
+
+    if (isPlaying && playData) {
+      handleAutoplayForCurrent();
+    }
+  }, [currentIdx, isPlaying, playData]);
+
+  useEffect(() => {
+    if (isPlaying && playData) {
       startProgressTracker();
     }
-  }, [currentIdx, isPlaying]);
+  }, [currentIdx, isPlaying, playData, waitingMedia]);
+
+  const clearAllTimers = () => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    if (progressRef.current) {
+      clearInterval(progressRef.current);
+      progressRef.current = null;
+    }
+    if (mediaTimeoutRef.current) {
+      clearTimeout(mediaTimeoutRef.current);
+      mediaTimeoutRef.current = null;
+    }
+  };
 
   const loadPlaylist = async () => {
     try {
-      const data = await growthTrajectoryApi.getPlaylist(id);
+      const [data, covers] = await Promise.all([
+        growthTrajectoryApi.getPlaylist(id),
+        growthTrajectoryApi.getCovers(id)
+      ]);
       setPlayData(data);
+      setStageCovers(covers || {});
     } catch (err) {
       console.error('加载播放列表失败:', err);
       if (err.response?.status === 404) navigate('/growth-trajectory');
@@ -48,11 +82,17 @@ function GrowthTrajectoryPlayer() {
 
   const stopAllMedia = () => {
     Object.values(audioRefs.current).forEach(a => {
-      if (a) { a.pause(); a.currentTime = 0; }
+      if (a) {
+        try { a.pause(); a.currentTime = 0; } catch (e) {}
+      }
     });
     Object.values(videoRefs.current).forEach(v => {
-      if (v) { v.pause(); v.currentTime = 0; }
+      if (v) {
+        try { v.pause(); v.currentTime = 0; } catch (e) {}
+      }
     });
+    audioRefs.current = {};
+    videoRefs.current = {};
   };
 
   const getDurationForItem = (item) => {
@@ -75,7 +115,12 @@ function GrowthTrajectoryPlayer() {
     if (!playData) return;
 
     const currentItem = playData.playlist[currentIdx];
-    if (!currentItem || currentItem.type === 'timeline_node') {
+    if (!currentItem) {
+      setProgress(100);
+      return;
+    }
+
+    if (currentItem.type === 'timeline_node' && waitingMedia) {
       setProgress(100);
       return;
     }
@@ -101,7 +146,7 @@ function GrowthTrajectoryPlayer() {
       setCurrentIdx(currentIdx + 1);
     } else {
       setIsPlaying(false);
-      if (timerRef.current) clearInterval(timerRef.current);
+      clearAllTimers();
     }
   }, [playData, currentIdx]);
 
@@ -120,23 +165,20 @@ function GrowthTrajectoryPlayer() {
   const togglePlay = () => {
     if (isPlaying) {
       setIsPlaying(false);
-      if (timerRef.current) clearInterval(timerRef.current);
-      if (progressRef.current) clearInterval(progressRef.current);
+      clearAllTimers();
+      Object.values(audioRefs.current).forEach(a => { if (a) a.pause(); });
+      Object.values(videoRefs.current).forEach(v => { if (v) v.pause(); });
     } else {
       setIsPlaying(true);
       if (!playData) return;
       if (currentIdx === playData.playlist.length - 1) {
         setCurrentIdx(0);
       }
-      scheduleNext();
-      startProgressTracker();
     }
   };
 
-  const scheduleNext = useCallback(() => {
-    if (timerRef.current) clearInterval(timerRef.current);
+  const handleAutoplayForCurrent = useCallback(() => {
     if (!playData) return;
-
     const currentItem = playData.playlist[currentIdx];
     if (!currentItem) return;
 
@@ -144,32 +186,48 @@ function GrowthTrajectoryPlayer() {
       const matIds = currentItem.materialIds || [];
       if (matIds.length > 0) {
         const materials = matIds.map(mid => playData.materials[mid]).filter(Boolean);
-        const hasMedia = materials.some(m => m.type === 'video' || m.type === 'audio');
-        if (hasMedia) return;
+        const mediaMats = materials.filter(m => m.type === 'video' || m.type === 'audio');
+        if (mediaMats.length > 0) {
+          totalMediaRef.current = mediaMats.length;
+          mediaEndedCountRef.current = 0;
+          setWaitingMedia(true);
+
+          const mediaTimeoutMs = 600000 / playSpeed;
+          mediaTimeoutRef.current = setTimeout(() => {
+            proceedToNext();
+          }, mediaTimeoutMs);
+          return;
+        }
       }
     }
 
     const duration = getDurationForItem(currentItem);
     timerRef.current = setTimeout(() => {
-      setCurrentIdx(prev => {
-        if (prev >= playData.playlist.length - 1) {
-          setIsPlaying(false);
-          if (timerRef.current) clearTimeout(timerRef.current);
-          return prev;
-        }
-        return prev + 1;
-      });
+      proceedToNext();
     }, duration);
   }, [playData, currentIdx, playSpeed]);
 
-  useEffect(() => {
-    if (isPlaying && playData) {
-      scheduleNext();
+  const proceedToNext = useCallback(() => {
+    clearAllTimers();
+    setWaitingMedia(false);
+    setCurrentIdx(prev => {
+      if (!playData) return prev;
+      if (prev >= playData.playlist.length - 1) {
+        setIsPlaying(false);
+        return prev;
+      }
+      return prev + 1;
+    });
+  }, [playData]);
+
+  const onMediaEnded = useCallback(() => {
+    mediaEndedCountRef.current += 1;
+    if (mediaEndedCountRef.current >= totalMediaRef.current) {
+      setTimeout(() => {
+        if (isPlaying) proceedToNext();
+      }, 1500);
     }
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, [currentIdx, isPlaying, playData, scheduleNext]);
+  }, [isPlaying, proceedToNext]);
 
   const getMaterialById = (mid) => playData?.materials?.[mid];
 
@@ -178,50 +236,74 @@ function GrowthTrajectoryPlayer() {
     return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
   };
 
-  const renderChapterCover = (item) => (
-    <div className="gt-cover" style={{ '--accent-color': item.stageColor }}>
-      <div className="cover-bg-pattern" />
-      {item.coverImage && (
-        <div className="cover-bg-image">
-          <img src={item.coverImage} alt="" />
-        </div>
-      )}
-      <div className="cover-content">
-        <div className="chapter-number">
-          <span className="chapter-prefix">CHAPTER</span>
-          <span className="chapter-num">{String(item.stageIdx + 1).padStart(2, '0')}</span>
-        </div>
-        <div className="chapter-icon">{item.stageIcon}</div>
-        <h2 className="chapter-name">{item.stageName}</h2>
-        <p className="chapter-description">{item.stageDescription}</p>
-        {item.dateRange && (
-          <div className="chapter-date-range">
-            <span className="date-icon">📅</span>
-            <span>{item.dateRange}</span>
+  const getEffectiveCover = (item) => {
+    const customCover = stageCovers[item.stageKey];
+    return customCover || item.coverImage;
+  };
+
+  const renderChapterCover = (item) => {
+    const effectiveCover = getEffectiveCover(item);
+    return (
+      <div className="gt-cover" style={{ '--accent-color': item.stageColor }}>
+        <div className="cover-bg-pattern" />
+        {effectiveCover && (
+          <div className="cover-bg-image">
+            <img src={effectiveCover} alt="" />
           </div>
         )}
-        <div className="chapter-stats">
-          <div className="chapter-stat">
-            <span className="stat-num">{item.nodeCount}</span>
-            <span className="stat-label">珍贵瞬间</span>
+        <div className="cover-content">
+          <div className="chapter-number">
+            <span className="chapter-prefix">CHAPTER</span>
+            <span className="chapter-num">{String(item.stageIdx + 1).padStart(2, '0')}</span>
           </div>
-          <div className="stat-divider">·</div>
-          <div className="chapter-stat">
-            <span className="stat-num">{item.materialCount}</span>
-            <span className="stat-label">回忆素材</span>
+          <div className="chapter-icon">{item.stageIcon}</div>
+          <h2 className="chapter-name">{item.stageName}</h2>
+          <p className="chapter-description">{item.stageDescription}</p>
+          {item.dateRange && (
+            <div className="chapter-date-range">
+              <span className="date-icon">📅</span>
+              <span>{item.dateRange}</span>
+            </div>
+          )}
+          <div className="chapter-stats">
+            <div className="chapter-stat">
+              <span className="stat-num">{item.nodeCount}</span>
+              <span className="stat-label">珍贵瞬间</span>
+            </div>
+            <div className="stat-divider">·</div>
+            <div className="chapter-stat">
+              <span className="stat-num">{item.materialCount}</span>
+              <span className="stat-label">回忆素材</span>
+            </div>
           </div>
+          {item.summary && (
+            <p className="chapter-summary">「{item.summary}」</p>
+          )}
+          {stageCovers[item.stageKey] && (
+            <div className="custom-cover-badge">✨ 自定义封面</div>
+          )}
         </div>
-        {item.summary && (
-          <p className="chapter-summary">「{item.summary}」</p>
-        )}
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderTimelineNode = (item) => {
     const materials = (item.materialIds || [])
       .map(getMaterialById)
       .filter(Boolean);
+
+    const attachMediaListeners = (element, matId) => {
+      if (!element) return;
+      if (element._listenersAttached) return;
+      element._listenersAttached = true;
+      element.addEventListener('ended', onMediaEnded);
+      element.addEventListener('play', () => {
+        if (mediaTimeoutRef.current) {
+          clearTimeout(mediaTimeoutRef.current);
+          mediaTimeoutRef.current = null;
+        }
+      });
+    };
 
     return (
       <div className="gt-node">
@@ -234,6 +316,12 @@ function GrowthTrajectoryPlayer() {
             <span className="tag-icon">📖</span>
             <span>{item.stageName}</span>
           </div>
+          {waitingMedia && isPlaying && (
+            <div className="waiting-media-hint">
+              <span className="hint-icon">🎵</span>
+              等待音视频播放完毕后自动继续
+            </div>
+          )}
         </div>
 
         <div className="node-date">{item.displayDate}</div>
@@ -269,7 +357,10 @@ function GrowthTrajectoryPlayer() {
                     </div>
                     {mat.title && <h4 className="mat-title">{mat.title}</h4>}
                     <audio
-                      ref={el => audioRefs.current[mat.id] = el}
+                      ref={(el) => {
+                        audioRefs.current[mat.id] = el;
+                        attachMediaListeners(el, mat.id);
+                      }}
                       src={mat.url}
                       controls
                     />
@@ -280,7 +371,10 @@ function GrowthTrajectoryPlayer() {
                 return (
                   <div key={mat.id} className="mat-item mat-video">
                     <video
-                      ref={el => videoRefs.current[mat.id] = el}
+                      ref={(el) => {
+                        videoRefs.current[mat.id] = el;
+                        attachMediaListeners(el, mat.id);
+                      }}
                       src={mat.url}
                       controls
                     />
@@ -457,6 +551,8 @@ function GrowthTrajectoryPlayer() {
 
   const currentItem = playData.playlist[currentIdx];
   const totalItems = playData.playlist.length;
+  const shouldShowProgress = isPlaying &&
+    !(currentItem?.type === 'timeline_node' && waitingMedia);
 
   return (
     <div className={`growth-trajectory-player ${showSidebar ? 'sidebar-open' : ''}`}>
@@ -490,12 +586,22 @@ function GrowthTrajectoryPlayer() {
       </div>
 
       <div className="player-controls-area">
-        {isPlaying && currentItem?.type !== 'timeline_node' && (
+        {shouldShowProgress && (
           <div className="progress-track">
             <div
               className="progress-bar"
               style={{ width: `${progress}%` }}
             />
+          </div>
+        )}
+
+        {currentItem?.type === 'timeline_node' && waitingMedia && isPlaying && (
+          <div className="media-progress-hint">
+            <span className="media-dot" />
+            正在播放音视频，请耐心聆听...
+            <span className="media-count">
+              ({mediaEndedCountRef.current}/{totalMediaRef.current} 已完成)
+            </span>
           </div>
         )}
 
@@ -600,6 +706,9 @@ function GrowthTrajectoryPlayer() {
                   {p.type === 'material_review' && `${p.stageIcon} ${p.stageName} 回顾`}
                 </span>
               </div>
+              {stageCovers[p.stageKey] && p.type === 'chapter_cover' && (
+                <span className="item-badge">✨</span>
+              )}
             </button>
           ))}
         </div>

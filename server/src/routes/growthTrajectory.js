@@ -26,7 +26,7 @@ const getStage = (age) => {
   return STAGE_RANGES.find(s => age >= s.minAge && age < s.maxAge) || STAGE_RANGES[STAGE_RANGES.length - 1];
 };
 
-const generateStages = (timelines, birthDate) => {
+const generateStages = (timelines, birthDate, materialsMap) => {
   const stageMap = new Map();
   STAGE_RANGES.forEach(s => {
     stageMap.set(s.key, {
@@ -34,7 +34,8 @@ const generateStages = (timelines, birthDate) => {
       nodes: [],
       materialCount: 0,
       startDate: null,
-      endDate: null
+      endDate: null,
+      candidateCovers: []
     });
   });
 
@@ -47,8 +48,25 @@ const generateStages = (timelines, birthDate) => {
     const stage = getStage(age);
     const stageData = stageMap.get(stage.key);
     if (stageData) {
+      const nodeImageMats = (node.materialIds || [])
+        .map(id => materialsMap?.get(id))
+        .filter(m => m && m.type === 'image');
+
+      nodeImageMats.forEach(m => {
+        stageData.candidateCovers.push({
+          url: m.url,
+          title: m.title || node.title,
+          nodeId: node.id,
+          materialId: m.id,
+          age
+        });
+      });
+
+      const nodeCoverImage = node.coverImage || nodeImageMats[0]?.url || null;
+
       stageData.nodes.push({
         ...node,
+        coverImage: nodeCoverImage,
         age,
         displayDate: formatDate(node.eventDate)
       });
@@ -68,10 +86,8 @@ const generateStages = (timelines, birthDate) => {
       ...s,
       nodeCount: s.nodes.length,
       coverImage: s.nodes.find(n => n.coverImage)?.coverImage ||
-        s.nodes.find(n => {
-          const matIds = n.materialIds || [];
-          return matIds.length > 0;
-        })?.nodes?.[0]?.url || null,
+        s.candidateCovers[0]?.url || null,
+      candidateCovers: s.candidateCovers,
       dateRange: s.startDate && s.endDate ? `${formatDate(s.startDate)} - ${formatDate(s.endDate)}` : null,
       summary: generateStageSummary(s)
     }));
@@ -177,7 +193,7 @@ export default async function growthTrajectoryRoutes(fastify) {
       return { error: '缺少出生日期或最早事件日期，无法生成阶段' };
     }
 
-    const stages = generateStages(timelinesWithImages, birthDate);
+    const stages = generateStages(timelinesWithImages, birthDate, materialsMap);
 
     return {
       exhibition: {
@@ -223,7 +239,7 @@ export default async function growthTrajectoryRoutes(fastify) {
       return { error: '缺少出生日期或最早事件日期，无法生成播放列表' };
     }
 
-    const stages = generateStages(timelinesWithImages, birthDate);
+    const stages = generateStages(timelinesWithImages, birthDate, materialsMap);
     const playlist = generateFlattenedPlayList(stages);
 
     const materialsById = {};
