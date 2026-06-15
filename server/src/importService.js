@@ -32,7 +32,7 @@ const readJsonFile = (filePath) => {
   }
 };
 
-const copyImportedFiles = async (extractedDir) => {
+const copyImportedFiles = async (extractedDir, dryRun = false) => {
   const filesDir = path.join(extractedDir, 'files');
   if (!fs.existsSync(filesDir)) {
     return { copied: [], skipped: [] };
@@ -60,7 +60,9 @@ const copyImportedFiles = async (extractedDir) => {
 
   for (const { fullPath, relativePath } of allFiles) {
     const destPath = path.join(UPLOADS_DIR, relativePath);
-    ensureDir(path.dirname(destPath));
+    if (!dryRun) {
+      ensureDir(path.dirname(destPath));
+    }
     if (fs.existsSync(destPath)) {
       const srcHash = await computeFileHash(fullPath);
       const destHash = await computeFileHash(destPath);
@@ -69,7 +71,9 @@ const copyImportedFiles = async (extractedDir) => {
         continue;
       }
     }
-    fs.copyFileSync(fullPath, destPath);
+    if (!dryRun) {
+      fs.copyFileSync(fullPath, destPath);
+    }
     copied.push({ path: relativePath });
   }
 
@@ -345,13 +349,13 @@ export const importBackup = async (zipPath, options = {}) => {
       }
     }
 
-    const fileResult = await copyImportedFiles(tempDir);
+    const fileResult = await copyImportedFiles(tempDir, dryRun);
 
     let importSummary = { filesCopied: fileResult.copied.length, filesSkipped: fileResult.skipped.length };
 
-    if (!dryRun) {
-      if (manifest.scope?.type === 'exhibition') {
-        const regenerated = regenerateIds(manifest.data);
+    if (manifest.scope?.type === 'exhibition') {
+      const regenerated = regenerateIds(manifest.data);
+      if (!dryRun) {
         const db = readDB();
         if (regenerated.exhibition) db.exhibitions.push(regenerated.exhibition);
         db.materials.push(...regenerated.materials);
@@ -361,19 +365,21 @@ export const importBackup = async (zipPath, options = {}) => {
         db.familyMembers.push(...regenerated.relatedMembers);
         db.familyAlbums.push(...regenerated.relatedFamilyAlbums);
         writeDB(db);
-        importSummary = {
-          ...importSummary,
-          scope: 'exhibition',
-          exhibitionId: regenerated.exhibition?.id,
-          exhibitionTitle: regenerated.exhibition?.title,
-          materialsImported: regenerated.materials.length,
-          timelinesImported: regenerated.timelines.length,
-          messagesImported: regenerated.messages.length,
-          membersImported: regenerated.relatedMembers.length,
-          albumsImported: regenerated.relatedFamilyAlbums.length
-        };
-      } else if (manifest.scope?.type === 'full') {
-        const merged = mergeFullData(manifest.data, { overwrite, idConflictStrategy });
+      }
+      importSummary = {
+        ...importSummary,
+        scope: 'exhibition',
+        exhibitionId: regenerated.exhibition?.id,
+        exhibitionTitle: regenerated.exhibition?.title,
+        materialsImported: regenerated.materials.length,
+        timelinesImported: regenerated.timelines.length,
+        messagesImported: regenerated.messages.length,
+        membersImported: regenerated.relatedMembers.length,
+        albumsImported: regenerated.relatedFamilyAlbums.length
+      };
+    } else if (manifest.scope?.type === 'full') {
+      const merged = mergeFullData(manifest.data, { overwrite, idConflictStrategy });
+      if (!dryRun) {
         const db = readDB();
         if (overwrite) {
           db.exhibitions = merged.exhibitions;
@@ -397,17 +403,17 @@ export const importBackup = async (zipPath, options = {}) => {
           db.shareViews.push(...merged.shareViews);
         }
         writeDB(db);
-        importSummary = {
-          ...importSummary,
-          scope: 'full',
-          exhibitionsImported: merged.exhibitions.length,
-          materialsImported: merged.materials.length,
-          timelinesImported: merged.timelines.length,
-          messagesImported: merged.messages.length,
-          membersImported: merged.familyMembers.length,
-          albumsImported: merged.familyAlbums.length
-        };
       }
+      importSummary = {
+        ...importSummary,
+        scope: 'full',
+        exhibitionsImported: merged.exhibitions.length,
+        materialsImported: merged.materials.length,
+        timelinesImported: merged.timelines.length,
+        messagesImported: merged.messages.length,
+        membersImported: merged.familyMembers.length,
+        albumsImported: merged.familyAlbums.length
+      };
     }
 
     return {
