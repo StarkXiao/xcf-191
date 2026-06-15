@@ -22,7 +22,10 @@ const defaultDB = {
   ritualMessages: [],
   ritualPlayStates: [],
   collections: [],
-  growthTrajectoryCovers: []
+  growthTrajectoryCovers: [],
+  relicCategories: [],
+  relics: [],
+  archiveRules: []
 };
 
 export const initStorage = () => {

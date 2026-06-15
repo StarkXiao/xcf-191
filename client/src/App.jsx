@@ -22,6 +22,7 @@ import CollectionEditor from './pages/CollectionEditor.jsx';
 import CollectionDetail from './pages/CollectionDetail.jsx';
 import GrowthTrajectoryHome from './pages/GrowthTrajectoryHome.jsx';
 import GrowthTrajectoryPlayer from './pages/GrowthTrajectoryPlayer.jsx';
+import DigitalRelicCenter from './pages/DigitalRelicCenter.jsx';
 import './styles/App.scss';
 
 function App() {
@@ -71,6 +72,7 @@ function App() {
           <Route path="/collections/:id/edit" element={<CollectionEditor />} />
           <Route path="/growth-trajectory" element={<GrowthTrajectoryHome />} />
           <Route path="/growth-trajectory/:id/player" element={<GrowthTrajectoryPlayer />} />
+          <Route path="/digital-relics" element={<DigitalRelicCenter />} />
         </Routes>
       </main>
     </div>

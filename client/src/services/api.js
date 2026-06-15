@@ -206,4 +206,33 @@ export const growthTrajectoryApi = {
   getCovers: (exhibitionId) => request.get(`/growth-trajectories/${exhibitionId}/covers`).then(r => r.data)
 };
 
+export const relicApi = {
+  listCategories: () => request.get('/relics/categories').then(r => r.data),
+  createCategory: (data) => request.post('/relics/categories', data).then(r => r.data),
+  updateCategory: (id, data) => request.put(`/relics/categories/${id}`, data).then(r => r.data),
+  removeCategory: (id) => request.delete(`/relics/categories/${id}`).then(r => r.data),
+
+  listRelics: (params) => request.get('/relics/relics', { params }).then(r => r.data),
+  getRelic: (id) => request.get(`/relics/relics/${id}`).then(r => r.data),
+  createRelic: (data) => request.post('/relics/relics', data).then(r => r.data),
+  updateRelic: (id, data) => request.put(`/relics/relics/${id}`, data).then(r => r.data),
+  removeRelic: (id) => request.delete(`/relics/relics/${id}`).then(r => r.data),
+
+  batchArchive: (ids, archived) => request.post('/relics/relics/batch/archive', { ids, archived }).then(r => r.data),
+  batchMigrate: (ids, options) => request.post('/relics/relics/batch/migrate', { ids, ...options }).then(r => r.data),
+  batchDelete: (ids) => request.post('/relics/relics/batch/delete', { ids }).then(r => r.data),
+
+  importFromMaterial: (relicId, materialId, categoryId) =>
+    request.post(`/relics/relics/${relicId}/import-from-material`, { materialId, categoryId }).then(r => r.data),
+
+  listRules: () => request.get('/relics/rules').then(r => r.data),
+  createRule: (data) => request.post('/relics/rules', data).then(r => r.data),
+  updateRule: (id, data) => request.put(`/relics/rules/${id}`, data).then(r => r.data),
+  removeRule: (id) => request.delete(`/relics/rules/${id}`).then(r => r.data),
+  executeRule: (id) => request.post(`/relics/rules/${id}/execute`).then(r => r.data),
+  executeAllRules: () => request.post('/relics/rules/execute-all').then(r => r.data),
+
+  getStats: () => request.get('/relics/stats/summary').then(r => r.data)
+};
+
 export default request;

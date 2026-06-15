@@ -21,6 +21,7 @@ function Header() {
           <Link to="/growth-trajectory" className="nav-link">成长轨迹馆</Link>
           <Link to="/family-albums" className="nav-link">家庭纪念册</Link>
           <Link to="/family-members" className="nav-link">家庭成员</Link>
+          <Link to="/digital-relics" className="nav-link">数字遗物</Link>
           <Link to="/backup" className="nav-link">备份管理</Link>
           <button className="nav-btn create-btn" onClick={() => navigate('/create')}>
             <span className="btn-icon">+</span>

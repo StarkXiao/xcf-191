@@ -80,7 +80,6 @@ export default async function collectionRoutes(fastify) {
       .sort((a, b) => new Date(a.eventDate) - new Date(b.eventDate));
 
     const sortedExhibitions = [...collectionExhibitions];
-    const config = collection.config || {};
     if (config.sortBy === 'name') {
       sortedExhibitions.sort((a, b) => a.title.localeCompare(b.title));
     } else if (config.sortBy === 'date') {
