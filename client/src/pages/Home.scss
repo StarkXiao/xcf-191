@@ -196,10 +196,14 @@
 
 .action-cards {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 20px;
 
-  @media (max-width: 768px) {
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  @media (max-width: 600px) {
     grid-template-columns: 1fr;
   }
 }
@@ -223,6 +227,11 @@
     border-color: rgba(255, 255, 255, 0.15);
   }
 
+  &.ritual-card {
+    background: linear-gradient(135deg, rgba(221, 160, 221, 0.08), rgba(255, 182, 193, 0.08));
+    border: 1px solid rgba(221, 160, 221, 0.25);
+  }
+
   &.appointment-card {
     background: linear-gradient(135deg, rgba(255, 215, 0, 0.08), rgba(244, 164, 96, 0.08));
     border: 1px solid rgba(255, 215, 0, 0.2);
@@ -241,6 +250,10 @@
   border-radius: $radius-md;
   font-size: 32px;
   flex-shrink: 0;
+
+  .ritual-card & {
+    background: linear-gradient(135deg, rgba(221, 160, 221, 0.25), rgba(255, 182, 193, 0.25));
+  }
 
   .appointment-card & {
     background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(244, 164, 96, 0.2));

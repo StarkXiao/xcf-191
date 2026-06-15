@@ -14,6 +14,9 @@ import FamilyTimeline from './pages/FamilyTimeline.jsx';
 import BackupManager from './components/BackupManager.jsx';
 import AppointmentAdmin from './pages/AppointmentAdmin.jsx';
 import AppointmentBooking from './pages/AppointmentBooking.jsx';
+import MemorialRitualList from './pages/MemorialRitualList.jsx';
+import MemorialRitualManager from './pages/MemorialRitualManager.jsx';
+import MemorialRitualPlayer from './pages/MemorialRitualPlayer.jsx';
 import './styles/App.scss';
 
 function App() {
@@ -53,6 +56,10 @@ function App() {
           <Route path="/appointments" element={<AppointmentAdmin />} />
           <Route path="/appointment/book" element={<AppointmentBooking />} />
           <Route path="/appointment/book/:exhibitionId" element={<AppointmentBooking />} />
+          <Route path="/memorial-rituals" element={<MemorialRitualList />} />
+          <Route path="/memorial-rituals/create" element={<MemorialRitualManager />} />
+          <Route path="/memorial-rituals/:id/edit" element={<MemorialRitualManager />} />
+          <Route path="/memorial-rituals/:id/player" element={<MemorialRitualPlayer />} />
         </Routes>
       </main>
     </div>

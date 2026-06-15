@@ -14,6 +14,7 @@ function Header() {
         </Link>
         <nav className="nav">
           <Link to="/" className="nav-link">展厅列表</Link>
+          <Link to="/memorial-rituals" className="nav-link">纪念仪式</Link>
           <Link to="/appointment/book" className="nav-link">访客预约</Link>
           <Link to="/appointments" className="nav-link">预约管理</Link>
           <Link to="/family-albums" className="nav-link">家庭纪念册</Link>

@@ -17,7 +17,10 @@ const defaultDB = {
   appointments: [],
   timeSlots: [],
   reminderTemplates: [],
-  visitRecords: []
+  visitRecords: [],
+  memorialRituals: [],
+  ritualMessages: [],
+  ritualPlayStates: []
 };
 
 export const initStorage = () => {

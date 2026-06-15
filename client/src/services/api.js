@@ -162,4 +162,25 @@ export const visitRecordApi = {
   getStats: (params) => request.get('/visit-records/stats/summary', { params }).then(r => r.data)
 };
 
+export const memorialRitualApi = {
+  list: (exhibitionId) => request.get('/memorial-rituals', { params: { exhibitionId } }).then(r => r.data),
+  get: (id) => request.get(`/memorial-rituals/${id}`).then(r => r.data),
+  create: (data) => request.post('/memorial-rituals', data).then(r => r.data),
+  update: (id, data) => request.put(`/memorial-rituals/${id}`, data).then(r => r.data),
+  remove: (id) => request.delete(`/memorial-rituals/${id}`).then(r => r.data),
+  addStep: (id, data) => request.post(`/memorial-rituals/${id}/steps`, data).then(r => r.data),
+  updateStep: (id, stepId, data) => request.put(`/memorial-rituals/${id}/steps/${stepId}`, data).then(r => r.data),
+  removeStep: (id, stepId) => request.delete(`/memorial-rituals/${id}/steps/${stepId}`).then(r => r.data),
+  reorderSteps: (id, stepOrders) => request.post(`/memorial-rituals/${id}/steps/reorder`, { stepOrders }).then(r => r.data),
+  addMusic: (id, data) => request.post(`/memorial-rituals/${id}/music`, data).then(r => r.data),
+  updateMusic: (id, musicId, data) => request.put(`/memorial-rituals/${id}/music/${musicId}`, data).then(r => r.data),
+  removeMusic: (id, musicId) => request.delete(`/memorial-rituals/${id}/music/${musicId}`).then(r => r.data),
+  reorderMusic: (id, musicOrders) => request.post(`/memorial-rituals/${id}/music/reorder`, { musicOrders }).then(r => r.data),
+  listMessages: (id) => request.get(`/memorial-rituals/${id}/messages`).then(r => r.data),
+  addMessage: (id, data) => request.post(`/memorial-rituals/${id}/messages`, data).then(r => r.data),
+  removeMessage: (id, messageId) => request.delete(`/memorial-rituals/${id}/messages/${messageId}`).then(r => r.data),
+  getPlayState: (id) => request.get(`/memorial-rituals/${id}/play-state`).then(r => r.data),
+  updatePlayState: (id, data) => request.put(`/memorial-rituals/${id}/play-state`, data).then(r => r.data)
+};
+
 export default request;

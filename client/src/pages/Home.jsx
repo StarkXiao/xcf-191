@@ -60,6 +60,13 @@ function Home() {
 
       <section className="quick-actions">
         <div className="action-cards">
+          <Link to="/memorial-rituals" className="action-card ritual-card">
+            <div className="action-icon">🕯️</div>
+            <div className="action-info">
+              <h3>纪念仪式</h3>
+              <p>配置专属仪式流程，播放温馨追忆</p>
+            </div>
+          </Link>
           <Link to="/appointment/book" className="action-card appointment-card">
             <div className="action-icon">✿</div>
             <div className="action-info">
