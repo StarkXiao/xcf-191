@@ -16,6 +16,37 @@
   }
 }
 
+.visitor-identity-bar {
+  @include flex-center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: $radius-md;
+
+  .identity-label {
+    color: $text-secondary;
+    font-size: 13px;
+  }
+
+  .identity-select {
+    padding: 6px 12px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid $border-color;
+    border-radius: $radius-sm;
+    color: $text-primary;
+    font-size: 13px;
+    outline: none;
+    cursor: pointer;
+    min-width: 140px;
+
+    &:focus {
+      border-color: $accent-gold;
+    }
+  }
+}
+
 .message-form {
   @include glass;
   border-radius: $radius-lg;
@@ -23,11 +54,28 @@
   margin-bottom: 36px;
 
   .form-row {
-    margin-bottom: 14px;
+    margin-bottom: 16px;
+
+    &.form-row-inline {
+      @include flex;
+      gap: 16px;
+
+      .form-field {
+        flex: 1;
+      }
+    }
+  }
+
+  .field-label-sm {
+    display: block;
+    color: $text-secondary;
+    font-size: 13px;
+    margin-bottom: 8px;
   }
 }
 
-.author-input {
+.author-input,
+.group-select {
   width: 100%;
   padding: 12px 16px;
   background: rgba(0, 0, 0, 0.3);
@@ -37,6 +85,7 @@
   font-size: 14px;
   outline: none;
   transition: border-color $transition-fast;
+  font-family: inherit;
 
   &::placeholder {
     color: $text-muted;
@@ -45,6 +94,15 @@
   &:focus {
     border-color: $accent-gold;
   }
+}
+
+.group-select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23999' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
 }
 
 .content-textarea {
@@ -70,8 +128,104 @@
   }
 }
 
+.visibility-options {
+  @include flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.visibility-option {
+  @include flex-center;
+  gap: 10px;
+  flex: 1;
+  min-width: 140px;
+  padding: 12px 16px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid $border-color;
+  border-radius: $radius-md;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  input[type="radio"] {
+    margin: 0;
+    accent-color: $accent-gold;
+  }
+
+  .visibility-info {
+    @include flex-col;
+    gap: 2px;
+  }
+
+  .visibility-name {
+    color: $text-primary;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .visibility-desc {
+    color: $text-muted;
+    font-size: 11px;
+  }
+
+  &.active {
+    border-color: $accent-gold;
+    background: rgba($accent-gold, 0.1);
+  }
+
+  &:hover {
+    border-color: rgba($accent-gold, 0.5);
+  }
+}
+
+.group-checkboxes {
+  @include flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.group-checkbox {
+  @include flex-center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid $border-color;
+  border-radius: $radius-full;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  input[type="checkbox"] {
+    margin: 0;
+    accent-color: $accent-gold;
+  }
+
+  .group-color-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
+  .group-name {
+    color: $text-secondary;
+    font-size: 13px;
+  }
+
+  &.checked {
+    border-color: $accent-gold;
+    background: rgba($accent-gold, 0.1);
+
+    .group-name {
+      color: $text-primary;
+    }
+  }
+
+  &:hover {
+    border-color: rgba($accent-gold, 0.5);
+  }
+}
+
 .form-actions {
   @include flex-between;
+  margin-top: 20px;
 }
 
 .char-count {
@@ -152,8 +306,9 @@
 
 .msg-header {
   @include flex-center;
-  gap: 12px;
+  gap: 8px;
   margin-bottom: 6px;
+  flex-wrap: wrap;
 }
 
 .msg-author {
@@ -162,9 +317,25 @@
   font-weight: 500;
 }
 
+.msg-group-tag {
+  padding: 2px 8px;
+  border-radius: $radius-full;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.msg-visibility-tag {
+  padding: 2px 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: $radius-full;
+  font-size: 11px;
+  color: $text-muted;
+}
+
 .msg-time {
   color: $text-muted;
   font-size: 12px;
+  margin-left: auto;
 }
 
 .msg-text {

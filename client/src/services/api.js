@@ -12,7 +12,11 @@ export const exhibitionApi = {
   get: (id) => request.get(`/exhibitions/${id}`).then(r => r.data),
   create: (data) => request.post('/exhibitions', data).then(r => r.data),
   update: (id, data) => request.put(`/exhibitions/${id}`, data).then(r => r.data),
-  remove: (id) => request.delete(`/exhibitions/${id}`).then(r => r.data)
+  remove: (id) => request.delete(`/exhibitions/${id}`).then(r => r.data),
+  getVisitorGroups: (id) => request.get(`/exhibitions/${id}/visitor-groups`).then(r => r.data),
+  addVisitorGroup: (id, data) => request.post(`/exhibitions/${id}/visitor-groups`, data).then(r => r.data),
+  updateVisitorGroup: (id, groupId, data) => request.put(`/exhibitions/${id}/visitor-groups/${groupId}`, data).then(r => r.data),
+  removeVisitorGroup: (id, groupId) => request.delete(`/exhibitions/${id}/visitor-groups/${groupId}`).then(r => r.data)
 };
 
 export const materialApi = {
@@ -32,8 +36,9 @@ export const timelineApi = {
 };
 
 export const messageApi = {
-  list: (exhibitionId) => request.get('/messages', { params: { exhibitionId } }).then(r => r.data),
+  list: (exhibitionId, visitorGroupId, isAdmin) => request.get('/messages', { params: { exhibitionId, visitorGroupId, isAdmin } }).then(r => r.data),
   create: (data) => request.post('/messages', data).then(r => r.data),
+  update: (id, data) => request.put(`/messages/${id}`, data).then(r => r.data),
   remove: (id) => request.delete(`/messages/${id}`).then(r => r.data)
 };
 

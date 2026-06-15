@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { shareApi } from '../services/api.js';
+import { shareApi, exhibitionApi } from '../services/api.js';
 import './ShareManager.scss';
 
 function ShareManager({ exhibitionId, exhibitionTitle }) {
   const [shares, setShares] = useState([]);
+  const [visitorGroups, setVisitorGroups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingShare, setEditingShare] = useState(null);
@@ -17,7 +18,8 @@ function ShareManager({ exhibitionId, exhibitionTitle }) {
     allowDownload: false,
     allowTimeline: true,
     allowMessages: false,
-    watermark: ''
+    watermark: '',
+    visitorGroupId: ''
   });
   const [formErrors, setFormErrors] = useState({});
   const [copySuccess, setCopySuccess] = useState('');
@@ -31,8 +33,12 @@ function ShareManager({ exhibitionId, exhibitionTitle }) {
   const loadShares = async () => {
     try {
       setLoading(true);
-      const data = await shareApi.list(exhibitionId);
-      setShares(data);
+      const [sharesData, groupsData] = await Promise.all([
+        shareApi.list(exhibitionId),
+        exhibitionApi.getVisitorGroups(exhibitionId)
+      ]);
+      setShares(sharesData);
+      setVisitorGroups(groupsData);
     } catch (err) {
       console.error('加载分享列表失败:', err);
     } finally {
@@ -49,7 +55,8 @@ function ShareManager({ exhibitionId, exhibitionTitle }) {
       allowDownload: false,
       allowTimeline: true,
       allowMessages: false,
-      watermark: ''
+      watermark: '',
+      visitorGroupId: ''
     });
     setFormErrors({});
   };
@@ -70,7 +77,8 @@ function ShareManager({ exhibitionId, exhibitionTitle }) {
       allowDownload: share.allowDownload,
       allowTimeline: share.allowTimeline,
       allowMessages: share.allowMessages,
-      watermark: share.watermark || ''
+      watermark: share.watermark || '',
+      visitorGroupId: share.visitorGroupId || ''
     });
     setFormErrors({});
     setShowCreateModal(true);
@@ -100,7 +108,8 @@ function ShareManager({ exhibitionId, exhibitionTitle }) {
         ...formData,
         maxViews: formData.maxViews ? Number(formData.maxViews) : null,
         expiresAt: formData.expiresAt ? new Date(formData.expiresAt).toISOString() : null,
-        password: formData.password || null
+        password: formData.password || null,
+        visitorGroupId: formData.visitorGroupId || null
       };
 
       if (editingShare) {
@@ -337,6 +346,11 @@ function ShareManager({ exhibitionId, exhibitionTitle }) {
                     {share.allowDownload ? '✓' : '✗'} 下载
                   </span>
                   {share.watermark && <span className="perm-tag perm-on">水印: {share.watermark}</span>}
+                  {share.visitorGroupId && (
+                    <span className="perm-tag perm-on">
+                      👥 {visitorGroups.find(g => g.id === share.visitorGroupId)?.name || '访客分组'}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -455,6 +469,23 @@ function ShareManager({ exhibitionId, exhibitionTitle }) {
                   onChange={(e) => setFormData({ ...formData, watermark: e.target.value })}
                   placeholder="例如: 星屑纪念馆 专属"
                 />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">
+                  访客身份分组
+                  <span className="label-hint">分享链接访问者的身份，用于留言可见范围控制</span>
+                </label>
+                <select
+                  className="form-input"
+                  value={formData.visitorGroupId}
+                  onChange={(e) => setFormData({ ...formData, visitorGroupId: e.target.value })}
+                >
+                  <option value="">不设置（公开访客）</option>
+                  {visitorGroups.map(group => (
+                    <option key={group.id} value={group.id}>{group.name}</option>
+                  ))}
+                </select>
               </div>
 
               {formErrors.submit && (

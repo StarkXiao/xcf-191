@@ -1,0 +1,283 @@
+@import '../styles/variables.scss';
+@import '../styles/mixins.scss';
+
+.visitor-group-manager {
+  max-width: 640px;
+  margin: 0 auto;
+
+  .manager-header {
+    margin-bottom: 24px;
+
+    .manager-title {
+      font-size: 18px;
+      color: $text-primary;
+      margin-bottom: 6px;
+    }
+
+    .manager-desc {
+      font-size: 13px;
+      color: $text-muted;
+      margin-bottom: 16px;
+    }
+  }
+}
+
+.add-group-btn {
+  @include flex-center;
+  gap: 6px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, $accent-gold, $accent-warm);
+  color: $bg-primary;
+  border: none;
+  border-radius: $radius-full;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  .btn-icon {
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $shadow-glow;
+  }
+}
+
+.group-form {
+  @include glass;
+  border-radius: $radius-md;
+  padding: 20px;
+  margin-bottom: 20px;
+
+  .form-row {
+    margin-bottom: 16px;
+
+    .field-label {
+      display: block;
+      color: $text-secondary;
+      font-size: 13px;
+      margin-bottom: 10px;
+      font-weight: 500;
+    }
+  }
+
+  .form-fields-inline {
+    @include flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .name-input {
+    flex: 1;
+    padding: 10px 14px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid $border-color;
+    border-radius: $radius-sm;
+    color: $text-primary;
+    font-size: 14px;
+    outline: none;
+    transition: border-color $transition-fast;
+
+    &::placeholder {
+      color: $text-muted;
+    }
+
+    &:focus {
+      border-color: $accent-gold;
+    }
+  }
+
+  .color-picker {
+    @include flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    max-width: 200px;
+  }
+
+  .color-option {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all $transition-fast;
+
+    &.active {
+      border-color: $text-primary;
+      transform: scale(1.1);
+    }
+
+    &:hover {
+      transform: scale(1.1);
+    }
+  }
+
+  .color-preview {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    @include flex-center;
+    color: $bg-primary;
+    font-weight: 600;
+    font-size: 16px;
+  }
+
+  .form-actions {
+    @include flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+
+  .btn {
+    padding: 8px 20px;
+    border-radius: $radius-full;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all $transition-fast;
+    border: none;
+
+    &.btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: $text-secondary;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.15);
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+
+    &.btn-primary {
+      background: linear-gradient(135deg, $accent-gold, $accent-warm);
+      color: $bg-primary;
+
+      &:hover {
+        transform: translateY(-1px);
+        box-shadow: $shadow-glow;
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+
+.groups-list {
+  margin-bottom: 24px;
+
+  .empty-state {
+    text-align: center;
+    padding: 48px 20px;
+
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+
+    p {
+      color: $text-muted;
+      font-size: 14px;
+    }
+  }
+}
+
+.group-item {
+  @include glass;
+  border-radius: $radius-md;
+  padding: 14px 18px;
+  margin-bottom: 10px;
+  @include flex;
+  align-items: center;
+  gap: 14px;
+  transition: all $transition-fast;
+
+  &:hover {
+    border-color: rgba(255, 255, 255, 0.15);
+    transform: translateX(4px);
+  }
+
+  .group-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    @include flex-center;
+    color: $bg-primary;
+    font-weight: 600;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .group-info {
+    flex: 1;
+    @include flex-col;
+    gap: 2px;
+
+    .group-name {
+      color: $text-primary;
+      font-size: 15px;
+      font-weight: 500;
+    }
+
+    .group-color-label {
+      font-size: 11px;
+    }
+  }
+
+  .group-actions {
+    @include flex;
+    gap: 6px;
+
+    .action-btn {
+      width: 32px;
+      height: 32px;
+      @include flex-center;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.05);
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all $transition-fast;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      &.delete-btn:hover {
+        background: rgba(255, 80, 80, 0.2);
+      }
+    }
+  }
+}
+
+.tips-section {
+  background: rgba($accent-gold, 0.08);
+  border: 1px solid rgba($accent-gold, 0.2);
+  border-radius: $radius-md;
+  padding: 16px 20px;
+
+  .tips-title {
+    color: $accent-gold;
+    font-size: 14px;
+    margin-bottom: 10px;
+  }
+
+  .tips-list {
+    margin: 0;
+    padding-left: 20px;
+
+    li {
+      color: $text-secondary;
+      font-size: 13px;
+      line-height: 1.8;
+    }
+  }
+}

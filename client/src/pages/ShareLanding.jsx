@@ -84,27 +84,42 @@ function ShareLanding() {
     doVerify(password);
   };
 
+  const getShareVisitorGroup = () => {
+    return shareData?.share?.visitorGroupId || null;
+  };
+
+  const getVisitorSessionId = () => {
+    const key = `visitor_session_share_${code}`;
+    let sessionId = localStorage.getItem(key);
+    if (!sessionId) {
+      sessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      localStorage.setItem(key, sessionId);
+    }
+    return sessionId;
+  };
+
   const handleSubmitMessage = async (e) => {
     e.preventDefault();
     if (!newMessage.trim()) return;
     if (!shareData?.data?.exhibition?.id) return;
 
+    const visitorGroupId = getShareVisitorGroup();
+    const visitorSessionId = getVisitorSessionId();
+
     try {
       setSubmitting(true);
-      await messageApi.create({
-        exhibitionId: shareData.data.exhibition.id,
-        content: newMessage.trim(),
-        author: newAuthor.trim() || '匿名访客'
-      });
-
-      const messages = shareData.data.messages || [];
-      messages.push({
-        id: Date.now(),
+      const newMsg = await messageApi.create({
         exhibitionId: shareData.data.exhibition.id,
         content: newMessage.trim(),
         author: newAuthor.trim() || '匿名访客',
-        createdAt: new Date().toISOString()
+        visibility: 'public',
+        visibleGroupIds: [],
+        visitorGroupId,
+        visitorSessionId
       });
+
+      const messages = shareData.data.messages || [];
+      messages.push(newMsg);
       setShareData({
         ...shareData,
         data: { ...shareData.data, messages }

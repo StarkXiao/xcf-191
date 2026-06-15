@@ -110,6 +110,18 @@ export default async function shareRoutes(fastify) {
     };
   });
 
+  const isMessageVisibleForShare = (message, visitorGroupId) => {
+    const visibility = message.visibility || 'public';
+    if (visibility === 'public') return true;
+    if (visibility === 'private') return false;
+    if (visibility === 'groups') {
+      if (!visitorGroupId) return false;
+      const visibleGroupIds = message.visibleGroupIds || [];
+      return visibleGroupIds.includes(visitorGroupId);
+    }
+    return true;
+  };
+
   fastify.post('/', async (request, reply) => {
     const {
       exhibitionId,
@@ -120,7 +132,8 @@ export default async function shareRoutes(fastify) {
       allowDownload = false,
       allowTimeline = true,
       allowMessages = false,
-      watermark = ''
+      watermark = '',
+      visitorGroupId = null
     } = request.body;
 
     const exhibitions = getCollection('exhibitions');
@@ -149,6 +162,7 @@ export default async function shareRoutes(fastify) {
       allowTimeline,
       allowMessages,
       watermark,
+      visitorGroupId,
       status: 'active',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
@@ -171,6 +185,7 @@ export default async function shareRoutes(fastify) {
       allowTimeline,
       allowMessages,
       watermark,
+      visitorGroupId,
       status
     } = request.body;
 
@@ -190,6 +205,7 @@ export default async function shareRoutes(fastify) {
       allowTimeline: allowTimeline !== undefined ? allowTimeline : shares[index].allowTimeline,
       allowMessages: allowMessages !== undefined ? allowMessages : shares[index].allowMessages,
       watermark: watermark !== undefined ? watermark : shares[index].watermark,
+      visitorGroupId: visitorGroupId !== undefined ? visitorGroupId : shares[index].visitorGroupId,
       status: status !== undefined ? status : shares[index].status,
       updatedAt: new Date().toISOString()
     };
@@ -301,7 +317,9 @@ export default async function shareRoutes(fastify) {
           .sort((a, b) => new Date(a.eventDate) - new Date(b.eventDate))
       : [];
     const messages = share.allowMessages
-      ? getCollection('messages').filter(m => m.exhibitionId === share.exhibitionId)
+      ? getCollection('messages')
+          .filter(m => m.exhibitionId === share.exhibitionId)
+          .filter(m => isMessageVisibleForShare(m, share.visitorGroupId))
       : [];
 
     return {

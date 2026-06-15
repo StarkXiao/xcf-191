@@ -1,25 +1,41 @@
 import { v4 as uuidv4 } from 'uuid';
 import { getCollection, saveCollection } from '../storage.js';
 
+const defaultVisitorGroups = [
+  { id: 'family', name: '家人', color: '#E74C3C' },
+  { id: 'friend', name: '朋友', color: '#3498DB' },
+  { id: 'colleague', name: '同事', color: '#2ECC71' },
+  { id: 'other', name: '其他访客', color: '#95A5A6' }
+];
+
+const ensureVisitorGroups = (exhibition) => {
+  if (!exhibition.visitorGroups || !Array.isArray(exhibition.visitorGroups)) {
+    return { ...exhibition, visitorGroups: [...defaultVisitorGroups] };
+  }
+  return exhibition;
+};
+
 export default async function exhibitionRoutes(fastify) {
   fastify.get('/', async () => {
     const exhibitions = getCollection('exhibitions');
-    return exhibitions.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    return exhibitions
+      .map(ensureVisitorGroups)
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   });
 
   fastify.get('/:id', async (request, reply) => {
     const { id } = request.params;
     const exhibitions = getCollection('exhibitions');
-    const exhibition = exhibitions.find(e => e.id === id);
+    let exhibition = exhibitions.find(e => e.id === id);
     if (!exhibition) {
       reply.code(404);
       return { error: '展厅不存在' };
     }
-    return exhibition;
+    return ensureVisitorGroups(exhibition);
   });
 
   fastify.post('/', async (request) => {
-    const { title, description, coverImage, theme } = request.body;
+    const { title, description, coverImage, theme, visitorGroups } = request.body;
     const exhibitions = getCollection('exhibitions');
     const newExhibition = {
       id: uuidv4(),
@@ -27,6 +43,9 @@ export default async function exhibitionRoutes(fastify) {
       description: description || '',
       coverImage: coverImage || '',
       theme: theme || 'default',
+      visitorGroups: visitorGroups && visitorGroups.length > 0
+        ? visitorGroups
+        : [...defaultVisitorGroups],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -37,19 +56,21 @@ export default async function exhibitionRoutes(fastify) {
 
   fastify.put('/:id', async (request, reply) => {
     const { id } = request.params;
-    const { title, description, coverImage, theme } = request.body;
+    const { title, description, coverImage, theme, visitorGroups } = request.body;
     const exhibitions = getCollection('exhibitions');
     const index = exhibitions.findIndex(e => e.id === id);
     if (index === -1) {
       reply.code(404);
       return { error: '展厅不存在' };
     }
+    const current = ensureVisitorGroups(exhibitions[index]);
     exhibitions[index] = {
-      ...exhibitions[index],
-      title: title !== undefined ? title : exhibitions[index].title,
-      description: description !== undefined ? description : exhibitions[index].description,
-      coverImage: coverImage !== undefined ? coverImage : exhibitions[index].coverImage,
-      theme: theme !== undefined ? theme : exhibitions[index].theme,
+      ...current,
+      title: title !== undefined ? title : current.title,
+      description: description !== undefined ? description : current.description,
+      coverImage: coverImage !== undefined ? coverImage : current.coverImage,
+      theme: theme !== undefined ? theme : current.theme,
+      visitorGroups: visitorGroups !== undefined ? visitorGroups : current.visitorGroups,
       updatedAt: new Date().toISOString()
     };
     saveCollection('exhibitions', exhibitions);
@@ -73,6 +94,108 @@ export default async function exhibitionRoutes(fastify) {
     saveCollection('materials', materials);
     saveCollection('timelines', timelines);
     saveCollection('messages', messages);
+
+    return { success: true };
+  });
+
+  fastify.get('/:id/visitor-groups', async (request, reply) => {
+    const { id } = request.params;
+    const exhibitions = getCollection('exhibitions');
+    const exhibition = exhibitions.find(e => e.id === id);
+    if (!exhibition) {
+      reply.code(404);
+      return { error: '展厅不存在' };
+    }
+    const withGroups = ensureVisitorGroups(exhibition);
+    return withGroups.visitorGroups;
+  });
+
+  fastify.post('/:id/visitor-groups', async (request, reply) => {
+    const { id } = request.params;
+    const { name, color } = request.body;
+    if (!name || !name.trim()) {
+      reply.code(400);
+      return { error: '分组名称不能为空' };
+    }
+    const exhibitions = getCollection('exhibitions');
+    const index = exhibitions.findIndex(e => e.id === id);
+    if (index === -1) {
+      reply.code(404);
+      return { error: '展厅不存在' };
+    }
+    const current = ensureVisitorGroups(exhibitions[index]);
+    const newGroup = {
+      id: uuidv4(),
+      name: name.trim(),
+      color: color || '#95A5A6',
+      createdAt: new Date().toISOString()
+    };
+    current.visitorGroups.push(newGroup);
+    current.updatedAt = new Date().toISOString();
+    exhibitions[index] = current;
+    saveCollection('exhibitions', exhibitions);
+    return newGroup;
+  });
+
+  fastify.put('/:id/visitor-groups/:groupId', async (request, reply) => {
+    const { id, groupId } = request.params;
+    const { name, color } = request.body;
+    const exhibitions = getCollection('exhibitions');
+    const index = exhibitions.findIndex(e => e.id === id);
+    if (index === -1) {
+      reply.code(404);
+      return { error: '展厅不存在' };
+    }
+    const current = ensureVisitorGroups(exhibitions[index]);
+    const groupIndex = current.visitorGroups.findIndex(g => g.id === groupId);
+    if (groupIndex === -1) {
+      reply.code(404);
+      return { error: '访客分组不存在' };
+    }
+    current.visitorGroups[groupIndex] = {
+      ...current.visitorGroups[groupIndex],
+      name: name !== undefined ? name.trim() : current.visitorGroups[groupIndex].name,
+      color: color !== undefined ? color : current.visitorGroups[groupIndex].color
+    };
+    current.updatedAt = new Date().toISOString();
+    exhibitions[index] = current;
+    saveCollection('exhibitions', exhibitions);
+    return current.visitorGroups[groupIndex];
+  });
+
+  fastify.delete('/:id/visitor-groups/:groupId', async (request, reply) => {
+    const { id, groupId } = request.params;
+    const exhibitions = getCollection('exhibitions');
+    const index = exhibitions.findIndex(e => e.id === id);
+    if (index === -1) {
+      reply.code(404);
+      return { error: '展厅不存在' };
+    }
+    const current = ensureVisitorGroups(exhibitions[index]);
+    const groupIndex = current.visitorGroups.findIndex(g => g.id === groupId);
+    if (groupIndex === -1) {
+      reply.code(404);
+      return { error: '访客分组不存在' };
+    }
+    current.visitorGroups.splice(groupIndex, 1);
+    current.updatedAt = new Date().toISOString();
+    exhibitions[index] = current;
+    saveCollection('exhibitions', exhibitions);
+
+    const messages = getCollection('messages');
+    const updatedMessages = messages.map(m => {
+      if (m.exhibitionId === id && m.visitorGroupId === groupId) {
+        return { ...m, visitorGroupId: null };
+      }
+      if (m.exhibitionId === id && m.visibleGroupIds && Array.isArray(m.visibleGroupIds)) {
+        return {
+          ...m,
+          visibleGroupIds: m.visibleGroupIds.filter(gid => gid !== groupId)
+        };
+      }
+      return m;
+    });
+    saveCollection('messages', updatedMessages);
 
     return { success: true };
   });
