@@ -3,6 +3,20 @@ import { Link } from 'react-router-dom';
 import { familyMemberApi } from '../services/api.js';
 import './FamilyMemberManager.scss';
 
+const RELATION_LABELS = {
+  father: '父亲',
+  mother: '母亲',
+  child: '子女',
+  parent: '父母',
+  spouse: '配偶',
+  sibling: '兄弟姐妹',
+  grandparent: '祖父母',
+  grandchild: '孙子女',
+  uncle_aunt: '叔伯/姨姑',
+  nephew_niece: '侄子/侄女',
+  cousin: '堂/表兄弟姐妹'
+};
+
 const RELATION_OPTIONS = [
   { value: 'father', label: '父亲' },
   { value: 'mother', label: '母亲' },
@@ -152,8 +166,7 @@ function FamilyMemberManager() {
   };
 
   const getRelationLabel = (type) => {
-    const opt = RELATION_OPTIONS.find(o => o.value === type);
-    return opt ? opt.label : type;
+    return RELATION_LABELS[type] || type;
   };
 
   const getGenderLabel = (gender) => {

@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>家庭纪念册 - 自测证据对照表</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            min-height: 100vh;
+            color: #fff;
+            padding: 40px 20px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { text-align: center; font-size: 2.5em; margin-bottom: 10px; 
+             background: linear-gradient(135deg, #ffd700, #ff6b6b);
+             -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .subtitle { text-align: center; color: #aaa; margin-bottom: 40px; font-size: 1.1em; }
+        .section { margin-bottom: 50px; }
+        .section h2 { 
+            font-size: 1.6em; margin-bottom: 20px; padding-left: 15px;
+            border-left: 4px solid #ffd700;
+        }
+        .test-summary {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 15px;
+        }
+        .summary-item {
+            text-align: center;
+            padding: 15px;
+            background: rgba(255,215,0,0.1);
+            border-radius: 10px;
+            border: 1px solid rgba(255,215,0,0.3);
+        }
+        .summary-item .num { font-size: 2.5em; font-weight: bold; color: #ffd700; }
+        .summary-item .label { color: #ccc; margin-top: 5px; font-size: 0.95em; }
+        .evidence-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+        }
+        .evidence-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .evidence-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .evidence-card img {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            cursor: pointer;
+        }
+        .evidence-info { padding: 18px; }
+        .evidence-id {
+            display: inline-block;
+            background: linear-gradient(135deg, #ffd700, #ff6b6b);
+            color: #000;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.85em;
+            margin-bottom: 10px;
+        }
+        .evidence-title { font-size: 1.1em; margin-bottom: 8px; font-weight: 600; }
+        .evidence-route {
+            font-family: "SF Mono", Monaco, Consolas, monospace;
+            background: rgba(0,0,0,0.3);
+            padding: 6px 10px;
+            border-radius: 6px;
+            color: #7dd3fc;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            word-break: break-all;
+        }
+        .evidence-desc { color: #aaa; font-size: 0.9em; line-height: 1.5; }
+        .evidence-status {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 4px 10px;
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+            border-radius: 6px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        .jump-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .jump-table th, .jump-table td {
+            padding: 14px 18px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .jump-table th {
+            background: rgba(255,215,0,0.1);
+            color: #ffd700;
+            font-weight: 600;
+        }
+        .jump-table tr:hover { background: rgba(255,255,255,0.05); }
+        .jump-table td.route {
+            font-family: "SF Mono", Monaco, Consolas, monospace;
+            color: #7dd3fc;
+            font-size: 0.9em;
+        }
+        .jump-table .pass { color: #4ade80; font-weight: 600; }
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            color: #666;
+            font-size: 0.9em;
+        }
+        .fix-info {
+            background: rgba(255, 107, 107, 0.1);
+            border: 1px solid rgba(255, 107, 107, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+        .fix-info h4 { color: #ff6b6b; margin-bottom: 8px; }
+        .fix-info code {
+            background: rgba(0,0,0,0.3);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            color: #fca5a5;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0; top: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal.show { display: flex; }
+        .modal img { max-width: 90%; max-height: 90%; object-fit: contain; }
+        .modal-close {
+            position: absolute;
+            top: 30px; right: 40px;
+            color: #fff;
+            font-size: 40px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✦ 家庭纪念册 · 自测证据对照表</h1>
+        <p class="subtitle">测试日期：2026-06-15 | 测试环境：http://localhost:5174</p>
+
+        <div class="test-summary">
+            <h3 style="margin-bottom: 10px;">📊 测试总览</h3>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <div class="num">7</div>
+                    <div class="label">页面截图证据</div>
+                </div>
+                <div class="summary-item">
+                    <div class="num">10</div>
+                    <div class="label">导航跳转测试</div>
+                </div>
+                <div class="summary-item">
+                    <div class="num">3</div>
+                    <div class="label">已修复问题</div>
+                </div>
+                <div class="summary-item">
+                    <div class="num">100%</div>
+                    <div class="label">通过率</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🔧 已修复的问题</h2>
+            <div class="fix-info">
+                <h4>1. 跨展厅时间轴地点对象显示错误</h4>
+                <p>问题：location 对象直接渲染显示为 <code>[object Object]</code></p>
+                <p>修复：新增 <code>formatLocation()</code> 函数，智能解析并格式化地点信息</p>
+                <p style="margin-top: 8px; font-size: 0.9em;">文件：<code>client/src/pages/FamilyTimeline.jsx:43-59</code></p>
+            </div>
+            <div class="fix-info" style="margin-top: 15px;">
+                <h4>2. 成员关系标签显示英文</h4>
+                <p>问题：反向关系如 <code>parent</code> 显示为英文而非中文</p>
+                <p>修复：新增完整 <code>RELATION_LABELS</code> 映射，包含所有关系类型</p>
+                <p style="margin-top: 8px; font-size: 0.9em;">文件：<code>client/src/pages/FamilyMemberManager.jsx:6-18</code></p>
+            </div>
+            <div class="fix-info" style="margin-top: 15px;">
+                <h4>3. 后端成员列表缺少 relations 关联信息</h4>
+                <p>问题：列表接口未返回 relations 字段的 member 详情</p>
+                <p>修复：列表接口也会填充 relations 的 member 信息（头像、姓名）</p>
+                <p style="margin-top: 8px; font-size: 0.9em;">文件：<code>server/src/routes/familyMember.js:17-27</code></p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📋 多展厅归档流程 - 页面证据</h2>
+            <div class="evidence-grid">
+                <div class="evidence-card">
+                    <img src="01-family-album-home.png" alt="家庭纪念册首页" onclick="openModal(this.src)">
+                    <div class="evidence-info">
+                        <span class="evidence-id">证据 #01</span>
+                        <div class="evidence-title">家庭纪念册首页</div>
+                        <div class="evidence-route">/family-albums</div>
+                        <div class="evidence-desc">展示所有家庭纪念册列表，包含快速入口（创建纪念册、管理成员、全部展厅）</div>
+                        <span class="evidence-status">✅ 正常</span>
+                    </div>
+                </div>
+
+                <div class="evidence-card">
+                    <img src="02-family-album-create.png" alt="创建家庭纪念册" onclick="openModal(this.src)">
+                    <div class="evidence-info">
+                        <span class="evidence-id">证据 #02</span>
+                        <div class="evidence-title">创建家庭纪念册</div>
+                        <div class="evidence-route">/family-albums/create</div>
+                        <div class="evidence-desc">完整的创建表单，包含基本信息、主题风格、关联展厅、关联家庭成员</div>
+                        <span class="evidence-status">✅ 正常</span>
+                    </div>
+                </div>
+
+                <div class="evidence-card">
+                    <img src="03-family-album-detail.png" alt="纪念册详情页" onclick="openModal(this.src)">
+                    <div class="evidence-info">
+                        <span class="evidence-id">证据 #03</span>
+                        <div class="evidence-title">纪念册详情页</div>
+                        <div class="evidence-route">/family-albums/:id</div>
+                        <div class="evidence-desc">展示纪念册详情，包含成员管理、展厅归档、时间轴入口等功能</div>
+                        <span class="evidence-status">✅ 正常</span>
+                    </div>
+                </div>
+
+                <div class="evidence-card">
+                    <img src="04-family-album-timeline.png" alt="跨展厅时间轴" onclick="openModal(this.src)">
+                    <div class="evidence-info">
+                        <span class="evidence-id">证据 #04</span>
+                        <div class="evidence-title">跨展厅时间轴（汇总页）</div>
+                        <div class="evidence-route">/family-albums/:id/timeline</div>
+                        <div class="evidence-desc">汇聚所有展厅的珍贵记忆，按时间顺序呈现家族故事。地点显示已修复，formatLocation() 函数正确工作</div>
+                        <span class="evidence-status">✅ 正常</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>👨‍👩‍👧‍👦 成员关系管理流程 - 页面证据</h2>
+            <div class="evidence-grid">
+                <div class="evidence-card">
+                    <img src="05-family-members-list.png" alt="家庭成员管理页" onclick="openModal(this.src)">
+                    <div class="evidence-info">
+                        <span class="evidence-id">证据 #05</span>
+                        <div class="evidence-title">家庭成员管理页</div>
+                        <div class="evidence-route">/family-members</div>
+                        <div class="evidence-desc">展示所有家庭成员列表，包含关系标签。关系标签显示已修复，所有关系类型正确显示中文</div>
+                        <span class="evidence-status">✅ 正常</span>
+                    </div>
+                </div>
+
+                <div class="evidence-card">
+                    <img src="06-family-member-add-modal.png" alt="添加成员弹窗" onclick="openModal(this.src)">
+                    <div class="evidence-info">
+                        <span class="evidence-id">证据 #06</span>
+                        <div class="evidence-title">添加成员弹窗</div>
+                        <div class="evidence-route">/family-members（弹窗）</div>
+                        <div class="evidence-desc">完整的成员信息表单：姓名、头像、家族角色、性别、出生日期、逝世日期、简介</div>
+                        <span class="evidence-status">✅ 正常</span>
+                    </div>
+                </div>
+
+                <div class="evidence-card">
+                    <img src="07-exhibition-list-home.png" alt="展厅列表首页" onclick="openModal(this.src)">
+                    <div class="evidence-info">
+                        <span class="evidence-id">证据 #07</span>
+                        <div class="evidence-title">展厅列表首页</div>
+                        <div class="evidence-route">/</div>
+                        <div class="evidence-desc">系统首页，展示所有独立展厅，Header 导航统一入口</div>
+                        <span class="evidence-status">✅ 正常</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🧭 统一导航跳转测试记录</h2>
+            <table class="jump-table">
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">序号</th>
+                        <th>导航入口</th>
+                        <th>目标路由</th>
+                        <th style="width: 80px;">结果</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>Header - 展厅列表</td>
+                        <td class="route">/</td>
+                        <td><span class="pass">✅ 通过</span></td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>Header - 家庭纪念册</td>
+                        <td class="route">/family-albums</td>
+                        <td><span class="pass">✅ 通过</span></td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>Header - 家庭成员</td>
+                        <td class="route">/family-members</td>
+                        <td><span class="pass">✅ 通过</span></td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>纪念册卡片</td>
+                        <td class="route">/family-albums/:id</td>
+                        <td><span class="pass">✅ 通过</span></td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>详情页 - 返回纪念册列表</td>
+                        <td class="route">/family-albums</td>
+                        <td><span class="pass">✅ 通过</span></td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>详情页 - 管理成员按钮</td>
+                        <td class="route">/family-members</td>
+                        <td><span class="pass">✅ 通过</span></td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td>成员页 - 返回纪念册首页</td>
+                        <td class="route">/family-albums</td>
+                        <td><span class="pass">✅ 通过</span></td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td>首页 - 全部展厅快速入口</td>
+                        <td class="route">/</td>
+                        <td><span class="pass">✅ 通过</span></td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <td>详情页 - 跨展厅时间轴</td>
+                        <td class="route">/family-albums/:id/timeline</td>
+                        <td><span class="pass">✅ 通过</span></td>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                        <td>时间轴页 - 返回纪念册</td>
+                        <td class="route">/family-albums/:id</td>
+                        <td><span class="pass">✅ 通过</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="footer">
+            <p>✅ 所有测试通过 | 测试完成时间：2026-06-15</p>
+            <p style="margin-top: 8px;">项目地址：http://localhost:5174 | 后端地址：http://localhost:4500</p>
+        </div>
+    </div>
+
+    <div class="modal" id="imageModal" onclick="closeModal()">
+        <span class="modal-close">&times;</span>
+        <img id="modalImage" src="" alt="Full size">
+    </div>
+
+    <script>
+        function openModal(src) {
+            document.getElementById('modalImage').src = src;
+            document.getElementById('imageModal').classList.add('show');
+        }
+        function closeModal() {
+            document.getElementById('imageModal').classList.remove('show');
+        }
+    </script>
+</body>
+</html>
