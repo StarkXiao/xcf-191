@@ -18,6 +18,7 @@ import timeSlotRoutes from './routes/timeSlot.js';
 import reminderTemplateRoutes from './routes/reminderTemplate.js';
 import visitRecordRoutes from './routes/visitRecord.js';
 import memorialRitualRoutes from './routes/memorialRitual.js';
+import collectionRoutes from './routes/collection.js';
 import { initStorage } from './storage.js';
 import { UPLOADS_DIR } from './config.js';
 
@@ -60,6 +61,7 @@ fastify.register(timeSlotRoutes, { prefix: '/api/time-slots' });
 fastify.register(reminderTemplateRoutes, { prefix: '/api/reminder-templates' });
 fastify.register(visitRecordRoutes, { prefix: '/api/visit-records' });
 fastify.register(memorialRitualRoutes, { prefix: '/api/memorial-rituals' });
+fastify.register(collectionRoutes, { prefix: '/api/collections' });
 
 
 fastify.get('/api/health', async () => {

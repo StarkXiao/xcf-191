@@ -183,4 +183,18 @@ export const memorialRitualApi = {
   updatePlayState: (id, data) => request.put(`/memorial-rituals/${id}/play-state`, data).then(r => r.data)
 };
 
+export const collectionApi = {
+  list: (params) => request.get('/collections', { params }).then(r => r.data),
+  get: (id) => request.get(`/collections/${id}`).then(r => r.data),
+  getDetail: (id) => request.get(`/collections/${id}/detail`).then(r => r.data),
+  create: (data) => request.post('/collections', data).then(r => r.data),
+  update: (id, data) => request.put(`/collections/${id}`, data).then(r => r.data),
+  remove: (id) => request.delete(`/collections/${id}`).then(r => r.data),
+  addExhibition: (id, exhibitionId) => request.post(`/collections/${id}/exhibitions`, { exhibitionId }).then(r => r.data),
+  removeExhibition: (id, exhibitionId) => request.delete(`/collections/${id}/exhibitions/${exhibitionId}`).then(r => r.data),
+  searchMaterials: (params) => request.get('/collections/search/materials', { params }).then(r => r.data),
+  getByPerson: () => request.get('/collections/aggregate/by-person').then(r => r.data),
+  getByEvent: () => request.get('/collections/aggregate/by-event').then(r => r.data)
+};
+
 export default request;

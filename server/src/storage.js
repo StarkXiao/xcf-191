@@ -20,7 +20,8 @@ const defaultDB = {
   visitRecords: [],
   memorialRituals: [],
   ritualMessages: [],
-  ritualPlayStates: []
+  ritualPlayStates: [],
+  collections: []
 };
 
 export const initStorage = () => {

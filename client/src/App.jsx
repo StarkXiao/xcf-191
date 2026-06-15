@@ -17,6 +17,9 @@ import AppointmentBooking from './pages/AppointmentBooking.jsx';
 import MemorialRitualList from './pages/MemorialRitualList.jsx';
 import MemorialRitualManager from './pages/MemorialRitualManager.jsx';
 import MemorialRitualPlayer from './pages/MemorialRitualPlayer.jsx';
+import CollectionHome from './pages/CollectionHome.jsx';
+import CollectionEditor from './pages/CollectionEditor.jsx';
+import CollectionDetail from './pages/CollectionDetail.jsx';
 import './styles/App.scss';
 
 function App() {
@@ -60,6 +63,10 @@ function App() {
           <Route path="/memorial-rituals/create" element={<MemorialRitualManager />} />
           <Route path="/memorial-rituals/:id/edit" element={<MemorialRitualManager />} />
           <Route path="/memorial-rituals/:id/player" element={<MemorialRitualPlayer />} />
+          <Route path="/collections" element={<CollectionHome />} />
+          <Route path="/collections/create" element={<CollectionEditor />} />
+          <Route path="/collections/:id" element={<CollectionDetail />} />
+          <Route path="/collections/:id/edit" element={<CollectionEditor />} />
         </Routes>
       </main>
     </div>
