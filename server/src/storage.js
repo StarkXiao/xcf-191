@@ -25,7 +25,9 @@ const defaultDB = {
   growthTrajectoryCovers: [],
   relicCategories: [],
   relics: [],
-  archiveRules: []
+  archiveRules: [],
+  reviewRecords: [],
+  fileRepairLogs: []
 };
 
 export const initStorage = () => {

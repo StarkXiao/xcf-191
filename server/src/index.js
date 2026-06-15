@@ -21,6 +21,7 @@ import memorialRitualRoutes from './routes/memorialRitual.js';
 import collectionRoutes from './routes/collection.js';
 import growthTrajectoryRoutes from './routes/growthTrajectory.js';
 import relicRoutes from './routes/relic.js';
+import opsRoutes from './routes/ops.js';
 import { initStorage } from './storage.js';
 import { UPLOADS_DIR } from './config.js';
 
@@ -66,6 +67,7 @@ fastify.register(memorialRitualRoutes, { prefix: '/api/memorial-rituals' });
 fastify.register(collectionRoutes, { prefix: '/api/collections' });
 fastify.register(growthTrajectoryRoutes, { prefix: '/api/growth-trajectories' });
 fastify.register(relicRoutes, { prefix: '/api/relics' });
+fastify.register(opsRoutes, { prefix: '/api/ops' });
 
 fastify.get('/api/health', async () => {
   return { status: 'ok', time: new Date().toISOString() };

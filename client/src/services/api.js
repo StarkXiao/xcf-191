@@ -235,4 +235,25 @@ export const relicApi = {
   getStats: () => request.get('/relics/stats/summary').then(r => r.data)
 };
 
+export const opsApi = {
+  getDashboard: () => request.get('/ops/dashboard').then(r => r.data),
+
+  listMessages: (params) => request.get('/ops/messages', { params }).then(r => r.data),
+  reviewMessage: (id, data) => request.put(`/ops/messages/${id}/review`, data).then(r => r.data),
+  batchReviewMessages: (data) => request.post('/ops/messages/batch-review', data).then(r => r.data),
+
+  inspectMaterials: () => request.get('/ops/materials/inspect').then(r => r.data),
+
+  getAbnormalFiles: () => request.get('/ops/files/abnormal').then(r => r.data),
+  repairFile: (data) => request.post('/ops/files/repair', data).then(r => r.data),
+  cleanupOrphans: (urls) => request.post('/ops/files/orphan-cleanup', { urls }).then(r => r.data),
+  getRepairLogs: (params) => request.get('/ops/repair-logs', { params }).then(r => r.data),
+
+  listReviews: (params) => request.get('/ops/reviews', { params }).then(r => r.data),
+  createReview: (data) => request.post('/ops/reviews', data).then(r => r.data),
+  approveReview: (id, note) => request.put(`/ops/reviews/${id}/approve`, { note }).then(r => r.data),
+  rejectReview: (id, note) => request.put(`/ops/reviews/${id}/reject`, { note }).then(r => r.data),
+  generateReviews: () => request.post('/ops/reviews/generate').then(r => r.data)
+};
+
 export default request;

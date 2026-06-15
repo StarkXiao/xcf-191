@@ -23,6 +23,11 @@ import CollectionDetail from './pages/CollectionDetail.jsx';
 import GrowthTrajectoryHome from './pages/GrowthTrajectoryHome.jsx';
 import GrowthTrajectoryPlayer from './pages/GrowthTrajectoryPlayer.jsx';
 import DigitalRelicCenter from './pages/DigitalRelicCenter.jsx';
+import OpsDashboard from './pages/OpsDashboard.jsx';
+import OpsMessages from './pages/OpsMessages.jsx';
+import OpsMaterialInspect from './pages/OpsMaterialInspect.jsx';
+import OpsFileRepair from './pages/OpsFileRepair.jsx';
+import OpsReviewWorkflow from './pages/OpsReviewWorkflow.jsx';
 import './styles/App.scss';
 
 function App() {
@@ -73,6 +78,11 @@ function App() {
           <Route path="/growth-trajectory" element={<GrowthTrajectoryHome />} />
           <Route path="/growth-trajectory/:id/player" element={<GrowthTrajectoryPlayer />} />
           <Route path="/digital-relics" element={<DigitalRelicCenter />} />
+          <Route path="/ops" element={<OpsDashboard />} />
+          <Route path="/ops/messages" element={<OpsMessages />} />
+          <Route path="/ops/material-inspect" element={<OpsMaterialInspect />} />
+          <Route path="/ops/file-repair" element={<OpsFileRepair />} />
+          <Route path="/ops/reviews" element={<OpsReviewWorkflow />} />
         </Routes>
       </main>
     </div>
