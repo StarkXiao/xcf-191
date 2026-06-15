@@ -50,9 +50,22 @@ export default async function collectionRoutes(fastify) {
       collection.exhibitionIds && collection.exhibitionIds.includes(e.id)
     );
 
-    const allMaterials = materials.filter(m => 
-      collection.exhibitionIds && collection.exhibitionIds.includes(m.exhibitionId)
-    );
+    const sortedMaterials = materials
+      .filter(m => collection.exhibitionIds && collection.exhibitionIds.includes(m.exhibitionId))
+      .map(m => {
+        const exhibition = exhibitions.find(e => e.id === m.exhibitionId);
+        return {
+          ...m,
+          exhibition: exhibition ? { id: exhibition.id, title: exhibition.title, coverImage: exhibition.coverImage } : null
+        };
+      });
+
+    const config = collection.config || {};
+    if (config.sortBy === 'name') {
+      sortedMaterials.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+    } else if (config.sortBy === 'date') {
+      sortedMaterials.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    }
 
     const allTimelines = timelines
       .filter(t => collection.exhibitionIds && collection.exhibitionIds.includes(t.exhibitionId))
@@ -77,11 +90,11 @@ export default async function collectionRoutes(fastify) {
     return {
       ...collection,
       exhibitions: sortedExhibitions,
-      materials: allMaterials,
+      materials: sortedMaterials,
       timelines: allTimelines,
       stats: {
         exhibitionCount: sortedExhibitions.length,
-        materialCount: allMaterials.length,
+        materialCount: sortedMaterials.length,
         timelineCount: allTimelines.length
       }
     };
@@ -206,7 +219,7 @@ export default async function collectionRoutes(fastify) {
   });
 
   fastify.get('/search/materials', async (request) => {
-    const { keyword, type, collectionId } = request.query;
+    const { keyword, type, collectionId, sortBy } = request.query;
     let materials = getCollection('materials');
     let exhibitions = getCollection('exhibitions');
 
@@ -238,7 +251,13 @@ export default async function collectionRoutes(fastify) {
       exhibition: exhibitionMap[m.exhibitionId] || null
     }));
 
-    return result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    if (sortBy === 'name') {
+      result.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+    } else {
+      result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    }
+
+    return result;
   });
 
   fastify.get('/aggregate/by-person', async () => {

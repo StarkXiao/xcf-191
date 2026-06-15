@@ -48,6 +48,8 @@ function CollectionDetail() {
       if (materialType !== 'all') {
         params.type = materialType;
       }
+      const sortBy = collection.config?.sortBy || 'date';
+      params.sortBy = sortBy;
       const results = await collectionApi.searchMaterials(params);
       setSearchResults(results);
     } catch (err) {
@@ -118,6 +120,9 @@ function CollectionDetail() {
     { value: 'audio', label: '音频' },
     { value: 'text', label: '文字' }
   ];
+
+  const layout = collection.config?.layout || 'grid';
+  const sortBy = collection.config?.sortBy || 'date';
 
   return (
     <div className="collection-detail">
@@ -259,8 +264,35 @@ function CollectionDetail() {
                 <p>还没有关联的展厅</p>
                 <Link to={`/collections/${id}/edit`} className="link-btn">去添加展厅</Link>
               </div>
+            ) : layout === 'timeline' ? (
+              <div className="exhibition-timeline">
+                {collection.exhibitions.map((ex, idx) => (
+                  <div key={ex.id} className="exhibition-timeline-item">
+                    <div className="exhibition-timeline-node">
+                      <span className="node-dot"></span>
+                      <span className="node-index">{idx + 1}</span>
+                    </div>
+                    <Link to={`/exhibition/${ex.id}`} className="exhibition-timeline-card">
+                      <div className="card-cover">
+                        {ex.coverImage ? (
+                          <img src={ex.coverImage} alt={ex.title} />
+                        ) : (
+                          <div className="card-cover-placeholder">
+                            <span>✦</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="card-content">
+                        <h3 className="card-title">{ex.title}</h3>
+                        <p className="card-desc">{ex.description || '暂无描述'}</p>
+                        <span className="card-date">创建于 {formatDate(ex.createdAt)}</span>
+                      </div>
+                    </Link>
+                  </div>
+                ))}
+              </div>
             ) : (
-              <div className="exhibition-grid">
+              <div className={layout === 'list' ? 'exhibition-list' : 'exhibition-grid'}>
                 {collection.exhibitions.map(ex => (
                   <Link to={`/exhibition/${ex.id}`} key={ex.id} className="exhibition-card">
                     <div className="card-cover">
@@ -318,8 +350,43 @@ function CollectionDetail() {
               <div className="empty-inline">
                 <p>{searchKeyword ? '没有找到匹配的素材' : '暂无素材'}</p>
               </div>
+            ) : layout === 'timeline' ? (
+              <div className="materials-timeline">
+                {searchResults.map((mat, idx) => (
+                  <div key={mat.id} className="materials-timeline-item">
+                    <div className="materials-timeline-node">
+                      <span className="node-dot"></span>
+                    </div>
+                    <div className="materials-timeline-card">
+                      <div className="material-cover">
+                        {mat.type === 'image' && mat.url ? (
+                          <img src={mat.url} alt={mat.title} />
+                        ) : (
+                          <div className="material-icon-wrap">
+                            <span className="material-type-icon">
+                              {getMaterialTypeIcon(mat.type)}
+                            </span>
+                          </div>
+                        )}
+                        <div className="material-type-badge">
+                          {getMaterialTypeLabel(mat.type)}
+                        </div>
+                      </div>
+                      <div className="material-info">
+                        <h4 className="material-title">{mat.title || '无标题'}</h4>
+                        <p className="material-desc">{mat.description || '暂无描述'}</p>
+                        {mat.exhibition && (
+                          <span className="material-from">
+                            来自：{mat.exhibition.title}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             ) : (
-              <div className="materials-grid">
+              <div className={layout === 'list' ? 'materials-list' : 'materials-grid'}>
                 {searchResults.map(mat => (
                   <div key={mat.id} className="material-card">
                     <div className="material-cover">
