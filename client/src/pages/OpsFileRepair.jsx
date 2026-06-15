@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { opsApi } from '../services/api.js';
 import './OpsFileRepair.scss';
@@ -30,6 +30,11 @@ function OpsFileRepair() {
 
   const [showRepairModal, setShowRepairModal] = useState(false);
   const [repairTarget, setRepairTarget] = useState(null);
+  const [bindSource, setBindSource] = useState('material');
+  const [sourceOrphanFile, setSourceOrphanFile] = useState(null);
+  const [selectedTargetMaterialId, setSelectedTargetMaterialId] = useState('');
+  const [materialSearchKeyword, setMaterialSearchKeyword] = useState('');
+
   const [repairMode, setRepairMode] = useState('upload');
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploading, setUploading] = useState(false);
@@ -58,8 +63,12 @@ function OpsFileRepair() {
     }
   };
 
-  const openRepairModal = (file) => {
+  const openRepairModalFromMaterial = (file) => {
     setRepairTarget(file);
+    setBindSource('material');
+    setSourceOrphanFile(null);
+    setSelectedTargetMaterialId('');
+    setMaterialSearchKeyword('');
     setRepairMode('upload');
     setUploadProgress(0);
     setUploading(false);
@@ -70,9 +79,28 @@ function OpsFileRepair() {
     setShowRepairModal(true);
   };
 
+  const openBindModalFromOrphan = (orphanFile) => {
+    setSourceOrphanFile(orphanFile);
+    setSelectedOrphanUrl(orphanFile.url);
+    setBindSource('orphan');
+    setRepairTarget(null);
+    setSelectedTargetMaterialId('');
+    setMaterialSearchKeyword('');
+    setRepairMode('bind');
+    setUploadProgress(0);
+    setUploading(false);
+    setSelectedFile(null);
+    setManualUrl('');
+    setRepairResult(null);
+    setShowRepairModal(true);
+  };
+
   const closeRepairModal = () => {
     setShowRepairModal(false);
     setRepairTarget(null);
+    setSourceOrphanFile(null);
+    setSelectedTargetMaterialId('');
+    setMaterialSearchKeyword('');
     setRepairResult(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -123,10 +151,16 @@ function OpsFileRepair() {
   };
 
   const handleBindOrphan = async () => {
-    if (!selectedOrphanUrl || !repairTarget) return;
+    if (bindSource === 'material') {
+      if (!selectedOrphanUrl || !repairTarget) return;
+    } else {
+      if (!selectedTargetMaterialId || !selectedOrphanUrl) return;
+    }
+
     setUploading(true);
     try {
-      const result = await opsApi.bindOrphanFile(repairTarget.id, selectedOrphanUrl);
+      const materialId = bindSource === 'material' ? repairTarget.id : selectedTargetMaterialId;
+      const result = await opsApi.bindOrphanFile(materialId, selectedOrphanUrl);
       setRepairResult({
         success: true,
         mode: 'bind',
@@ -227,11 +261,26 @@ function OpsFileRepair() {
     return '⚠️';
   };
 
+  const orphanOptions = abnormalData?.orphanFiles || [];
+  const abnormalFiles = abnormalData?.abnormalFiles || [];
+
+  const filteredTargetMaterials = useMemo(() => {
+    if (!materialSearchKeyword.trim()) return abnormalFiles;
+    const keyword = materialSearchKeyword.toLowerCase();
+    return abnormalFiles.filter(f =>
+      f.materialTitle?.toLowerCase().includes(keyword) ||
+      f.exhibitionTitle?.toLowerCase().includes(keyword) ||
+      f.type?.toLowerCase().includes(keyword)
+    );
+  }, [abnormalFiles, materialSearchKeyword]);
+
+  const selectedTargetMaterial = useMemo(() => {
+    return abnormalFiles.find(f => f.id === selectedTargetMaterialId) || null;
+  }, [abnormalFiles, selectedTargetMaterialId]);
+
   if (loading && !abnormalData) {
     return <div className="ops-file-repair"><div className="loading">扫描中...</div></div>;
   }
-
-  const orphanOptions = abnormalData?.orphanFiles || [];
 
   return (
     <div className="ops-file-repair">
@@ -323,7 +372,7 @@ function OpsFileRepair() {
                       <button
                         className="btn-repair primary"
                         disabled={repairing[file.id]}
-                        onClick={() => openRepairModal(file)}
+                        onClick={() => openRepairModalFromMaterial(file)}
                       >
                         🔧 修复
                       </button>
@@ -385,15 +434,9 @@ function OpsFileRepair() {
                         {abnormalData.abnormalCount > 0 && (
                           <button
                             className="btn-link"
-                            onClick={() => {
-                              setSelectedOrphanUrl(file.url);
-                              setRepairMode('bind');
-                              setShowRepairModal(true);
-                              setRepairTarget(null);
-                              setRepairResult(null);
-                            }}
+                            onClick={() => openBindModalFromOrphan(file)}
                           >
-                            绑定到素材
+                            🔗 绑定到素材
                           </button>
                         )}
                       </td>
@@ -451,11 +494,36 @@ function OpsFileRepair() {
         <div className="modal-overlay" onClick={!uploading && !repairResult?.success ? closeRepairModal : undefined}>
           <div className="modal large" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>修复异常文件</h3>
+              <h3>
+                {bindSource === 'orphan' ? '绑定孤立文件到素材' : '修复异常文件'}
+              </h3>
               {!repairResult && !uploading && (
                 <button className="modal-close" onClick={closeRepairModal}>×</button>
               )}
             </div>
+
+            {sourceOrphanFile && (
+              <div className="repair-target-info">
+                <div className="info-row">
+                  <span className="info-label">源文件：</span>
+                  <span className="info-value">{sourceOrphanFile.filename}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">目录：</span>
+                  <span className="info-value">{sourceOrphanFile.dir}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">大小：</span>
+                  <span className="info-value">{formatSize(sourceOrphanFile.size)}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">URL：</span>
+                  <span className="info-value" style={{ fontFamily: 'monospace', fontSize: 12 }}>
+                    {sourceOrphanFile.url}
+                  </span>
+                </div>
+              </div>
+            )}
 
             {repairTarget && (
               <div className="repair-target-info">
@@ -478,39 +546,41 @@ function OpsFileRepair() {
 
             {!repairResult && (
               <>
-                <div className="repair-modes">
-                  <button
-                    className={`mode-btn ${repairMode === 'upload' ? 'active' : ''}`}
-                    onClick={() => setRepairMode('upload')}
-                    disabled={uploading}
-                  >
-                    <span className="mode-icon">📤</span>
-                    <span className="mode-title">上传新文件</span>
-                    <span className="mode-desc">选择本地文件上传替换</span>
-                  </button>
-                  <button
-                    className={`mode-btn ${repairMode === 'bind' ? 'active' : ''}`}
-                    onClick={() => setRepairMode('bind')}
-                    disabled={uploading || orphanOptions.length === 0}
-                  >
-                    <span className="mode-icon">🔗</span>
-                    <span className="mode-title">绑定孤立文件</span>
-                    <span className="mode-desc">从孤立文件中选择绑定</span>
-                    {orphanOptions.length === 0 && <span className="mode-disabled">暂无可绑定文件</span>}
-                  </button>
-                  <button
-                    className={`mode-btn ${repairMode === 'manual' ? 'active' : ''}`}
-                    onClick={() => setRepairMode('manual')}
-                    disabled={uploading}
-                  >
-                    <span className="mode-icon">✏️</span>
-                    <span className="mode-title">手动输入URL</span>
-                    <span className="mode-desc">直接输入新的文件地址</span>
-                  </button>
-                </div>
+                {bindSource === 'material' && (
+                  <div className="repair-modes">
+                    <button
+                      className={`mode-btn ${repairMode === 'upload' ? 'active' : ''}`}
+                      onClick={() => setRepairMode('upload')}
+                      disabled={uploading}
+                    >
+                      <span className="mode-icon">📤</span>
+                      <span className="mode-title">上传新文件</span>
+                      <span className="mode-desc">选择本地文件上传替换</span>
+                    </button>
+                    <button
+                      className={`mode-btn ${repairMode === 'bind' ? 'active' : ''}`}
+                      onClick={() => setRepairMode('bind')}
+                      disabled={uploading || orphanOptions.length === 0}
+                    >
+                      <span className="mode-icon">🔗</span>
+                      <span className="mode-title">绑定孤立文件</span>
+                      <span className="mode-desc">从孤立文件中选择绑定</span>
+                      {orphanOptions.length === 0 && <span className="mode-disabled">暂无可绑定文件</span>}
+                    </button>
+                    <button
+                      className={`mode-btn ${repairMode === 'manual' ? 'active' : ''}`}
+                      onClick={() => setRepairMode('manual')}
+                      disabled={uploading}
+                    >
+                      <span className="mode-icon">✏️</span>
+                      <span className="mode-title">手动输入URL</span>
+                      <span className="mode-desc">直接输入新的文件地址</span>
+                    </button>
+                  </div>
+                )}
 
                 <div className="repair-content">
-                  {repairMode === 'upload' && (
+                  {bindSource === 'material' && repairMode === 'upload' && (
                     <div className="upload-section">
                       <div
                         className="drop-zone"
@@ -560,7 +630,7 @@ function OpsFileRepair() {
                     </div>
                   )}
 
-                  {repairMode === 'bind' && (
+                  {bindSource === 'material' && repairMode === 'bind' && (
                     <div className="bind-section">
                       <label className="form-label">选择孤立文件</label>
                       <select
@@ -572,7 +642,7 @@ function OpsFileRepair() {
                         <option value="">请选择孤立文件</option>
                         {orphanOptions.map((file, idx) => (
                           <option key={idx} value={file.url}>
-                            {file.filename} ({formatSize(file.size)})
+                            {file.filename} ({formatSize(file.size)}) - {file.dir}
                           </option>
                         ))}
                       </select>
@@ -584,7 +654,7 @@ function OpsFileRepair() {
                     </div>
                   )}
 
-                  {repairMode === 'manual' && (
+                  {bindSource === 'material' && repairMode === 'manual' && (
                     <div className="manual-section">
                       <label className="form-label">新文件URL</label>
                       <input
@@ -600,6 +670,61 @@ function OpsFileRepair() {
                       </p>
                     </div>
                   )}
+
+                  {bindSource === 'orphan' && (
+                    <div className="target-material-section">
+                      <label className="form-label">选择目标素材</label>
+                      <div className="material-search">
+                        <input
+                          type="text"
+                          className="form-input"
+                          value={materialSearchKeyword}
+                          onChange={(e) => setMaterialSearchKeyword(e.target.value)}
+                          placeholder="🔍 搜索素材名称、展厅或类型..."
+                          disabled={uploading}
+                        />
+                      </div>
+                      <div className="material-list">
+                        {filteredTargetMaterials.length === 0 ? (
+                          <div className="material-empty">暂无匹配的异常素材</div>
+                        ) : (
+                          filteredTargetMaterials.map(file => (
+                            <div
+                              key={file.id}
+                              className={`material-item ${selectedTargetMaterialId === file.id ? 'selected' : ''}`}
+                              onClick={() => !uploading && setSelectedTargetMaterialId(file.id)}
+                            >
+                              <div className="material-item-main">
+                                <span className="material-icon">{getIssueIcon(file.issues)}</span>
+                                <div className="material-item-info">
+                                  <div className="material-item-title">{file.materialTitle}</div>
+                                  <div className="material-item-meta">
+                                    <span className="material-type">{file.type}</span>
+                                    <span className="material-exhibition">{file.exhibitionTitle}</span>
+                                  </div>
+                                  <div className="material-item-issues">
+                                    {file.issues.map((issue, idx) => (
+                                      <span key={idx} className="issue-tag small">
+                                        {issue}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="material-item-check">
+                                {selectedTargetMaterialId === file.id && <span>✓</span>}
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                      <p className="form-hint">
+                        {selectedTargetMaterial
+                          ? `已选择：${selectedTargetMaterial.materialTitle}`
+                          : `共 ${filteredTargetMaterials.length} 个异常素材可选，点击选择目标素材`}
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="modal-actions">
@@ -610,7 +735,7 @@ function OpsFileRepair() {
                   >
                     取消
                   </button>
-                  {repairMode === 'upload' && (
+                  {bindSource === 'material' && repairMode === 'upload' && (
                     <button
                       className="btn-primary"
                       onClick={handleUploadRepair}
@@ -619,7 +744,7 @@ function OpsFileRepair() {
                       {uploading ? '上传中...' : '上传并修复'}
                     </button>
                   )}
-                  {repairMode === 'bind' && (
+                  {(bindSource === 'material' && repairMode === 'bind') && (
                     <button
                       className="btn-primary"
                       onClick={handleBindOrphan}
@@ -628,7 +753,16 @@ function OpsFileRepair() {
                       {uploading ? '绑定中...' : '确认绑定'}
                     </button>
                   )}
-                  {repairMode === 'manual' && (
+                  {bindSource === 'orphan' && (
+                    <button
+                      className="btn-primary"
+                      onClick={handleBindOrphan}
+                      disabled={!selectedTargetMaterialId || uploading || !selectedOrphanUrl}
+                    >
+                      {uploading ? '绑定中...' : '确认绑定'}
+                    </button>
+                  )}
+                  {bindSource === 'material' && repairMode === 'manual' && (
                     <button
                       className="btn-primary"
                       onClick={handleManualReplace}
@@ -652,6 +786,10 @@ function OpsFileRepair() {
                 <div className="result-message">{repairResult.message}</div>
                 {repairResult.success && repairResult.details?.material && (
                   <div className="result-details">
+                    <div className="detail-row">
+                      <span>素材：</span>
+                      <span>{repairResult.details.material.title || repairResult.details.material.name}</span>
+                    </div>
                     <div className="detail-row">
                       <span>新URL：</span>
                       <span className="new-url">{repairResult.details.material.url}</span>

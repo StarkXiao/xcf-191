@@ -850,8 +850,121 @@
 
 .upload-section,
 .bind-section,
-.manual-section {
+.manual-section,
+.target-material-section {
   background: rgba(0, 0, 0, 0.2);
   border-radius: $radius-md;
   padding: 20px;
+}
+
+.target-material-section {
+  .material-search {
+    margin-bottom: 16px;
+  }
+
+  .material-list {
+    max-height: 320px;
+    overflow-y: auto;
+    border: 1px solid $border-light;
+    border-radius: $radius-sm;
+    background: rgba(0, 0, 0, 0.15);
+  }
+
+  .material-empty {
+    text-align: center;
+    padding: 32px 16px;
+    color: $text-muted;
+    font-size: 14px;
+  }
+
+  .material-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid $border-light;
+    cursor: pointer;
+    transition: all $transition-fast;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &:hover {
+      background: rgba(255, 215, 0, 0.05);
+    }
+
+    &.selected {
+      background: rgba(135, 206, 235, 0.1);
+      border-left: 3px solid $accent-blue;
+      padding-left: 13px;
+    }
+  }
+
+  .material-item-main {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .material-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .material-item-info {
+    flex: 1;
+    min-width: 0;
+
+    .material-item-title {
+      color: $text-primary;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 4px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .material-item-meta {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 6px;
+
+      .material-type,
+      .material-exhibition {
+        font-size: 12px;
+        color: $text-muted;
+      }
+
+      .material-type {
+        color: $accent-blue;
+      }
+    }
+
+    .material-item-issues {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+
+      .issue-tag.small {
+        font-size: 11px;
+        padding: 2px 6px;
+      }
+    }
+  }
+
+  .material-item-check {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    color: $accent-blue;
+    font-size: 16px;
+    text-align: center;
+    line-height: 20px;
+  }
 }
