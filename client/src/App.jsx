@@ -12,6 +12,8 @@ import CreateFamilyAlbum from './pages/CreateFamilyAlbum.jsx';
 import FamilyMemberManager from './pages/FamilyMemberManager.jsx';
 import FamilyTimeline from './pages/FamilyTimeline.jsx';
 import BackupManager from './components/BackupManager.jsx';
+import AppointmentAdmin from './pages/AppointmentAdmin.jsx';
+import AppointmentBooking from './pages/AppointmentBooking.jsx';
 import './styles/App.scss';
 
 function App() {
@@ -48,6 +50,9 @@ function App() {
           <Route path="/family-albums/:id/timeline" element={<FamilyTimeline />} />
           <Route path="/family-members" element={<FamilyMemberManager />} />
           <Route path="/backup" element={<BackupManager />} />
+          <Route path="/appointments" element={<AppointmentAdmin />} />
+          <Route path="/appointment/book" element={<AppointmentBooking />} />
+          <Route path="/appointment/book/:exhibitionId" element={<AppointmentBooking />} />
         </Routes>
       </main>
     </div>

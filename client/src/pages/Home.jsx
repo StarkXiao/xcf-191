@@ -1,22 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { exhibitionApi } from '../services/api.js';
+import { exhibitionApi, appointmentApi } from '../services/api.js';
 import './Home.scss';
 
 function Home() {
   const [exhibitions, setExhibitions] = useState([]);
+  const [apptStats, setApptStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadExhibitions();
+    loadData();
   }, []);
 
-  const loadExhibitions = async () => {
+  const loadData = async () => {
     try {
-      const data = await exhibitionApi.list();
-      setExhibitions(data);
+      const [exs, stats] = await Promise.all([
+        exhibitionApi.list(),
+        appointmentApi.getStats().catch(() => null)
+      ]);
+      setExhibitions(exs);
+      setApptStats(stats);
     } catch (err) {
-      console.error('加载展厅失败:', err);
+      console.error('加载失败:', err);
     } finally {
       setLoading(false);
     }
@@ -51,6 +56,36 @@ function Home() {
           <span className="hero-btn-icon">✦</span>
           创建我的纪念馆
         </Link>
+      </section>
+
+      <section className="quick-actions">
+        <div className="action-cards">
+          <Link to="/appointment/book" className="action-card appointment-card">
+            <div className="action-icon">✿</div>
+            <div className="action-info">
+              <h3>访客预约</h3>
+              <p>预约追思时段，静享温馨时光</p>
+            </div>
+            {apptStats && (
+              <div className="action-stats">
+                <span>{apptStats.total} 次预约</span>
+              </div>
+            )}
+          </Link>
+          <Link to="/appointments" className="action-card admin-card">
+            <div className="action-icon">📋</div>
+            <div className="action-info">
+              <h3>预约管理</h3>
+              <p>管理时段、签到和访客记录</p>
+            </div>
+            {apptStats && (
+              <div className="action-stats">
+                <span className="pending">{apptStats.pending} 待确认</span>
+                <span className="confirmed">{apptStats.confirmed} 已确认</span>
+              </div>
+            )}
+          </Link>
+        </div>
       </section>
 
       <section className="exhibition-section">

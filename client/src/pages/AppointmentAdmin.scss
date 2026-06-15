@@ -1,0 +1,598 @@
+@import '../styles/variables.scss';
+@import '../styles/mixins.scss';
+
+.appointment-admin {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.admin-header {
+  margin-bottom: 24px;
+
+  .back-btn {
+    background: none;
+    border: none;
+    color: $text-secondary;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: $radius-sm;
+    transition: all $transition-fast;
+    margin-bottom: 16px;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: $text-primary;
+    }
+  }
+
+  .header-content {
+    @include flex-between;
+    flex-wrap: wrap;
+    gap: 16px;
+
+    h1 {
+      font-family: $font-serif;
+      color: $text-primary;
+      font-size: 28px;
+      margin: 0;
+      font-weight: 500;
+    }
+  }
+
+  .exhibition-selector {
+    @include flex-center;
+    gap: 8px;
+
+    label {
+      color: $text-secondary;
+      font-size: 14px;
+    }
+
+    .form-input {
+      min-width: 200px;
+    }
+  }
+}
+
+.tabs-bar {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 24px;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 6px;
+  border-radius: $radius-md;
+  overflow-x: auto;
+
+  .tab-item {
+    @include flex-center;
+    gap: 8px;
+    padding: 12px 24px;
+    background: none;
+    border: none;
+    color: $text-secondary;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: $radius-sm;
+    transition: all $transition-fast;
+    white-space: nowrap;
+    font-family: inherit;
+
+    &:hover {
+      color: $text-primary;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    &.active {
+      background: linear-gradient(135deg, $accent-gold, $accent-warm);
+      color: $bg-primary;
+      font-weight: 500;
+    }
+
+    .tab-icon {
+      font-size: 16px;
+    }
+  }
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  @include glass;
+  padding: 20px;
+  border-radius: $radius-md;
+  text-align: center;
+
+  .stat-label {
+    display: block;
+    color: $text-muted;
+    font-size: 13px;
+    margin-bottom: 8px;
+  }
+
+  .stat-value {
+    display: block;
+    font-family: $font-serif;
+    font-size: 32px;
+    font-weight: 600;
+    color: $text-primary;
+  }
+
+  &.warning .stat-value { color: $accent-gold; }
+  &.info .stat-value { color: $accent-blue; }
+  &.success .stat-value { color: $accent-green; }
+  &.danger .stat-value { color: #ff8080; }
+  &.purple .stat-value { color: $accent-purple; }
+}
+
+.filter-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+
+  .form-input {
+    max-width: 200px;
+  }
+}
+
+.section-actions {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.btn-primary,
+.btn-secondary,
+.btn-danger {
+  padding: 10px 20px;
+  border: none;
+  border-radius: $radius-sm;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all $transition-fast;
+  font-family: inherit;
+  font-weight: 500;
+
+  &.full {
+    width: 100%;
+  }
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, $accent-gold, $accent-warm);
+  color: $bg-primary;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: $shadow-glow;
+  }
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: $text-primary;
+  border: 1px solid $border-color;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.15);
+  }
+}
+
+.btn-danger {
+  background: rgba(255, 80, 80, 0.2);
+  color: #ff8080;
+  border: 1px solid rgba(255, 80, 80, 0.3);
+
+  &:hover {
+    background: rgba(255, 80, 80, 0.3);
+  }
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: $accent-blue;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all $transition-fast;
+  font-family: inherit;
+
+  &:hover {
+    background: rgba(135, 206, 235, 0.1);
+  }
+
+  &.danger {
+    color: #ff8080;
+
+    &:hover {
+      background: rgba(255, 80, 80, 0.1);
+    }
+  }
+}
+
+.data-table {
+  @include glass;
+  border-radius: $radius-md;
+  overflow: hidden;
+
+  h3 {
+    padding: 20px 20px 0;
+    margin: 0 0 12px 0;
+    color: $text-primary;
+    font-size: 18px;
+    font-weight: 500;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+
+    th {
+      text-align: left;
+      padding: 14px 20px;
+      color: $text-muted;
+      font-size: 13px;
+      font-weight: 500;
+      background: rgba(0, 0, 0, 0.2);
+      border-bottom: 1px solid $border-color;
+    }
+
+    td {
+      padding: 14px 20px;
+      color: $text-primary;
+      font-size: 14px;
+      border-bottom: 1px solid $border-light;
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .loading-cell,
+    .empty-cell {
+      text-align: center;
+      padding: 40px 20px;
+      color: $text-muted;
+    }
+
+    .actions-cell {
+      white-space: nowrap;
+    }
+
+    .text-success { color: $accent-green; }
+    .text-danger { color: #ff8080; }
+  }
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: $radius-full;
+  font-size: 12px;
+  font-weight: 500;
+
+  &.active {
+    background: rgba(152, 251, 152, 0.15);
+    color: $accent-green;
+  }
+
+  &.inactive {
+    background: rgba(255, 255, 255, 0.08);
+    color: $text-muted;
+  }
+}
+
+.tag {
+  display: inline-block;
+  padding: 2px 10px;
+  background: rgba(255, 215, 0, 0.15);
+  color: $accent-gold;
+  border-radius: $radius-full;
+  font-size: 12px;
+  margin-right: 6px;
+
+  &.tag-alt {
+    background: rgba(135, 206, 235, 0.15);
+    color: $accent-blue;
+  }
+}
+
+.templates-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
+}
+
+.template-card {
+  @include glass;
+  border-radius: $radius-md;
+  padding: 20px;
+  transition: all $transition-fast;
+
+  &:hover {
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  &.disabled {
+    opacity: 0.5;
+  }
+
+  .template-header {
+    @include flex-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+
+    h4 {
+      margin: 0 0 8px 0;
+      color: $text-primary;
+      font-size: 16px;
+      font-weight: 500;
+    }
+  }
+
+  .template-actions {
+    display: flex;
+    gap: 4px;
+  }
+
+  .template-content {
+    color: $text-secondary;
+    font-size: 14px;
+    line-height: 1.7;
+    margin: 0;
+    white-space: pre-wrap;
+  }
+}
+
+.entry-panels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.entry-panel {
+  @include glass;
+  border-radius: $radius-md;
+  padding: 24px;
+
+  h3 {
+    margin: 0 0 20px 0;
+    color: $text-primary;
+    font-size: 18px;
+    font-weight: 500;
+  }
+}
+
+.form-group {
+  margin-bottom: 16px;
+
+  label {
+    display: block;
+    color: $text-secondary;
+    font-size: 13px;
+    margin-bottom: 8px;
+
+    .hint {
+      color: $text-muted;
+      font-size: 12px;
+      font-weight: normal;
+      margin-left: 8px;
+    }
+  }
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+
+  .form-group {
+    margin-bottom: 0;
+  }
+}
+
+.form-input,
+.form-textarea {
+  width: 100%;
+  padding: 10px 14px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid $border-color;
+  border-radius: $radius-sm;
+  color: $text-primary;
+  font-size: 14px;
+  outline: none;
+  transition: border-color $transition-fast;
+  font-family: inherit;
+  box-sizing: border-box;
+
+  &::placeholder {
+    color: $text-muted;
+  }
+
+  &:focus {
+    border-color: $accent-gold;
+  }
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 80px;
+  line-height: 1.6;
+}
+
+.checkbox-label {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+
+  input[type="checkbox"] {
+    width: auto;
+  }
+}
+
+.panel-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.verify-result {
+  margin-top: 16px;
+  padding: 12px 16px;
+  border-radius: $radius-sm;
+  font-size: 14px;
+
+  &.success {
+    background: rgba(152, 251, 152, 0.1);
+    border: 1px solid rgba(152, 251, 152, 0.3);
+    color: $accent-green;
+  }
+
+  &.error {
+    background: rgba(255, 80, 80, 0.1);
+    border: 1px solid rgba(255, 80, 80, 0.3);
+    color: #ff8080;
+  }
+
+  .verify-info {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+    p {
+      margin: 4px 0;
+      font-size: 13px;
+    }
+  }
+}
+
+.checkin-welcome {
+  @include glass;
+  border-radius: $radius-md;
+  padding: 24px;
+  text-align: center;
+  margin-bottom: 20px;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(244, 164, 96, 0.1));
+
+  .welcome-icon {
+    font-size: 40px;
+    color: $accent-gold;
+    margin-bottom: 8px;
+  }
+
+  h3 {
+    margin: 0 0 8px 0;
+    color: $text-primary;
+    font-size: 22px;
+    font-family: $font-serif;
+    font-weight: 500;
+  }
+
+  p {
+    margin: 0;
+    color: $text-secondary;
+    font-size: 14px;
+    line-height: 1.7;
+  }
+}
+
+.weekdays {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.weekday-label {
+  display: flex !important;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid $border-color;
+  border-radius: $radius-sm;
+  cursor: pointer;
+  transition: all $transition-fast;
+  font-size: 13px;
+  color: $text-secondary !important;
+
+  &:has(input:checked) {
+    background: rgba(255, 215, 0, 0.15);
+    border-color: $accent-gold;
+    color: $accent-gold !important;
+  }
+
+  input {
+    margin: 0;
+  }
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  @include flex-center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal {
+  background: $bg-secondary;
+  border: 1px solid $border-color;
+  border-radius: $radius-lg;
+  padding: 28px;
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+
+  &.large {
+    max-width: 680px;
+  }
+
+  h3 {
+    margin: 0 0 20px 0;
+    color: $text-primary;
+    font-size: 20px;
+    font-weight: 500;
+    font-family: $font-serif;
+  }
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid $border-light;
+}
+
+.preview-box {
+  margin-top: 12px;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: $radius-sm;
+  color: $text-secondary;
+  font-size: 14px;
+  line-height: 1.7;
+  border: 1px dashed $border-color;
+}

@@ -1,0 +1,115 @@
+@import '../styles/variables.scss';
+@import '../styles/mixins.scss';
+
+.appointment-booking {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.booking-header {
+  margin-bottom: 32px;
+
+  .back-btn {
+    background: none;
+    border: none;
+    color: $text-secondary;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: $radius-sm;
+    transition: all $transition-fast;
+    margin-bottom: 16px;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: $text-primary;
+    }
+  }
+}
+
+.booking-title-wrap {
+  text-align: center;
+  padding: 24px 0;
+
+  .title-icon {
+    font-size: 40px;
+    color: $accent-gold;
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  h1 {
+    font-family: $font-serif;
+    color: $text-primary;
+    font-size: 32px;
+    margin: 0 0 8px 0;
+    font-weight: 500;
+  }
+
+  .booking-subtitle {
+    color: $text-muted;
+    font-size: 15px;
+    margin: 0;
+  }
+}
+
+.booking-content {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 28px;
+  align-items: start;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.booking-info {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: sticky;
+  top: 24px;
+}
+
+.info-card {
+  @include glass;
+  border-radius: $radius-md;
+  padding: 20px;
+
+  h3 {
+    margin: 0 0 12px 0;
+    color: $accent-gold;
+    font-size: 16px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    &::before {
+      content: '';
+      display: inline-block;
+      width: 4px;
+      height: 16px;
+      background: linear-gradient(180deg, $accent-gold, $accent-warm);
+      border-radius: 2px;
+    }
+  }
+
+  ul {
+    margin: 0;
+    padding-left: 20px;
+    color: $text-secondary;
+    font-size: 13px;
+    line-height: 2;
+  }
+
+  li {
+    margin-bottom: 4px;
+  }
+}
+
+.booking-form-wrap {
+  min-width: 0;
+}

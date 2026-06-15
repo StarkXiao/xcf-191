@@ -13,7 +13,11 @@ const defaultDB = {
   shareViews: [],
   memoryMaps: [],
   familyAlbums: [],
-  familyMembers: []
+  familyMembers: [],
+  appointments: [],
+  timeSlots: [],
+  reminderTemplates: [],
+  visitRecords: []
 };
 
 export const initStorage = () => {

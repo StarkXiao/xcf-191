@@ -13,6 +13,10 @@ import memoryMapRoutes from './routes/memoryMap.js';
 import familyAlbumRoutes from './routes/familyAlbum.js';
 import familyMemberRoutes from './routes/familyMember.js';
 import exportBackupRoutes from './routes/exportBackup.js';
+import appointmentRoutes from './routes/appointment.js';
+import timeSlotRoutes from './routes/timeSlot.js';
+import reminderTemplateRoutes from './routes/reminderTemplate.js';
+import visitRecordRoutes from './routes/visitRecord.js';
 import { initStorage } from './storage.js';
 import { UPLOADS_DIR } from './config.js';
 
@@ -50,6 +54,10 @@ fastify.register(memoryMapRoutes, { prefix: '/api/memory-maps' });
 fastify.register(familyAlbumRoutes, { prefix: '/api/family-albums' });
 fastify.register(familyMemberRoutes, { prefix: '/api/family-members' });
 fastify.register(exportBackupRoutes, { prefix: '/api/backup' });
+fastify.register(appointmentRoutes, { prefix: '/api/appointments' });
+fastify.register(timeSlotRoutes, { prefix: '/api/time-slots' });
+fastify.register(reminderTemplateRoutes, { prefix: '/api/reminder-templates' });
+fastify.register(visitRecordRoutes, { prefix: '/api/visit-records' });
 
 
 fastify.get('/api/health', async () => {

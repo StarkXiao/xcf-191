@@ -6,6 +6,7 @@ import TimelineEditor from '../components/TimelineEditor.jsx';
 import MemoryMap from '../components/MemoryMap.jsx';
 import MessageBoard from '../components/MessageBoard.jsx';
 import ShareManager from '../components/ShareManager.jsx';
+import AppointmentForm from '../components/AppointmentForm.jsx';
 import './ExhibitionDetail.scss';
 
 function ExhibitionDetail() {
@@ -46,6 +47,7 @@ function ExhibitionDetail() {
     { key: 'timeline', name: '时间轴', icon: '⌛' },
     { key: 'memorymap', name: '回忆地图', icon: '🗺️' },
     { key: 'messages', name: '访客留言', icon: '✉' },
+    { key: 'appointment', name: '访客预约', icon: '✿' },
     { key: 'share', name: '公开分享', icon: '✦' }
   ];
 
@@ -134,6 +136,9 @@ function ExhibitionDetail() {
         )}
         {activeTab === 'messages' && (
           <MessageBoard exhibitionId={id} />
+        )}
+        {activeTab === 'appointment' && (
+          <AppointmentForm exhibitionId={id} />
         )}
         {activeTab === 'share' && (
           <ShareManager

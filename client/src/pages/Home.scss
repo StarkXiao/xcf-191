@@ -189,3 +189,107 @@
   color: $text-muted;
   font-size: 12px;
 }
+
+.quick-actions {
+  margin-bottom: 48px;
+}
+
+.action-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.action-card {
+  @include glass;
+  border-radius: $radius-lg;
+  padding: 28px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  transition: all $transition-normal;
+  text-decoration: none;
+  color: inherit;
+  position: relative;
+  overflow: hidden;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: $shadow-lg;
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  &.appointment-card {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.08), rgba(244, 164, 96, 0.08));
+    border: 1px solid rgba(255, 215, 0, 0.2);
+  }
+
+  &.admin-card {
+    background: linear-gradient(135deg, rgba(135, 206, 235, 0.08), rgba(221, 160, 221, 0.08));
+    border: 1px solid rgba(135, 206, 235, 0.2);
+  }
+}
+
+.action-icon {
+  width: 64px;
+  height: 64px;
+  @include flex-center;
+  border-radius: $radius-md;
+  font-size: 32px;
+  flex-shrink: 0;
+
+  .appointment-card & {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(244, 164, 96, 0.2));
+  }
+
+  .admin-card & {
+    background: linear-gradient(135deg, rgba(135, 206, 235, 0.2), rgba(221, 160, 221, 0.2));
+  }
+}
+
+.action-info {
+  flex: 1;
+
+  h3 {
+    margin: 0 0 6px 0;
+    color: $text-primary;
+    font-size: 20px;
+    font-weight: 500;
+    font-family: $font-serif;
+  }
+
+  p {
+    margin: 0;
+    color: $text-secondary;
+    font-size: 14px;
+  }
+}
+
+.action-stats {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+
+  span {
+    padding: 4px 12px;
+    border-radius: $radius-full;
+    font-size: 12px;
+    background: rgba(255, 255, 255, 0.08);
+    color: $text-muted;
+
+    &.pending {
+      background: rgba(255, 215, 0, 0.15);
+      color: $accent-gold;
+    }
+
+    &.confirmed {
+      background: rgba(135, 206, 235, 0.15);
+      color: $accent-blue;
+    }
+  }
+}

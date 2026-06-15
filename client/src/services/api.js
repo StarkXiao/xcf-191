@@ -117,4 +117,49 @@ export const backupApi = {
   }
 };
 
+export const appointmentApi = {
+  list: (params) => request.get('/appointments', { params }).then(r => r.data),
+  get: (id) => request.get(`/appointments/${id}`).then(r => r.data),
+  create: (data) => request.post('/appointments', data).then(r => r.data),
+  update: (id, data) => request.put(`/appointments/${id}`, data).then(r => r.data),
+  remove: (id) => request.delete(`/appointments/${id}`).then(r => r.data),
+  confirm: (id) => request.post(`/appointments/${id}/confirm`).then(r => r.data),
+  cancel: (id) => request.post(`/appointments/${id}/cancel`).then(r => r.data),
+  complete: (id) => request.post(`/appointments/${id}/complete`).then(r => r.data),
+  noShow: (id) => request.post(`/appointments/${id}/no-show`).then(r => r.data),
+  getStats: (params) => request.get('/appointments/stats/summary', { params }).then(r => r.data)
+};
+
+export const timeSlotApi = {
+  list: (params) => request.get('/time-slots', { params }).then(r => r.data),
+  get: (id) => request.get(`/time-slots/${id}`).then(r => r.data),
+  create: (data) => request.post('/time-slots', data).then(r => r.data),
+  createBatch: (data) => request.post('/time-slots/batch', data).then(r => r.data),
+  update: (id, data) => request.put(`/time-slots/${id}`, data).then(r => r.data),
+  toggle: (id) => request.post(`/time-slots/${id}/toggle`).then(r => r.data),
+  remove: (id) => request.delete(`/time-slots/${id}`).then(r => r.data),
+  cleanupExpired: () => request.delete('/time-slots/cleanup/expired').then(r => r.data)
+};
+
+export const reminderTemplateApi = {
+  list: (params) => request.get('/reminder-templates', { params }).then(r => r.data),
+  get: (id) => request.get(`/reminder-templates/${id}`).then(r => r.data),
+  create: (data) => request.post('/reminder-templates', data).then(r => r.data),
+  update: (id, data) => request.put(`/reminder-templates/${id}`, data).then(r => r.data),
+  toggle: (id) => request.post(`/reminder-templates/${id}/toggle`).then(r => r.data),
+  remove: (id) => request.delete(`/reminder-templates/${id}`).then(r => r.data),
+  preview: (content, variables) => request.post('/reminder-templates/preview', { content, variables }).then(r => r.data),
+  send: (id, data) => request.post(`/reminder-templates/${id}/send`, data).then(r => r.data)
+};
+
+export const visitRecordApi = {
+  list: (params) => request.get('/visit-records', { params }).then(r => r.data),
+  get: (id) => request.get(`/visit-records/${id}`).then(r => r.data),
+  checkIn: (data) => request.post('/visit-records/checkin', data).then(r => r.data),
+  checkOut: (data) => request.post('/visit-records/checkout', data).then(r => r.data),
+  verify: (data) => request.post('/visit-records/verify', data).then(r => r.data),
+  quickEntry: (data) => request.post('/visit-records/quick-entry', data).then(r => r.data),
+  getStats: (params) => request.get('/visit-records/stats/summary', { params }).then(r => r.data)
+};
+
 export default request;
