@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { getCollection, saveCollection } from '../storage.js';
 
-const isMessageVisible = (message, visitorGroupId, isAdmin = false) => {
+const isMessageVisible = (message, visitorGroupId, visitorSessionId, isAdmin = false) => {
   if (isAdmin) return true;
 
   const visibility = message.visibility || 'public';
@@ -9,7 +9,7 @@ const isMessageVisible = (message, visitorGroupId, isAdmin = false) => {
   if (visibility === 'public') return true;
 
   if (visibility === 'private') {
-    return message.visitorSessionId && message.visitorSessionId === visitorGroupId;
+    return message.visitorSessionId && message.visitorSessionId === visitorSessionId;
   }
 
   if (visibility === 'groups') {
@@ -32,7 +32,7 @@ const normalizeMessage = (message) => {
 
 export default async function messageRoutes(fastify) {
   fastify.get('/', async (request) => {
-    const { exhibitionId, visitorGroupId, isAdmin } = request.query;
+    const { exhibitionId, visitorGroupId, visitorSessionId, isAdmin } = request.query;
     let messages = getCollection('messages');
 
     if (exhibitionId) {
@@ -43,7 +43,7 @@ export default async function messageRoutes(fastify) {
 
     const filtered = messages
       .map(normalizeMessage)
-      .filter(m => isMessageVisible(m, visitorGroupId, adminFlag));
+      .filter(m => isMessageVisible(m, visitorGroupId, visitorSessionId, adminFlag));
 
     return filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   });

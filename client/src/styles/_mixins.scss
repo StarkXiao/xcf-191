@@ -1,3 +1,7 @@
+@mixin flex {
+  display: flex;
+}
+
 @mixin flex-center {
   display: flex;
   align-items: center;
@@ -14,6 +18,11 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+@mixin flex-col {
+  display: flex;
+  flex-direction: column;
 }
 
 @mixin glass {

@@ -58,7 +58,7 @@ function MessageBoard({ exhibitionId, isAdmin = false }) {
     try {
       const [groups, msgs] = await Promise.all([
         exhibitionApi.getVisitorGroups(exhibitionId),
-        loadMessagesData()
+        loadMessagesData(visitorSessionId)
       ]);
       setVisitorGroups(groups);
       setMessages(msgs);
@@ -69,15 +69,20 @@ function MessageBoard({ exhibitionId, isAdmin = false }) {
     }
   };
 
-  const loadMessagesData = async () => {
+  const loadMessagesData = async (sessionId) => {
     const currentGroupId = getStoredVisitorGroup(exhibitionId);
-    const data = await messageApi.list(exhibitionId, currentGroupId || undefined, isAdmin);
+    const data = await messageApi.list(
+      exhibitionId,
+      currentGroupId || undefined,
+      sessionId,
+      isAdmin
+    );
     return data;
   };
 
   const loadMessages = async () => {
     try {
-      const data = await loadMessagesData();
+      const data = await loadMessagesData(visitorSessionId);
       setMessages(data);
     } catch (err) {
       console.error('加载留言失败:', err);
