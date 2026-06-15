@@ -54,17 +54,33 @@ export default async function collectionRoutes(fastify) {
       collection.exhibitionIds && collection.exhibitionIds.includes(m.exhibitionId)
     );
 
-    const allTimelines = timelines.filter(t => 
-      collection.exhibitionIds && collection.exhibitionIds.includes(t.exhibitionId)
-    );
+    const allTimelines = timelines
+      .filter(t => collection.exhibitionIds && collection.exhibitionIds.includes(t.exhibitionId))
+      .map(t => {
+        const exhibition = exhibitions.find(e => e.id === t.exhibitionId);
+        return {
+          ...t,
+          exhibitionTitle: exhibition ? exhibition.title : null,
+          exhibitionCover: exhibition ? exhibition.coverImage : null
+        };
+      })
+      .sort((a, b) => new Date(a.eventDate) - new Date(b.eventDate));
+
+    const sortedExhibitions = [...collectionExhibitions];
+    const config = collection.config || {};
+    if (config.sortBy === 'name') {
+      sortedExhibitions.sort((a, b) => a.title.localeCompare(b.title));
+    } else if (config.sortBy === 'date') {
+      sortedExhibitions.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    }
 
     return {
       ...collection,
-      exhibitions: collectionExhibitions,
+      exhibitions: sortedExhibitions,
       materials: allMaterials,
       timelines: allTimelines,
       stats: {
-        exhibitionCount: collectionExhibitions.length,
+        exhibitionCount: sortedExhibitions.length,
         materialCount: allMaterials.length,
         timelineCount: allTimelines.length
       }

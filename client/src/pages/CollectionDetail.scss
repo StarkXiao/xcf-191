@@ -680,3 +680,14 @@
   margin: 0;
   line-height: 1.6;
 }
+
+.timeline-from {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 11px;
+  color: $accent-gold;
+  opacity: 0.8;
+  padding: 2px 8px;
+  background: rgba(255, 215, 0, 0.1);
+  border-radius: $radius-sm;
+}

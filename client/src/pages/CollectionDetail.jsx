@@ -365,9 +365,12 @@ function CollectionDetail() {
                     <div className="timeline-dot"></div>
                     <div className="timeline-content">
                       <h4 className="timeline-title">{tl.title || '时间线事件'}</h4>
-                      {tl.date && <span className="timeline-date">{formatDate(tl.date)}</span>}
+                      {tl.eventDate && <span className="timeline-date">{formatDate(tl.eventDate)}</span>}
                       {tl.description && (
                         <p className="timeline-desc">{tl.description}</p>
+                      )}
+                      {tl.exhibitionTitle && (
+                        <span className="timeline-from">来自：{tl.exhibitionTitle}</span>
                       )}
                     </div>
                   </div>

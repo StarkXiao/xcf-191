@@ -20,6 +20,10 @@ function CollectionEditor() {
     type: 'person',
     tags: [],
     exhibitionIds: [],
+    config: {
+      layout: 'grid',
+      sortBy: 'date'
+    },
     personInfo: {
       name: '',
       birthDate: '',
@@ -57,6 +61,10 @@ function CollectionEditor() {
           type: collection.type || 'person',
           tags: collection.tags || [],
           exhibitionIds: collection.exhibitionIds || [],
+          config: collection.config || {
+            layout: 'grid',
+            sortBy: 'date'
+          },
           personInfo: collection.personInfo || {
             name: '',
             birthDate: '',
@@ -157,6 +165,13 @@ function CollectionEditor() {
     setFormData(prev => ({
       ...prev,
       eventInfo: { ...prev.eventInfo, [field]: value }
+    }));
+  };
+
+  const updateConfig = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      config: { ...prev.config, [field]: value }
     }));
   };
 
@@ -285,6 +300,63 @@ function CollectionEditor() {
                   添加
                 </button>
               </div>
+            </div>
+          </div>
+
+          <div className="form-item">
+            <label>展示布局</label>
+            <div className="layout-options">
+              <button
+                type="button"
+                className={`layout-option ${formData.config.layout === 'grid' ? 'selected' : ''}`}
+                onClick={() => updateConfig('layout', 'grid')}
+              >
+                <span className="layout-icon">⊞</span>
+                <span className="layout-label">网格布局</span>
+              </button>
+              <button
+                type="button"
+                className={`layout-option ${formData.config.layout === 'list' ? 'selected' : ''}`}
+                onClick={() => updateConfig('layout', 'list')}
+              >
+                <span className="layout-icon">☰</span>
+                <span className="layout-label">列表布局</span>
+              </button>
+              <button
+                type="button"
+                className={`layout-option ${formData.config.layout === 'timeline' ? 'selected' : ''}`}
+                onClick={() => updateConfig('layout', 'timeline')}
+              >
+                <span className="layout-icon">⌛</span>
+                <span className="layout-label">时间轴</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="form-item">
+            <label>排序方式</label>
+            <div className="sort-options">
+              <button
+                type="button"
+                className={`sort-option ${formData.config.sortBy === 'date' ? 'selected' : ''}`}
+                onClick={() => updateConfig('sortBy', 'date')}
+              >
+                按时间排序
+              </button>
+              <button
+                type="button"
+                className={`sort-option ${formData.config.sortBy === 'name' ? 'selected' : ''}`}
+                onClick={() => updateConfig('sortBy', 'name')}
+              >
+                按名称排序
+              </button>
+              <button
+                type="button"
+                className={`sort-option ${formData.config.sortBy === 'custom' ? 'selected' : ''}`}
+                onClick={() => updateConfig('sortBy', 'custom')}
+              >
+                自定义排序
+              </button>
             </div>
           </div>
         </section>
