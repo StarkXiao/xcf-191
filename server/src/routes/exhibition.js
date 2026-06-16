@@ -35,7 +35,7 @@ export default async function exhibitionRoutes(fastify) {
   });
 
   fastify.post('/', async (request) => {
-    const { title, description, coverImage, theme, visitorGroups, memorialDate } = request.body;
+    const { title, description, coverImage, theme, themeConfig, visitorGroups, memorialDate } = request.body;
     const exhibitions = getCollection('exhibitions');
     const newExhibition = {
       id: uuidv4(),
@@ -43,6 +43,7 @@ export default async function exhibitionRoutes(fastify) {
       description: description || '',
       coverImage: coverImage || '',
       theme: theme || 'default',
+      themeConfig: themeConfig || null,
       visitorGroups: visitorGroups && visitorGroups.length > 0
         ? visitorGroups
         : [...defaultVisitorGroups],
@@ -59,7 +60,7 @@ export default async function exhibitionRoutes(fastify) {
 
   fastify.put('/:id', async (request, reply) => {
     const { id } = request.params;
-    const { title, description, coverImage, theme, visitorGroups, memorialDate } = request.body;
+    const { title, description, coverImage, theme, themeConfig, visitorGroups, memorialDate } = request.body;
     const exhibitions = getCollection('exhibitions');
     const index = exhibitions.findIndex(e => e.id === id);
     if (index === -1) {
@@ -73,6 +74,7 @@ export default async function exhibitionRoutes(fastify) {
       description: description !== undefined ? description : current.description,
       coverImage: coverImage !== undefined ? coverImage : current.coverImage,
       theme: theme !== undefined ? theme : current.theme,
+      themeConfig: themeConfig !== undefined ? themeConfig : (current.themeConfig || null),
       visitorGroups: visitorGroups !== undefined ? visitorGroups : current.visitorGroups,
       memorialDate: memorialDate !== undefined ? memorialDate : (current.memorialDate || ''),
       lastRemindedAt: current.lastRemindedAt || null,

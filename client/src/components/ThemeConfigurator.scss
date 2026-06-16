@@ -1,0 +1,327 @@
+@import '../styles/variables.scss';
+@import '../styles/mixins.scss';
+
+.theme-configurator {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: $radius-lg;
+  overflow: hidden;
+}
+
+.tc-tabs {
+  @include flex-center;
+  gap: 4px;
+  padding: 8px 12px;
+  border-bottom: 1px solid $border-light;
+  background: rgba(0, 0, 0, 0.15);
+  overflow-x: auto;
+  @include scrollbar-hide;
+}
+
+.tc-tab {
+  @include inline-flex-center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: $radius-full;
+  font-size: 13px;
+  color: $text-muted;
+  white-space: nowrap;
+  transition: all $transition-fast;
+
+  &:hover {
+    color: $text-secondary;
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  &.active {
+    color: $accent-gold;
+    background: rgba(255, 215, 0, 0.1);
+  }
+}
+
+.tc-tab-icon {
+  font-size: 14px;
+}
+
+.tc-tab-name {
+  font-size: 13px;
+}
+
+.tc-content {
+  padding: 20px;
+}
+
+.tc-section-hint {
+  color: $text-muted;
+  font-size: 12px;
+  margin-bottom: 16px;
+}
+
+.tc-preset-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.tc-preset-card {
+  border-radius: $radius-md;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all $transition-fast;
+  border: 2px solid transparent;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+
+  &.active {
+    border-color: $accent-gold;
+    box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.2);
+  }
+}
+
+.tc-preset-preview {
+  height: 60px;
+}
+
+.tc-preset-info {
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.tc-preset-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: $text-primary;
+  margin-bottom: 2px;
+}
+
+.tc-preset-desc {
+  font-size: 11px;
+  color: $text-muted;
+}
+
+.tc-bg-uploader {
+  width: 100%;
+}
+
+.tc-bg-preview {
+  position: relative;
+  width: 100%;
+  border-radius: $radius-md;
+  overflow: hidden;
+
+  img {
+    width: 100%;
+    max-height: 240px;
+    object-fit: cover;
+    display: block;
+  }
+}
+
+.tc-bg-overlay {
+  position: absolute;
+  inset: 0;
+  @include flex-center;
+  background: rgba(0, 0, 0, 0);
+  transition: background $transition-fast;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.5);
+  }
+}
+
+.tc-bg-remove {
+  padding: 8px 20px;
+  background: rgba(220, 50, 50, 0.8);
+  color: white;
+  border-radius: $radius-full;
+  font-size: 13px;
+  opacity: 0;
+  transition: all $transition-fast;
+
+  .tc-bg-overlay:hover & {
+    opacity: 1;
+  }
+
+  &:hover {
+    background: rgba(220, 50, 50, 1);
+  }
+}
+
+.tc-bg-placeholder {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  @include flex-center;
+  flex-direction: column;
+  gap: 8px;
+  border: 2px dashed $border-color;
+  border-radius: $radius-md;
+  cursor: pointer;
+  transition: all $transition-normal;
+  background: rgba(0, 0, 0, 0.2);
+
+  &:hover {
+    border-color: $accent-gold;
+    background: rgba(255, 215, 0, 0.05);
+  }
+}
+
+.tc-upload-icon {
+  font-size: 36px;
+  color: $accent-gold;
+  font-weight: 300;
+}
+
+.tc-upload-text {
+  color: $text-primary;
+  font-size: 15px;
+}
+
+.tc-upload-hint {
+  color: $text-muted;
+  font-size: 12px;
+}
+
+.tc-color-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.tc-color-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tc-color-label {
+  color: $text-secondary;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.tc-color-input-wrap {
+  @include flex-center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid $border-color;
+  border-radius: $radius-sm;
+
+  input[type="color"] {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: $radius-sm;
+    cursor: pointer;
+    background: none;
+    padding: 0;
+
+    &::-webkit-color-swatch-wrapper {
+      padding: 0;
+    }
+
+    &::-webkit-color-swatch {
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+    }
+  }
+}
+
+.tc-color-value {
+  color: $text-muted;
+  font-size: 12px;
+  font-family: monospace;
+}
+
+.tc-color-reset {
+  padding: 8px 20px;
+  background: rgba(255, 255, 255, 0.06);
+  color: $text-secondary;
+  border-radius: $radius-full;
+  font-size: 13px;
+  transition: all $transition-fast;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: $text-primary;
+  }
+}
+
+.tc-font-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.tc-font-card {
+  @include flex-center;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px 16px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 2px solid transparent;
+  border-radius: $radius-md;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  &.active {
+    border-color: $accent-gold;
+    background: rgba(255, 215, 0, 0.05);
+  }
+}
+
+.tc-font-preview {
+  font-size: 22px;
+  color: $text-primary;
+  letter-spacing: 2px;
+}
+
+.tc-font-name {
+  font-size: 12px;
+  color: $text-muted;
+}
+
+.tc-deco-list {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.tc-deco-card {
+  @include flex-center;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 2px solid transparent;
+  border-radius: $radius-md;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  &.active {
+    border-color: $accent-gold;
+    background: rgba(255, 215, 0, 0.05);
+  }
+}
+
+.tc-deco-icon {
+  font-size: 28px;
+  color: $text-primary;
+}
+
+.tc-deco-name {
+  font-size: 12px;
+  color: $text-muted;
+}

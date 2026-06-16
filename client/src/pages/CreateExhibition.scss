@@ -184,69 +184,6 @@
   }
 }
 
-.theme-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-}
-
-.theme-card {
-  border-radius: $radius-md;
-  overflow: hidden;
-  cursor: pointer;
-  transition: all $transition-fast;
-  border: 2px solid transparent;
-
-  &:hover {
-    transform: translateY(-2px);
-  }
-
-  &.active {
-    border-color: $accent-gold;
-    box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.2);
-  }
-}
-
-.theme-preview {
-  height: 60px;
-}
-
-.theme-warm .theme-preview {
-  background: linear-gradient(135deg, #f4a460, #ffd700);
-}
-.theme-ocean .theme-preview {
-  background: linear-gradient(135deg, #4682b4, #87ceeb);
-}
-.theme-forest .theme-preview {
-  background: linear-gradient(135deg, #2e8b57, #98fb98);
-}
-.theme-sunset .theme-preview {
-  background: linear-gradient(135deg, #ff6b6b, #9370db);
-}
-.theme-night .theme-preview {
-  background: linear-gradient(135deg, #191970, #4b0082);
-}
-.theme-sakura .theme-preview {
-  background: linear-gradient(135deg, #ffb6c1, #ffc0cb);
-}
-
-.theme-info {
-  padding: 10px 12px;
-  background: rgba(0, 0, 0, 0.3);
-}
-
-.theme-name {
-  font-size: 13px;
-  font-weight: 500;
-  color: $text-primary;
-  margin-bottom: 2px;
-}
-
-.theme-desc {
-  font-size: 11px;
-  color: $text-muted;
-}
-
 .form-actions {
   @include flex-center;
   gap: 16px;

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { exhibitionApi, fileApi } from '../services/api.js';
+import ThemeConfigurator from '../components/ThemeConfigurator.jsx';
 import './CreateExhibition.scss';
 
 function CreateExhibition() {
@@ -11,18 +12,15 @@ function CreateExhibition() {
     theme: 'warm',
     memorialDate: ''
   });
+  const [themeConfig, setThemeConfig] = useState(null);
   const [coverFile, setCoverFile] = useState(null);
   const [coverPreview, setCoverPreview] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const themes = [
-    { value: 'warm', name: '暖阳', desc: '金色温暖的回忆色调' },
-    { value: 'ocean', name: '深海', desc: '静谧深蓝的思念之感' },
-    { value: 'forest', name: '林间', desc: '清新自然的绿意时光' },
-    { value: 'sunset', name: '黄昏', desc: '橙紫渐变的温柔暮色' },
-    { value: 'night', name: '星夜', desc: '深邃梦幻的星空之境' },
-    { value: 'sakura', name: '樱花', desc: '粉色浪漫的柔美容颜' }
-  ];
+  const handleThemeConfigChange = (newConfig) => {
+    setThemeConfig(newConfig);
+    setForm(prev => ({ ...prev, theme: newConfig.theme }));
+  };
 
   const handleCoverChange = (e) => {
     const file = e.target.files[0];
@@ -49,7 +47,8 @@ function CreateExhibition() {
       }
       const exhibition = await exhibitionApi.create({
         ...form,
-        coverImage
+        coverImage,
+        themeConfig
       });
       navigate(`/exhibition/${exhibition.id}`);
     } catch (err) {
@@ -131,22 +130,8 @@ function CreateExhibition() {
         </div>
 
         <div className="form-section">
-          <label className="field-label">选择主题</label>
-          <div className="theme-grid">
-            {themes.map(theme => (
-              <div
-                key={theme.value}
-                className={`theme-card theme-${theme.value} ${form.theme === theme.value ? 'active' : ''}`}
-                onClick={() => setForm({ ...form, theme: theme.value })}
-              >
-                <div className="theme-preview"></div>
-                <div className="theme-info">
-                  <div className="theme-name">{theme.name}</div>
-                  <div className="theme-desc">{theme.desc}</div>
-                </div>
-              </div>
-            ))}
-          </div>
+          <label className="field-label">主题配置</label>
+          <ThemeConfigurator value={themeConfig} onChange={handleThemeConfigChange} />
         </div>
 
         <div className="form-actions">

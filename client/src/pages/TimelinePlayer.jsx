@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { exhibitionApi, materialApi, timelineApi } from '../services/api.js';
+import { applyThemeConfig, getDecorationClass } from '../components/ThemeConfigurator.jsx';
 import './TimelinePlayer.scss';
 
 function TimelinePlayer() {
@@ -110,8 +111,14 @@ function TimelinePlayer() {
   const currentNode = timelines[currentIdx];
   const nodeMaterials = (currentNode.materialIds || []).map(getMaterialById).filter(Boolean);
 
+  const themeStyle = applyThemeConfig(exhibition.themeConfig, exhibition.theme);
+  const decoClass = getDecorationClass(exhibition.themeConfig);
+
   return (
-    <div className={`timeline-player theme-${exhibition.theme}`}>
+    <div className={`timeline-player theme-${exhibition.theme} ${decoClass}`} style={themeStyle}>
+      {exhibition.themeConfig?.backgroundImage && (
+        <div className="player-bg-image" style={{ backgroundImage: `url(${exhibition.themeConfig.backgroundImage})` }}></div>
+      )}
       <button className="player-back" onClick={() => { stopAllMedia(); navigate(`/exhibition/${id}`); }}>
         ← 返回展厅
       </button>

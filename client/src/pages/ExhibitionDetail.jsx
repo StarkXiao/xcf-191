@@ -8,6 +8,7 @@ import MessageBoard from '../components/MessageBoard.jsx';
 import ShareManager from '../components/ShareManager.jsx';
 import AppointmentForm from '../components/AppointmentForm.jsx';
 import VisitorGroupManager from '../components/VisitorGroupManager.jsx';
+import ThemeConfigurator, { applyThemeConfig, getDecorationClass } from '../components/ThemeConfigurator.jsx';
 import './ExhibitionDetail.scss';
 
 function ExhibitionDetail() {
@@ -20,6 +21,8 @@ function ExhibitionDetail() {
   const [loading, setLoading] = useState(true);
   const [editingMemorial, setEditingMemorial] = useState(false);
   const [memorialDateInput, setMemorialDateInput] = useState('');
+  const [editingTheme, setEditingTheme] = useState(false);
+  const [themeConfigDraft, setThemeConfigDraft] = useState(null);
 
   useEffect(() => {
     loadAll();
@@ -65,6 +68,23 @@ function ExhibitionDetail() {
     }
   };
 
+  const handleSaveTheme = async () => {
+    try {
+      const updated = await exhibitionApi.update(id, {
+        theme: themeConfigDraft?.theme || exhibition.theme,
+        themeConfig: themeConfigDraft
+      });
+      setExhibition(updated);
+      setEditingTheme(false);
+    } catch (err) {
+      console.error('保存主题失败:', err);
+    }
+  };
+
+  const handleThemeConfigChange = (newConfig) => {
+    setThemeConfigDraft(newConfig);
+  };
+
   const formatMemorialDate = (dateStr) => {
     if (!dateStr) return '';
     const d = new Date(dateStr);
@@ -96,6 +116,7 @@ function ExhibitionDetail() {
     { key: 'messages', name: '访客留言', icon: '✉' },
     { key: 'visitorgroups', name: '访客分组', icon: '👥' },
     { key: 'appointment', name: '访客预约', icon: '✿' },
+    { key: 'theme', name: '主题配置', icon: '✦' },
     { key: 'share', name: '公开分享', icon: '✦' }
   ];
 
@@ -110,8 +131,11 @@ function ExhibitionDetail() {
 
   if (!exhibition) return null;
 
+  const themeStyle = applyThemeConfig(exhibition.themeConfig, exhibition.theme);
+  const decoClass = getDecorationClass(exhibition.themeConfig);
+
   return (
-    <div className={`exhibition-detail theme-${exhibition.theme}`}>
+    <div className={`exhibition-detail theme-${exhibition.theme} ${decoClass}`} style={themeStyle}>
       <div className="detail-hero">
         <div className="hero-cover">
           {exhibition.coverImage ? (
@@ -243,6 +267,46 @@ function ExhibitionDetail() {
         )}
         {activeTab === 'appointment' && (
           <AppointmentForm exhibitionId={id} />
+        )}
+        {activeTab === 'theme' && (
+          <div className="theme-edit-section">
+            {editingTheme ? (
+              <div className="theme-edit-active">
+                <ThemeConfigurator
+                  value={themeConfigDraft}
+                  onChange={handleThemeConfigChange}
+                />
+                <div className="theme-edit-actions">
+                  <button className="btn btn-secondary" onClick={() => setEditingTheme(false)}>取消</button>
+                  <button className="btn btn-primary" onClick={handleSaveTheme}>保存主题</button>
+                </div>
+              </div>
+            ) : (
+              <div className="theme-edit-preview">
+                <div className="theme-preview-info">
+                  <h3 className="theme-preview-title">当前主题配置</h3>
+                  <p className="theme-preview-desc">
+                    预设：{exhibition.theme} · 字体：{exhibition.themeConfig?.font || '默认'} · 装饰：{exhibition.themeConfig?.decoration || '无'}
+                  </p>
+                  {exhibition.themeConfig?.backgroundImage && (
+                    <div className="theme-preview-bg">
+                      <img src={exhibition.themeConfig.backgroundImage} alt="当前背景" />
+                      <span>自定义背景图</span>
+                    </div>
+                  )}
+                </div>
+                <button
+                  className="btn btn-primary"
+                  onClick={() => {
+                    setThemeConfigDraft(exhibition.themeConfig || { theme: exhibition.theme, backgroundImage: '', colors: { primary: '', secondary: '', text: '', background: '' }, font: 'default', decoration: 'none' });
+                    setEditingTheme(true);
+                  }}
+                >
+                  自定义主题
+                </button>
+              </div>
+            )}
+          </div>
         )}
         {activeTab === 'share' && (
           <ShareManager
