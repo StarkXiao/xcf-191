@@ -1,5 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { saveProgress, removeProgress, getProgress } from '../services/playbackProgress.js';
 import './MaterialManager.scss';
+
+const PROGRESS_SOURCE = 'material';
 
 function MaterialManager({ exhibitionId, materials, timelines, onMaterialsChange, fileApi, materialApi }) {
   const [uploading, setUploading] = useState(false);
@@ -8,6 +11,7 @@ function MaterialManager({ exhibitionId, materials, timelines, onMaterialsChange
   const [textForm, setTextForm] = useState({ title: '', content: '' });
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({ title: '', description: '' });
+  const mediaRefs = useRef({});
 
   const [filters, setFilters] = useState({
     type: [],
@@ -26,6 +30,16 @@ function MaterialManager({ exhibitionId, materials, timelines, onMaterialsChange
   useEffect(() => {
     fetchFilteredMaterials();
   }, [filters, exhibitionId]);
+
+  useEffect(() => {
+    return () => {
+      Object.entries(mediaRefs.current).forEach(([matId, el]) => {
+        if (el && el.currentTime > 0 && el.duration > 0) {
+          saveProgress(PROGRESS_SOURCE, matId, el.currentTime, el.duration);
+        }
+      });
+    };
+  }, []);
 
   const fetchFilteredMaterials = async () => {
     try {
@@ -135,6 +149,11 @@ function MaterialManager({ exhibitionId, materials, timelines, onMaterialsChange
   const handleDelete = async (id) => {
     if (!confirm('确定要删除这个素材吗？')) return;
     try {
+      const el = mediaRefs.current[id];
+      if (el && el.currentTime > 0) {
+        removeProgress(PROGRESS_SOURCE, id);
+      }
+      delete mediaRefs.current[id];
       await materialApi.remove(id);
       const updated = await materialApi.list(exhibitionId);
       onMaterialsChange(updated);
@@ -166,6 +185,27 @@ function MaterialManager({ exhibitionId, materials, timelines, onMaterialsChange
     return timelines.filter(t => (t.materialIds || []).includes(matId));
   };
 
+  const handleMediaTimeUpdate = useCallback((matId) => (e) => {
+    const el = e.target;
+    if (el.currentTime > 0 && el.duration > 0) {
+      saveProgress(PROGRESS_SOURCE, matId, el.currentTime, el.duration);
+    }
+  }, []);
+
+  const handleMediaEnded = useCallback((matId) => () => {
+    removeProgress(PROGRESS_SOURCE, matId);
+  }, []);
+
+  const handleMediaRef = useCallback((matId) => (el) => {
+    if (el) {
+      mediaRefs.current[matId] = el;
+      const saved = getProgress(PROGRESS_SOURCE, matId);
+      if (saved && saved.currentTime > 0) {
+        el.currentTime = saved.currentTime;
+      }
+    }
+  }, []);
+
   const renderMaterialItem = (m) => {
     const isEditing = editingId === m.id;
     const linkedNodes = getLinkedNodes(m.id);
@@ -177,11 +217,24 @@ function MaterialManager({ exhibitionId, materials, timelines, onMaterialsChange
           {m.type === 'audio' && (
             <div className="audio-preview">
               <span className="audio-icon">♪</span>
-              <audio src={m.url} controls />
+              <audio
+                ref={handleMediaRef(m.id)}
+                src={m.url}
+                controls
+                onTimeUpdate={handleMediaTimeUpdate(m.id)}
+                onEnded={handleMediaEnded(m.id)}
+              />
             </div>
           )}
           {m.type === 'video' && (
-            <video src={m.url} controls className="video-preview" />
+            <video
+              ref={handleMediaRef(m.id)}
+              src={m.url}
+              controls
+              className="video-preview"
+              onTimeUpdate={handleMediaTimeUpdate(m.id)}
+              onEnded={handleMediaEnded(m.id)}
+            />
           )}
           {m.type === 'text' && (
             <div className="text-preview">

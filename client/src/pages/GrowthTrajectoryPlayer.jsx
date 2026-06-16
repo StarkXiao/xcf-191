@@ -1,7 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { growthTrajectoryApi } from '../services/api.js';
+import { saveProgress, getProgress, removeProgress, savePageState, getPageState, getMediaProgressList } from '../services/playbackProgress.js';
+import ResumePrompt from '../components/ResumePrompt.jsx';
 import './GrowthTrajectoryPlayer.scss';
+
+const PROGRESS_SOURCE = 'growth';
 
 function GrowthTrajectoryPlayer() {
   const { id } = useParams();
@@ -15,6 +19,7 @@ function GrowthTrajectoryPlayer() {
   const [progress, setProgress] = useState(0);
   const [playSpeed, setPlaySpeed] = useState(1);
   const [waitingMedia, setWaitingMedia] = useState(false);
+  const [resumeItems, setResumeItems] = useState([]);
   const audioRefs = useRef({});
   const videoRefs = useRef({});
   const timerRef = useRef(null);
@@ -22,13 +27,43 @@ function GrowthTrajectoryPlayer() {
   const mediaEndedCountRef = useRef(0);
   const totalMediaRef = useRef(0);
   const mediaTimeoutRef = useRef(null);
+  const saveTimerRef = useRef(null);
+  const resumedRef = useRef(false);
 
   useEffect(() => {
     loadPlaylist();
     return () => {
       clearAllTimers();
+      if (saveTimerRef.current) clearInterval(saveTimerRef.current);
     };
   }, [id]);
+
+  useEffect(() => {
+    if (playData && !resumedRef.current) {
+      const pageState = getPageState(PROGRESS_SOURCE, id);
+      if (pageState?.currentIdx != null && pageState.currentIdx < playData.playlist.length) {
+        setCurrentIdx(pageState.currentIdx);
+      }
+      const allMatIds = Object.keys(playData.materials || {});
+      const mediaMatIds = allMatIds.filter(mid => {
+        const m = playData.materials[mid];
+        return m && (m.type === 'audio' || m.type === 'video');
+      });
+      const mediaProgress = getMediaProgressList(PROGRESS_SOURCE, mediaMatIds);
+      const itemsWithProgress = mediaMatIds
+        .filter(mid => mediaProgress[mid])
+        .map(mid => ({
+          materialId: mid,
+          currentTime: mediaProgress[mid].currentTime,
+          duration: mediaProgress[mid].duration,
+          title: playData.materials[mid].title
+        }));
+      if (itemsWithProgress.length > 0) {
+        setResumeItems(itemsWithProgress);
+      }
+      resumedRef.current = true;
+    }
+  }, [playData, id]);
 
   useEffect(() => {
     stopAllMedia();
@@ -48,6 +83,27 @@ function GrowthTrajectoryPlayer() {
       startProgressTracker();
     }
   }, [currentIdx, isPlaying, playData, waitingMedia]);
+
+  useEffect(() => {
+    if (isPlaying) {
+      if (saveTimerRef.current) clearInterval(saveTimerRef.current);
+      saveTimerRef.current = setInterval(() => {
+        saveCurrentMediaProgress();
+        savePageState(PROGRESS_SOURCE, id, { currentIdx });
+      }, 3000);
+    } else {
+      if (saveTimerRef.current) {
+        clearInterval(saveTimerRef.current);
+        saveTimerRef.current = null;
+      }
+    }
+    return () => {
+      if (saveTimerRef.current) {
+        clearInterval(saveTimerRef.current);
+        saveTimerRef.current = null;
+      }
+    };
+  }, [isPlaying, currentIdx, id]);
 
   const clearAllTimers = () => {
     if (timerRef.current) {
@@ -94,6 +150,52 @@ function GrowthTrajectoryPlayer() {
     audioRefs.current = {};
     videoRefs.current = {};
   };
+
+  const saveCurrentMediaProgress = useCallback(() => {
+    Object.entries(audioRefs.current).forEach(([matId, el]) => {
+      if (el && el.currentTime > 0) {
+        saveProgress(PROGRESS_SOURCE, matId, el.currentTime, el.duration || 0);
+      }
+    });
+    Object.entries(videoRefs.current).forEach(([matId, el]) => {
+      if (el && el.currentTime > 0) {
+        saveProgress(PROGRESS_SOURCE, matId, el.currentTime, el.duration || 0);
+      }
+    });
+  }, []);
+
+  const handleMediaTimeUpdate = useCallback((matId) => (e) => {
+    const el = e.target;
+    if (el.currentTime > 0 && el.duration > 0) {
+      saveProgress(PROGRESS_SOURCE, matId, el.currentTime, el.duration);
+    }
+  }, []);
+
+  const handleMediaEnded = useCallback((matId) => () => {
+    removeProgress(PROGRESS_SOURCE, matId);
+  }, []);
+
+  const handleResume = () => {
+    for (const item of resumeItems) {
+      const el = audioRefs.current[item.materialId] || videoRefs.current[item.materialId];
+      if (el && item.currentTime > 0) {
+        el.currentTime = item.currentTime;
+      }
+    }
+    setResumeItems([]);
+  };
+
+  const handleDismissResume = () => {
+    for (const item of resumeItems) {
+      removeProgress(PROGRESS_SOURCE, item.materialId);
+    }
+    setResumeItems([]);
+  };
+
+  const handleLeavePage = useCallback(() => {
+    saveCurrentMediaProgress();
+    savePageState(PROGRESS_SOURCE, id, { currentIdx });
+  }, [saveCurrentMediaProgress, id, currentIdx]);
 
   const getDurationForItem = (item) => {
     const settings = playData?.settings || {};
@@ -142,6 +244,7 @@ function GrowthTrajectoryPlayer() {
 
   const goNext = useCallback(() => {
     if (!playData) return;
+    saveCurrentMediaProgress();
     if (currentIdx < playData.playlist.length - 1) {
       setCurrentIdx(currentIdx + 1);
     } else {
@@ -152,11 +255,13 @@ function GrowthTrajectoryPlayer() {
 
   const goPrev = () => {
     if (!playData) return;
+    saveCurrentMediaProgress();
     if (currentIdx > 0) setCurrentIdx(currentIdx - 1);
   };
 
   const jumpToItem = (idx) => {
     if (!playData) return;
+    saveCurrentMediaProgress();
     if (idx >= 0 && idx < playData.playlist.length) {
       setCurrentIdx(idx);
     }
@@ -166,6 +271,7 @@ function GrowthTrajectoryPlayer() {
     if (isPlaying) {
       setIsPlaying(false);
       clearAllTimers();
+      saveCurrentMediaProgress();
       Object.values(audioRefs.current).forEach(a => { if (a) a.pause(); });
       Object.values(videoRefs.current).forEach(v => { if (v) v.pause(); });
     } else {
@@ -220,7 +326,7 @@ function GrowthTrajectoryPlayer() {
     });
   }, [playData]);
 
-  const onMediaEnded = useCallback(() => {
+  const onOriginalMediaEnded = useCallback(() => {
     mediaEndedCountRef.current += 1;
     if (mediaEndedCountRef.current >= totalMediaRef.current) {
       setTimeout(() => {
@@ -296,7 +402,11 @@ function GrowthTrajectoryPlayer() {
       if (!element) return;
       if (element._listenersAttached) return;
       element._listenersAttached = true;
-      element.addEventListener('ended', onMediaEnded);
+      element.addEventListener('ended', () => {
+        onOriginalMediaEnded();
+        removeProgress(PROGRESS_SOURCE, matId);
+      });
+      element.addEventListener('timeupdate', handleMediaTimeUpdate(matId));
       element.addEventListener('play', () => {
         if (mediaTimeoutRef.current) {
           clearTimeout(mediaTimeoutRef.current);
@@ -559,7 +669,7 @@ function GrowthTrajectoryPlayer() {
       <div className="player-topbar">
         <button
           className="topbar-btn"
-          onClick={() => { stopAllMedia(); navigate(`/exhibition/${id}`); }}
+          onClick={() => { stopAllMedia(); handleLeavePage(); navigate(`/exhibition/${id}`); }}
           title="返回展厅"
         >
           ← 返回展厅
@@ -578,6 +688,16 @@ function GrowthTrajectoryPlayer() {
           {showSidebar ? '✕ 关闭' : '☰ 章节'}
         </button>
       </div>
+
+      {resumeItems.length > 0 && (
+        <div style={{ padding: '0 16px' }}>
+          <ResumePrompt
+            items={resumeItems}
+            onResume={handleResume}
+            onDismiss={handleDismissResume}
+          />
+        </div>
+      )}
 
       <div className="player-main-area">
         <div className={`player-stage ${currentItem?.type || ''}`}>

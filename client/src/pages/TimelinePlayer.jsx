@@ -1,8 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { exhibitionApi, materialApi, timelineApi } from '../services/api.js';
 import { applyThemeConfig, getDecorationClass } from '../components/ThemeConfigurator.jsx';
+import { saveProgress, getProgress, removeProgress, savePageState, getPageState, removePageState, getMediaProgressList } from '../services/playbackProgress.js';
+import ResumePrompt from '../components/ResumePrompt.jsx';
 import './TimelinePlayer.scss';
+
+const PROGRESS_SOURCE = 'timeline';
 
 function TimelinePlayer() {
   const { id } = useParams();
@@ -13,20 +17,66 @@ function TimelinePlayer() {
   const [currentIdx, setCurrentIdx] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [resumeItems, setResumeItems] = useState([]);
   const audioRefs = useRef({});
   const videoRefs = useRef({});
   const timerRef = useRef(null);
+  const saveTimerRef = useRef(null);
+  const resumedRef = useRef(false);
 
   useEffect(() => {
     loadData();
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
+      if (saveTimerRef.current) clearInterval(saveTimerRef.current);
     };
   }, [id]);
 
   useEffect(() => {
+    if (timelines.length === 0 || materials.length === 0 || resumedRef.current) return;
+    const pageState = getPageState(PROGRESS_SOURCE, id);
+    if (pageState?.currentIdx != null && pageState.currentIdx < timelines.length) {
+      setCurrentIdx(pageState.currentIdx);
+    }
+    const allMediaMats = materials.filter(m => m.type === 'audio' || m.type === 'video');
+    const mediaProgress = getMediaProgressList(PROGRESS_SOURCE, allMediaMats.map(m => m.id));
+    const itemsWithProgress = allMediaMats
+      .filter(m => mediaProgress[m.id])
+      .map(m => ({
+        materialId: m.id,
+        currentTime: mediaProgress[m.id].currentTime,
+        duration: mediaProgress[m.id].duration,
+        title: m.title
+      }));
+    if (itemsWithProgress.length > 0) {
+      setResumeItems(itemsWithProgress);
+    }
+    resumedRef.current = true;
+  }, [timelines, materials, id]);
+
+  useEffect(() => {
     stopAllMedia();
   }, [currentIdx]);
+
+  useEffect(() => {
+    if (!isPlaying && saveTimerRef.current) {
+      clearInterval(saveTimerRef.current);
+      saveTimerRef.current = null;
+    }
+    if (isPlaying) {
+      if (saveTimerRef.current) clearInterval(saveTimerRef.current);
+      saveTimerRef.current = setInterval(() => {
+        saveCurrentMediaProgress();
+        savePageState(PROGRESS_SOURCE, id, { currentIdx });
+      }, 3000);
+    }
+    return () => {
+      if (saveTimerRef.current) {
+        clearInterval(saveTimerRef.current);
+        saveTimerRef.current = null;
+      }
+    };
+  }, [isPlaying, currentIdx, id]);
 
   const loadData = async () => {
     try {
@@ -51,7 +101,54 @@ function TimelinePlayer() {
     Object.values(videoRefs.current).forEach(v => { if (v) { v.pause(); v.currentTime = 0; } });
   };
 
+  const saveCurrentMediaProgress = useCallback(() => {
+    Object.entries(audioRefs.current).forEach(([matId, el]) => {
+      if (el && el.currentTime > 0 && !el.paused === false || el?.currentTime > 0) {
+        saveProgress(PROGRESS_SOURCE, matId, el.currentTime, el.duration || 0);
+      }
+    });
+    Object.entries(videoRefs.current).forEach(([matId, el]) => {
+      if (el && el.currentTime > 0) {
+        saveProgress(PROGRESS_SOURCE, matId, el.currentTime, el.duration || 0);
+      }
+    });
+  }, []);
+
+  const handleMediaTimeUpdate = useCallback((matId, type) => (e) => {
+    const el = e.target;
+    if (el.currentTime > 0 && el.duration > 0) {
+      saveProgress(PROGRESS_SOURCE, matId, el.currentTime, el.duration);
+    }
+  }, []);
+
+  const handleMediaEnded = useCallback((matId) => () => {
+    removeProgress(PROGRESS_SOURCE, matId);
+  }, []);
+
+  const handleResume = () => {
+    for (const item of resumeItems) {
+      const el = audioRefs.current[item.materialId] || videoRefs.current[item.materialId];
+      if (el && item.currentTime > 0) {
+        el.currentTime = item.currentTime;
+      }
+    }
+    setResumeItems([]);
+  };
+
+  const handleDismissResume = () => {
+    for (const item of resumeItems) {
+      removeProgress(PROGRESS_SOURCE, item.materialId);
+    }
+    setResumeItems([]);
+  };
+
+  const handleLeavePage = useCallback(() => {
+    saveCurrentMediaProgress();
+    savePageState(PROGRESS_SOURCE, id, { currentIdx });
+  }, [saveCurrentMediaProgress, id, currentIdx]);
+
   const goNext = () => {
+    saveCurrentMediaProgress();
     if (currentIdx < timelines.length - 1) {
       setCurrentIdx(currentIdx + 1);
     } else {
@@ -60,12 +157,14 @@ function TimelinePlayer() {
   };
 
   const goPrev = () => {
+    saveCurrentMediaProgress();
     if (currentIdx > 0) setCurrentIdx(currentIdx - 1);
   };
 
   const togglePlay = () => {
     if (isPlaying) {
       setIsPlaying(false);
+      saveCurrentMediaProgress();
       if (timerRef.current) clearInterval(timerRef.current);
     } else {
       setIsPlaying(true);
@@ -120,7 +219,7 @@ function TimelinePlayer() {
       {exhibition.themeConfig?.backgroundImage && (
         <div className="player-bg-image" style={{ backgroundImage: `url(${exhibition.themeConfig.backgroundImage})` }}></div>
       )}
-      <button className="player-back" onClick={() => { stopAllMedia(); navigate(`/exhibition/${id}`); }}>
+      <button className="player-back" onClick={() => { stopAllMedia(); handleLeavePage(); navigate(`/exhibition/${id}`); }}>
         ← 返回展厅
       </button>
 
@@ -132,6 +231,14 @@ function TimelinePlayer() {
           <span className="progress-total">{timelines.length}</span>
         </div>
       </div>
+
+      {resumeItems.length > 0 && (
+        <ResumePrompt
+          items={resumeItems}
+          onResume={handleResume}
+          onDismiss={handleDismissResume}
+        />
+      )}
 
       <div className="player-main">
         <div className="node-date">{formatDate(currentNode.eventDate)}</div>
@@ -170,6 +277,8 @@ function TimelinePlayer() {
                       ref={el => audioRefs.current[mat.id] = el}
                       src={mat.url}
                       controls
+                      onTimeUpdate={handleMediaTimeUpdate(mat.id, 'audio')}
+                      onEnded={handleMediaEnded(mat.id)}
                     />
                   </div>
                 );
@@ -181,6 +290,8 @@ function TimelinePlayer() {
                       ref={el => videoRefs.current[mat.id] = el}
                       src={mat.url}
                       controls
+                      onTimeUpdate={handleMediaTimeUpdate(mat.id, 'video')}
+                      onEnded={handleMediaEnded(mat.id)}
                     />
                   </div>
                 );
@@ -234,7 +345,7 @@ function TimelinePlayer() {
           <button
             key={node.id}
             className={`dot ${idx === currentIdx ? 'active' : ''}`}
-            onClick={() => setCurrentIdx(idx)}
+            onClick={() => { saveCurrentMediaProgress(); setCurrentIdx(idx); }}
             title={node.title}
           />
         ))}

@@ -1,8 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { memorialRitualApi } from '../services/api.js';
+import { saveProgress, removeProgress, savePageState, getPageState, formatTime } from '../services/playbackProgress.js';
 import RitualMessageWall from '../components/RitualMessageWall.jsx';
+import ResumePrompt from '../components/ResumePrompt.jsx';
 import './MemorialRitualPlayer.scss';
+
+const PROGRESS_SOURCE = 'ritual';
 
 function MemorialRitualPlayer() {
   const { id } = useParams();
@@ -17,17 +21,21 @@ function MemorialRitualPlayer() {
   const [showMessageWall, setShowMessageWall] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [transitionClass, setTransitionClass] = useState('');
+  const [resumeItems, setResumeItems] = useState([]);
 
   const audioRef = useRef(null);
+  const stepMediaRefs = useRef({});
   const timerRef = useRef(null);
   const progressIntervalRef = useRef(null);
   const playerContainerRef = useRef(null);
+  const saveTimerRef = useRef(null);
 
   useEffect(() => {
     loadRitual();
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
       if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+      if (saveTimerRef.current) clearInterval(saveTimerRef.current);
     };
   }, [id]);
 
@@ -48,23 +56,125 @@ function MemorialRitualPlayer() {
     }
   }, [currentMusicIndex, ritual]);
 
+  useEffect(() => {
+    if (isPlaying) {
+      if (saveTimerRef.current) clearInterval(saveTimerRef.current);
+      saveTimerRef.current = setInterval(() => {
+        saveCurrentProgress();
+        savePageState(PROGRESS_SOURCE, id, { currentStepIndex, currentMusicIndex });
+      }, 3000);
+    } else {
+      if (saveTimerRef.current) {
+        clearInterval(saveTimerRef.current);
+        saveTimerRef.current = null;
+      }
+    }
+    return () => {
+      if (saveTimerRef.current) {
+        clearInterval(saveTimerRef.current);
+        saveTimerRef.current = null;
+      }
+    };
+  }, [isPlaying, currentStepIndex, currentMusicIndex, id]);
+
   const loadRitual = async () => {
     try {
       const data = await memorialRitualApi.get(id);
       setRitual(data);
       setShowMessageWall(data.settings?.showMessageWall !== false);
+
+      const pageState = getPageState(PROGRESS_SOURCE, id);
+      if (pageState?.currentStepIndex != null && pageState.currentStepIndex < data.steps.length) {
+        setCurrentStepIndex(pageState.currentStepIndex);
+      }
+      if (pageState?.currentMusicIndex != null) {
+        setCurrentMusicIndex(pageState.currentMusicIndex);
+      }
+
+      const resumeList = [];
+      data.steps.forEach((step) => {
+        if ((step.type === 'video' || step.type === 'audio') && step.mediaUrl) {
+          const progressKey = `${PROGRESS_SOURCE}_step_${step.id}`;
+          try {
+            const raw = localStorage.getItem(`stardust_progress_${progressKey}`);
+            if (raw) {
+              const record = JSON.parse(raw);
+              if (record.currentTime > 0 && record.currentTime / record.duration < 0.98) {
+                resumeList.push({
+                  materialId: progressKey,
+                  currentTime: record.currentTime,
+                  duration: record.duration,
+                  title: step.title
+                });
+              }
+            }
+          } catch (e) {}
+        }
+      });
+
       try {
         const state = await memorialRitualApi.getPlayState(id);
-        setCurrentStepIndex(state.currentStepIndex || 0);
-        setCurrentMusicIndex(state.currentMusicIndex || 0);
+        if (pageState?.currentStepIndex == null) {
+          setCurrentStepIndex(state.currentStepIndex || 0);
+        }
+        if (pageState?.currentMusicIndex == null) {
+          setCurrentMusicIndex(state.currentMusicIndex || 0);
+        }
         setVolume(state.volume ?? 0.7);
       } catch (e) {}
+
+      if (resumeList.length > 0) {
+        setResumeItems(resumeList);
+      }
     } catch (err) {
       console.error('加载失败:', err);
       if (err.response?.status === 404) navigate('/memorial-rituals');
     } finally {
       setLoading(false);
     }
+  };
+
+  const saveCurrentProgress = useCallback(() => {
+    Object.entries(stepMediaRefs.current).forEach(([stepId, el]) => {
+      if (el && el.currentTime > 0 && el.duration > 0) {
+        const progressKey = `${PROGRESS_SOURCE}_step_${stepId}`;
+        saveProgress(progressKey, stepId, el.currentTime, el.duration);
+      }
+    });
+    if (audioRef.current && audioRef.current.currentTime > 0) {
+      const musicId = ritual?.backgroundMusic[currentMusicIndex]?.id;
+      if (musicId) {
+        saveProgress(PROGRESS_SOURCE, `music_${musicId}`, audioRef.current.currentTime, audioRef.current.duration || 0);
+      }
+    }
+  }, [ritual, currentMusicIndex]);
+
+  const handleStepMediaTimeUpdate = useCallback((stepId) => (e) => {
+    const el = e.target;
+    if (el.currentTime > 0 && el.duration > 0) {
+      saveProgress(`${PROGRESS_SOURCE}_step`, stepId, el.currentTime, el.duration);
+    }
+  }, []);
+
+  const handleStepMediaEnded = useCallback((stepId) => () => {
+    removeProgress(`${PROGRESS_SOURCE}_step`, stepId);
+  }, []);
+
+  const handleResume = () => {
+    for (const item of resumeItems) {
+      const el = stepMediaRefs.current[item.materialId];
+      if (el && item.currentTime > 0) {
+        el.currentTime = item.currentTime;
+      }
+    }
+    setResumeItems([]);
+  };
+
+  const handleDismissResume = () => {
+    for (const item of resumeItems) {
+      removeProgress(`${PROGRESS_SOURCE}_step`, item.materialId);
+    }
+    setResumeItems([]);
   };
 
   const savePlayState = useCallback(async (state = {}) => {
@@ -115,6 +225,7 @@ function MemorialRitualPlayer() {
     if (isPlaying) {
       setIsPlaying(false);
       clearTimers();
+      saveCurrentProgress();
       if (audioRef.current) audioRef.current.pause();
       savePlayState({ isPlaying: false });
     } else {
@@ -129,6 +240,7 @@ function MemorialRitualPlayer() {
 
   const goNext = (fromTimer = false) => {
     if (!ritual) return;
+    saveCurrentProgress();
     if (currentStepIndex < ritual.steps.length - 1) {
       triggerTransition('next', () => {
         const newIndex = currentStepIndex + 1;
@@ -137,6 +249,7 @@ function MemorialRitualPlayer() {
         clearTimers();
         if (isPlaying) startStepTimer();
         savePlayState({ currentStepIndex: newIndex, stepProgress: 0 });
+        savePageState(PROGRESS_SOURCE, id, { currentStepIndex: newIndex, currentMusicIndex });
       });
     } else {
       setIsPlaying(false);
@@ -148,6 +261,7 @@ function MemorialRitualPlayer() {
 
   const goPrev = () => {
     if (!ritual || currentStepIndex === 0) return;
+    saveCurrentProgress();
     triggerTransition('prev', () => {
       const newIndex = currentStepIndex - 1;
       setCurrentStepIndex(newIndex);
@@ -155,11 +269,13 @@ function MemorialRitualPlayer() {
       clearTimers();
       if (isPlaying) startStepTimer();
       savePlayState({ currentStepIndex: newIndex, stepProgress: 0 });
+      savePageState(PROGRESS_SOURCE, id, { currentStepIndex: newIndex, currentMusicIndex });
     });
   };
 
   const goToStep = (index) => {
     if (!ritual || index === currentStepIndex || index < 0 || index >= ritual.steps.length) return;
+    saveCurrentProgress();
     const direction = index > currentStepIndex ? 'next' : 'prev';
     triggerTransition(direction, () => {
       setCurrentStepIndex(index);
@@ -167,6 +283,7 @@ function MemorialRitualPlayer() {
       clearTimers();
       if (isPlaying) startStepTimer();
       savePlayState({ currentStepIndex: index, stepProgress: 0 });
+      savePageState(PROGRESS_SOURCE, id, { currentStepIndex: index, currentMusicIndex });
     });
   };
 
@@ -198,6 +315,7 @@ function MemorialRitualPlayer() {
     const next = currentMusicIndex < ritual.backgroundMusic.length - 1 ? currentMusicIndex + 1 : 0;
     setCurrentMusicIndex(next);
     savePlayState({ currentMusicIndex: next });
+    savePageState(PROGRESS_SOURCE, id, { currentStepIndex, currentMusicIndex: next });
     if (isPlaying && audioRef.current) {
       setTimeout(() => audioRef.current.play().catch(() => {}), 100);
     }
@@ -208,6 +326,7 @@ function MemorialRitualPlayer() {
     const prev = currentMusicIndex > 0 ? currentMusicIndex - 1 : ritual.backgroundMusic.length - 1;
     setCurrentMusicIndex(prev);
     savePlayState({ currentMusicIndex: prev });
+    savePageState(PROGRESS_SOURCE, id, { currentStepIndex, currentMusicIndex: prev });
     if (isPlaying && audioRef.current) {
       setTimeout(() => audioRef.current.play().catch(() => {}), 100);
     }
@@ -270,6 +389,8 @@ function MemorialRitualPlayer() {
       <div className="player-header">
         <button className="header-btn back-btn" onClick={() => {
           clearTimers();
+          saveCurrentProgress();
+          savePageState(PROGRESS_SOURCE, id, { currentStepIndex, currentMusicIndex });
           if (audioRef.current) audioRef.current.pause();
           savePlayState({ isPlaying: false });
           navigate(-1);
@@ -304,6 +425,16 @@ function MemorialRitualPlayer() {
           </button>
         </div>
       </div>
+
+      {resumeItems.length > 0 && (
+        <div style={{ padding: '0 16px' }}>
+          <ResumePrompt
+            items={resumeItems}
+            onResume={handleResume}
+            onDismiss={handleDismissResume}
+          />
+        </div>
+      )}
 
       {ritual.settings?.autoAdvance && (
         <div className="progress-bar-container">
@@ -343,7 +474,15 @@ function MemorialRitualPlayer() {
                       <img src={currentStep.mediaUrl} alt={currentStep.title} className="step-media" />
                     )}
                     {currentStep.type === 'video' && (
-                      <video src={currentStep.mediaUrl} controls autoPlay={isPlaying} className="step-media" />
+                      <video
+                        ref={el => stepMediaRefs.current[currentStep.id] = el}
+                        src={currentStep.mediaUrl}
+                        controls
+                        autoPlay={isPlaying}
+                        className="step-media"
+                        onTimeUpdate={handleStepMediaTimeUpdate(currentStep.id)}
+                        onEnded={handleStepMediaEnded(currentStep.id)}
+                      />
                     )}
                     {currentStep.type === 'audio' && (
                       <div className="step-audio-wrapper">
@@ -352,7 +491,14 @@ function MemorialRitualPlayer() {
                             <div key={i} className="audio-bar" style={{ animationDelay: `${i * 0.1}s` }} />
                           ))}
                         </div>
-                        <audio src={currentStep.mediaUrl} controls autoPlay={isPlaying} />
+                        <audio
+                          ref={el => stepMediaRefs.current[currentStep.id] = el}
+                          src={currentStep.mediaUrl}
+                          controls
+                          autoPlay={isPlaying}
+                          onTimeUpdate={handleStepMediaTimeUpdate(currentStep.id)}
+                          onEnded={handleStepMediaEnded(currentStep.id)}
+                        />
                       </div>
                     )}
                   </div>
