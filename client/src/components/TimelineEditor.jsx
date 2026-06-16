@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import './TimelineEditor.scss';
 
 function TimelineEditor({ exhibitionId, materials, timelines, onTimelinesChange, timelineApi }) {
@@ -11,6 +11,17 @@ function TimelineEditor({ exhibitionId, materials, timelines, onTimelinesChange,
     materialIds: [],
     location: null
   });
+
+  const [batchMode, setBatchMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [splitModal, setSplitModal] = useState(false);
+  const [splitTarget, setSplitTarget] = useState(null);
+  const [splitGroups, setSplitGroups] = useState([]);
+  const [mergeModal, setMergeModal] = useState(false);
+  const [mergeForm, setMergeForm] = useState({ title: '', eventDate: '' });
+
+  const dragItem = useRef(null);
+  const dragOverItem = useRef(null);
 
   const openModal = (item = null) => {
     if (item) {
@@ -116,6 +127,142 @@ function TimelineEditor({ exhibitionId, materials, timelines, onTimelinesChange,
     }
   };
 
+  const toggleBatchSelection = (id) => {
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  const exitBatchMode = () => {
+    setBatchMode(false);
+    setSelectedIds([]);
+  };
+
+  const handleDragStart = (idx) => {
+    dragItem.current = idx;
+  };
+
+  const handleDragEnter = (idx) => {
+    dragOverItem.current = idx;
+  };
+
+  const handleDragEnd = async () => {
+    if (dragItem.current === null || dragOverItem.current === null) return;
+    if (dragItem.current === dragOverItem.current) {
+      dragItem.current = null;
+      dragOverItem.current = null;
+      return;
+    }
+    const reordered = [...timelines];
+    const [draggedItem] = reordered.splice(dragItem.current, 1);
+    reordered.splice(dragOverItem.current, 0, draggedItem);
+    const orders = reordered.map((item, i) => ({ id: item.id, order: i }));
+    try {
+      await timelineApi.batchReorder(orders);
+      const updated = await timelineApi.list(exhibitionId);
+      onTimelinesChange(updated);
+    } catch (err) {
+      console.error('排序失败:', err);
+    }
+    dragItem.current = null;
+    dragOverItem.current = null;
+  };
+
+  const handleMerge = async () => {
+    if (selectedIds.length < 2) {
+      alert('请至少选择两个节点进行合并');
+      return;
+    }
+    setMergeModal(true);
+    const firstSelected = timelines.find(t => t.id === selectedIds[0]);
+    setMergeForm({
+      title: '',
+      eventDate: firstSelected ? firstSelected.eventDate.split('T')[0] : new Date().toISOString().split('T')[0]
+    });
+  };
+
+  const confirmMerge = async () => {
+    try {
+      const eventDate = mergeForm.eventDate
+        ? new Date(mergeForm.eventDate).toISOString()
+        : undefined;
+      await timelineApi.batchMerge(selectedIds, mergeForm.title || undefined, eventDate);
+      const updated = await timelineApi.list(exhibitionId);
+      onTimelinesChange(updated);
+      exitBatchMode();
+      setMergeModal(false);
+    } catch (err) {
+      console.error('合并失败:', err);
+      alert('合并失败，请重试');
+    }
+  };
+
+  const openSplitModal = (node) => {
+    if (!node.materialIds || node.materialIds.length < 2) {
+      alert('节点至少需要关联2个素材才能拆分');
+      return;
+    }
+    setSplitTarget(node);
+    setSplitGroups([
+      { title: '', materialIds: [node.materialIds[0]], eventDate: node.eventDate.split('T')[0] },
+      { title: '', materialIds: node.materialIds.slice(1), eventDate: node.eventDate.split('T')[0] }
+    ]);
+    setSplitModal(true);
+  };
+
+  const addSplitGroup = () => {
+    if (!splitTarget) return;
+    setSplitGroups(prev => [
+      ...prev,
+      { title: '', materialIds: [], eventDate: splitTarget.eventDate.split('T')[0] }
+    ]);
+  };
+
+  const removeSplitGroup = (idx) => {
+    if (splitGroups.length <= 2) return;
+    setSplitGroups(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  const updateSplitGroup = (idx, field, value) => {
+    setSplitGroups(prev => prev.map((g, i) => i === idx ? { ...g, [field]: value } : g));
+  };
+
+  const toggleSplitMaterial = (groupIdx, matId) => {
+    setSplitGroups(prev => prev.map((g, i) => {
+      if (i !== groupIdx) return g;
+      const ids = g.materialIds.includes(matId)
+        ? g.materialIds.filter(id => id !== matId)
+        : [...g.materialIds, matId];
+      return { ...g, materialIds: ids };
+    }));
+  };
+
+  const confirmSplit = async () => {
+    if (!splitTarget) return;
+    const allAssigned = splitGroups.every(g => g.materialIds.length > 0);
+    if (!allAssigned) {
+      alert('每个分组至少需要一个素材');
+      return;
+    }
+    try {
+      const groups = splitGroups.map(g => ({
+        title: g.title || undefined,
+        description: undefined,
+        eventDate: g.eventDate ? new Date(g.eventDate).toISOString() : undefined,
+        materialIds: g.materialIds
+      }));
+      await timelineApi.split(splitTarget.id, groups);
+      const updated = await timelineApi.list(exhibitionId);
+      onTimelinesChange(updated);
+      setSplitModal(false);
+      setSplitTarget(null);
+      setSplitGroups([]);
+    } catch (err) {
+      console.error('拆分失败:', err);
+      alert('拆分失败，请重试');
+    }
+  };
+
   const getMaterialById = (id) => materials.find(m => m.id === id);
 
   const formatDate = (dateStr) => {
@@ -144,10 +291,30 @@ function TimelineEditor({ exhibitionId, materials, timelines, onTimelinesChange,
     <div className="timeline-editor">
       <div className="editor-header">
         <p className="editor-hint">按时间顺序整理你的回忆，创建属于你的故事线</p>
-        <button className="add-btn" onClick={() => openModal()}>
-          <span>+</span> 添加时间节点
-        </button>
+        <div className="editor-actions">
+          <button
+            className={`batch-toggle-btn ${batchMode ? 'active' : ''}`}
+            onClick={() => batchMode ? exitBatchMode() : setBatchMode(true)}
+          >
+            {batchMode ? '退出批量' : '批量编排'}
+          </button>
+          <button className="add-btn" onClick={() => openModal()}>
+            <span>+</span> 添加时间节点
+          </button>
+        </div>
       </div>
+
+      {batchMode && selectedIds.length > 0 && (
+        <div className="batch-action-bar">
+          <span className="batch-count">已选 {selectedIds.length} 个节点</span>
+          <button className="batch-btn merge-btn" onClick={handleMerge} disabled={selectedIds.length < 2}>
+            合并节点
+          </button>
+          <button className="batch-btn cancel-btn" onClick={exitBatchMode}>
+            取消选择
+          </button>
+        </div>
+      )}
 
       {timelines.length === 0 ? (
         <div className="empty-state">
@@ -159,10 +326,29 @@ function TimelineEditor({ exhibitionId, materials, timelines, onTimelinesChange,
           <div className="timeline-line"></div>
           {timelines.map((node, idx) => {
             const nodeMats = (node.materialIds || []).map(getMaterialById).filter(Boolean);
+            const isSelected = selectedIds.includes(node.id);
             return (
-              <div key={node.id} className={`timeline-node ${idx % 2 === 0 ? 'left' : 'right'}`}>
+              <div
+                key={node.id}
+                className={`timeline-node ${idx % 2 === 0 ? 'left' : 'right'} ${isSelected ? 'selected' : ''}`}
+                draggable={!batchMode}
+                onDragStart={() => handleDragStart(idx)}
+                onDragEnter={() => handleDragEnter(idx)}
+                onDragEnd={handleDragEnd}
+                onDragOver={(e) => e.preventDefault()}
+              >
                 <div className="node-dot"></div>
                 <div className="node-card">
+                  {batchMode && (
+                    <div className="node-batch-check" onClick={() => toggleBatchSelection(node.id)}>
+                      <span className={`checkbox ${isSelected ? 'checked' : ''}`}>
+                        {isSelected ? '✓' : ''}
+                      </span>
+                    </div>
+                  )}
+                  {!batchMode && (
+                    <div className="node-drag-handle" title="拖拽排序">⠿</div>
+                  )}
                   <div className="node-date">{formatDate(node.eventDate)}</div>
                   <h3 className="node-title">{node.title}</h3>
                   {node.location && (
@@ -181,10 +367,14 @@ function TimelineEditor({ exhibitionId, materials, timelines, onTimelinesChange,
                           {renderMaterialThumb(mat)}
                         </div>
                       ))}
+                      <span className="node-mat-count">{nodeMats.length}个素材</span>
                     </div>
                   )}
                   <div className="node-actions">
                     <button onClick={() => openModal(node)}>编辑</button>
+                    {!batchMode && node.materialIds && node.materialIds.length >= 2 && (
+                      <button className="split-btn" onClick={() => openSplitModal(node)}>拆分</button>
+                    )}
                     <button className="danger" onClick={() => handleDelete(node.id)}>删除</button>
                   </div>
                 </div>
@@ -333,6 +523,112 @@ function TimelineEditor({ exhibitionId, materials, timelines, onTimelinesChange,
                 <button type="submit" className="primary">保存</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {mergeModal && (
+        <div className="modal-overlay" onClick={() => setMergeModal(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h3 className="modal-title">合并 {selectedIds.length} 个时间节点</h3>
+            <div className="merge-preview">
+              {selectedIds.map(id => {
+                const node = timelines.find(t => t.id === id);
+                return node ? (
+                  <div key={id} className="merge-preview-item">
+                    <span className="merge-node-title">{node.title}</span>
+                    <span className="merge-node-date">{formatDate(node.eventDate)}</span>
+                    <span className="merge-node-mats">{(node.materialIds || []).length}个素材</span>
+                  </div>
+                ) : null;
+              })}
+            </div>
+            <div className="form-row">
+              <label>合并后标题（留空自动拼接）</label>
+              <input
+                type="text"
+                placeholder="合并后的节点标题"
+                value={mergeForm.title}
+                onChange={(e) => setMergeForm(prev => ({ ...prev, title: e.target.value }))}
+                maxLength={100}
+              />
+            </div>
+            <div className="form-row">
+              <label>合并后日期</label>
+              <input
+                type="date"
+                value={mergeForm.eventDate}
+                onChange={(e) => setMergeForm(prev => ({ ...prev, eventDate: e.target.value }))}
+              />
+            </div>
+            <div className="modal-actions">
+              <button onClick={() => setMergeModal(false)}>取消</button>
+              <button className="primary" onClick={confirmMerge}>确认合并</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {splitModal && splitTarget && (
+        <div className="modal-overlay" onClick={() => setSplitModal(false)}>
+          <div className="modal modal-lg" onClick={(e) => e.stopPropagation()}>
+            <h3 className="modal-title">拆分节点：{splitTarget.title}</h3>
+            <p className="hint-text">将此节点的素材拆分到多个新节点中</p>
+            {splitGroups.map((group, gIdx) => (
+              <div key={gIdx} className="split-group">
+                <div className="split-group-header">
+                  <span className="split-group-label">分组 {gIdx + 1}</span>
+                  {splitGroups.length > 2 && (
+                    <button className="split-remove-btn" onClick={() => removeSplitGroup(gIdx)}>删除分组</button>
+                  )}
+                </div>
+                <div className="form-row">
+                  <label>标题（留空自动命名）</label>
+                  <input
+                    type="text"
+                    placeholder={`分组 ${gIdx + 1} 标题`}
+                    value={group.title}
+                    onChange={(e) => updateSplitGroup(gIdx, 'title', e.target.value)}
+                    maxLength={100}
+                  />
+                </div>
+                <div className="form-row">
+                  <label>日期</label>
+                  <input
+                    type="date"
+                    value={group.eventDate}
+                    onChange={(e) => updateSplitGroup(gIdx, 'eventDate', e.target.value)}
+                  />
+                </div>
+                <div className="split-materials">
+                  <label>选择素材</label>
+                  <div className="split-mat-grid">
+                    {(splitTarget.materialIds || []).map(matId => {
+                      const mat = getMaterialById(matId);
+                      if (!mat) return null;
+                      const inGroup = group.materialIds.includes(matId);
+                      return (
+                        <div
+                          key={matId}
+                          className={`split-mat-item ${inGroup ? 'selected' : ''}`}
+                          onClick={() => toggleSplitMaterial(gIdx, matId)}
+                        >
+                          <div className="split-mat-thumb">{renderMaterialThumb(mat)}</div>
+                          <span className="split-mat-name">{mat.title || '未命名'}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            ))}
+            <button className="add-split-group-btn" onClick={addSplitGroup}>
+              + 添加分组
+            </button>
+            <div className="modal-actions">
+              <button onClick={() => setSplitModal(false)}>取消</button>
+              <button className="primary" onClick={confirmSplit}>确认拆分</button>
+            </div>
           </div>
         </div>
       )}

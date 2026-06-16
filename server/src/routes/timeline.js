@@ -26,7 +26,92 @@ export default async function timelineRoutes(fastify) {
           exhibitionCover: exhibition ? exhibition.coverImage : null
         };
       })
-      .sort((a, b) => new Date(a.eventDate) - new Date(b.eventDate));
+      .sort((a, b) => {
+        if (a.order !== undefined && b.order !== undefined) return a.order - b.order;
+        if (a.order !== undefined) return -1;
+        if (b.order !== undefined) return 1;
+        return new Date(a.eventDate) - new Date(b.eventDate);
+      });
+  });
+
+  fastify.post('/batch/reorder', async (request) => {
+    const { orders } = request.body;
+    if (!Array.isArray(orders)) {
+      return { error: 'orders 必须为数组' };
+    }
+    const timelines = getCollection('timelines');
+    for (const item of orders) {
+      const idx = timelines.findIndex(t => t.id === item.id);
+      if (idx !== -1) {
+        timelines[idx].order = item.order;
+      }
+    }
+    saveCollection('timelines', timelines);
+    return { success: true, updated: orders.length };
+  });
+
+  fastify.post('/batch/merge', async (request) => {
+    const { nodeIds, title, eventDate } = request.body;
+    if (!Array.isArray(nodeIds) || nodeIds.length < 2) {
+      return { error: '至少需要选择两个节点才能合并' };
+    }
+    const timelines = getCollection('timelines');
+    const nodesToMerge = nodeIds.map(id => timelines.find(t => t.id === id)).filter(Boolean);
+    if (nodesToMerge.length < 2) {
+      return { error: '未找到足够的有效节点' };
+    }
+    const mergedMaterialIds = nodesToMerge.reduce((acc, node) => {
+      return acc.concat(node.materialIds || []);
+    }, []);
+    const uniqueMaterialIds = [...new Set(mergedMaterialIds)];
+    const mergedDescriptions = nodesToMerge
+      .filter(n => n.description)
+      .map(n => n.description)
+      .join('\n\n');
+    const mergedNode = {
+      id: uuidv4(),
+      exhibitionId: nodesToMerge[0].exhibitionId,
+      title: title || nodesToMerge.map(n => n.title).join(' + '),
+      description: mergedDescriptions || '',
+      eventDate: eventDate || nodesToMerge[0].eventDate,
+      materialIds: uniqueMaterialIds,
+      location: nodesToMerge[0].location || null,
+      order: Math.min(...nodesToMerge.map(n => n.order !== undefined ? n.order : Infinity)),
+      createdAt: new Date().toISOString()
+    };
+    const remaining = timelines.filter(t => !nodeIds.includes(t.id));
+    remaining.push(mergedNode);
+    saveCollection('timelines', remaining);
+    return mergedNode;
+  });
+
+  fastify.post('/:id/split', async (request, reply) => {
+    const { id } = request.params;
+    const { splitMaterialGroups } = request.body;
+    const timelines = getCollection('timelines');
+    const index = timelines.findIndex(t => t.id === id);
+    if (index === -1) {
+      reply.code(404);
+      return { error: '时间节点不存在' };
+    }
+    const sourceNode = timelines[index];
+    if (!Array.isArray(splitMaterialGroups) || splitMaterialGroups.length < 2) {
+      return { error: '至少需要两组素材才能拆分' };
+    }
+    const newNodes = splitMaterialGroups.map((group, i) => ({
+      id: uuidv4(),
+      exhibitionId: sourceNode.exhibitionId,
+      title: group.title || `${sourceNode.title} (${i + 1})`,
+      description: group.description || (i === 0 ? sourceNode.description : ''),
+      eventDate: group.eventDate || sourceNode.eventDate,
+      materialIds: group.materialIds || [],
+      location: group.location || (i === 0 ? sourceNode.location : null),
+      order: sourceNode.order !== undefined ? sourceNode.order + i : undefined,
+      createdAt: new Date().toISOString()
+    }));
+    timelines.splice(index, 1, ...newNodes);
+    saveCollection('timelines', timelines);
+    return { created: newNodes };
   });
 
   fastify.get('/:id', async (request, reply) => {
@@ -41,8 +126,9 @@ export default async function timelineRoutes(fastify) {
   });
 
   fastify.post('/', async (request) => {
-    const { exhibitionId, title, description, eventDate, materialIds, location } = request.body;
+    const { exhibitionId, title, description, eventDate, materialIds, location, order } = request.body;
     const timelines = getCollection('timelines');
+    const exhibitionTimelines = timelines.filter(t => t.exhibitionId === exhibitionId);
     const newTimeline = {
       id: uuidv4(),
       exhibitionId,
@@ -51,6 +137,9 @@ export default async function timelineRoutes(fastify) {
       eventDate: eventDate || new Date().toISOString(),
       materialIds: materialIds || [],
       location: location || null,
+      order: order !== undefined ? order : (exhibitionTimelines.length > 0
+        ? Math.max(...exhibitionTimelines.map(t => t.order !== undefined ? t.order : 0)) + 1
+        : 0),
       createdAt: new Date().toISOString()
     };
     timelines.push(newTimeline);
@@ -60,7 +149,7 @@ export default async function timelineRoutes(fastify) {
 
   fastify.put('/:id', async (request, reply) => {
     const { id } = request.params;
-    const { title, description, eventDate, materialIds, location } = request.body;
+    const { title, description, eventDate, materialIds, location, order } = request.body;
     const timelines = getCollection('timelines');
     const index = timelines.findIndex(t => t.id === id);
     if (index === -1) {
@@ -73,7 +162,8 @@ export default async function timelineRoutes(fastify) {
       description: description !== undefined ? description : timelines[index].description,
       eventDate: eventDate !== undefined ? eventDate : timelines[index].eventDate,
       materialIds: materialIds !== undefined ? materialIds : timelines[index].materialIds,
-      location: location !== undefined ? location : timelines[index].location
+      location: location !== undefined ? location : timelines[index].location,
+      order: order !== undefined ? order : timelines[index].order
     };
     saveCollection('timelines', timelines);
     return timelines[index];

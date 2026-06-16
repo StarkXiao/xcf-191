@@ -222,11 +222,12 @@ function TimelinePlayer() {
       </div>
 
       <div className="player-dots">
-        {timelines.map((_, idx) => (
+        {timelines.map((node, idx) => (
           <button
-            key={idx}
+            key={node.id}
             className={`dot ${idx === currentIdx ? 'active' : ''}`}
             onClick={() => setCurrentIdx(idx)}
+            title={node.title}
           />
         ))}
       </div>

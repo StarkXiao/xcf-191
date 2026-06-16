@@ -14,6 +14,34 @@
     font-size: 14px;
   }
 
+  .editor-actions {
+    @include flex-center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .batch-toggle-btn {
+    padding: 10px 24px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: $radius-full;
+    color: $text-secondary;
+    font-size: 14px;
+    transition: all $transition-fast;
+
+    &:hover {
+      background: rgba(255, 215, 0, 0.1);
+      border-color: rgba(255, 215, 0, 0.3);
+      color: $accent-gold;
+    }
+
+    &.active {
+      background: rgba(255, 215, 0, 0.15);
+      border-color: $accent-gold;
+      color: $accent-gold;
+    }
+  }
+
   .add-btn {
     @include flex-center;
     gap: 6px;
@@ -37,6 +65,68 @@
   }
 }
 
+.batch-action-bar {
+  @include flex-center;
+  gap: 16px;
+  padding: 14px 24px;
+  margin-bottom: 24px;
+  background: rgba(255, 215, 0, 0.08);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: $radius-md;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.batch-count {
+  color: $accent-gold;
+  font-size: 14px;
+  font-weight: 500;
+  margin-right: auto;
+}
+
+.batch-btn {
+  padding: 8px 20px;
+  border-radius: $radius-full;
+  font-size: 13px;
+  transition: all $transition-fast;
+
+  &.merge-btn {
+    background: linear-gradient(135deg, $accent-gold, $accent-warm);
+    color: $bg-primary;
+    font-weight: 500;
+
+    &:hover:not(:disabled) {
+      box-shadow: $shadow-glow;
+      transform: translateY(-1px);
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
+
+  &.cancel-btn {
+    background: rgba(255, 255, 255, 0.06);
+    color: $text-secondary;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: $text-primary;
+    }
+  }
+}
+
 .timeline {
   position: relative;
   padding: 20px 0;
@@ -56,6 +146,23 @@
   position: relative;
   width: 50%;
   padding: 20px 40px;
+  cursor: default;
+  transition: opacity 0.2s ease;
+
+  &[draggable="true"] {
+    cursor: grab;
+
+    &:active {
+      cursor: grabbing;
+    }
+  }
+
+  &.selected {
+    .node-card {
+      border-color: $accent-gold;
+      box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.3), $shadow-md;
+    }
+  }
 
   &.left {
     left: 0;
@@ -92,10 +199,69 @@
   border-radius: $radius-md;
   padding: 20px;
   transition: all $transition-normal;
+  position: relative;
 
   &:hover {
     transform: translateY(-4px);
     box-shadow: $shadow-md;
+  }
+}
+
+.node-batch-check {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  cursor: pointer;
+
+  .left & {
+    right: auto;
+    left: 12px;
+  }
+
+  .checkbox {
+    @include flex-center;
+    width: 22px;
+    height: 22px;
+    border-radius: $radius-sm;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    background: rgba(0, 0, 0, 0.3);
+    color: transparent;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all $transition-fast;
+
+    &.checked {
+      border-color: $accent-gold;
+      background: $accent-gold;
+      color: $bg-primary;
+    }
+  }
+}
+
+.node-drag-handle {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-size: 16px;
+  color: $text-muted;
+  cursor: grab;
+  opacity: 0;
+  transition: opacity $transition-fast;
+  letter-spacing: -1px;
+  user-select: none;
+
+  .left & {
+    right: auto;
+    left: 12px;
+  }
+
+  .node-card:hover & {
+    opacity: 1;
+  }
+
+  &:active {
+    cursor: grabbing;
   }
 }
 
@@ -126,6 +292,7 @@
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+  align-items: center;
   margin-bottom: 14px;
 
   .right & {
@@ -150,6 +317,14 @@
     height: 100%;
     object-fit: cover;
   }
+}
+
+.node-mat-count {
+  font-size: 12px;
+  color: $text-muted;
+  padding: 2px 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: $radius-full;
 }
 
 .mat-thumb-icon {
@@ -180,6 +355,13 @@
     &:hover {
       background: rgba(255, 255, 255, 0.12);
       color: $text-primary;
+    }
+
+    &.split-btn {
+      &:hover {
+        background: rgba(135, 206, 235, 0.2);
+        color: $accent-blue;
+      }
     }
 
     &.danger {
@@ -336,4 +518,153 @@
   font-size: 12px;
   color: $text-muted;
   line-height: 1.5;
+}
+
+.merge-preview {
+  margin: 16px 0;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: $radius-sm;
+}
+
+.merge-preview-item {
+  @include flex-center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.merge-node-title {
+  color: $text-primary;
+  font-size: 14px;
+  flex: 1;
+}
+
+.merge-node-date {
+  color: $accent-gold;
+  font-size: 12px;
+}
+
+.merge-node-mats {
+  color: $text-muted;
+  font-size: 12px;
+}
+
+.split-group {
+  margin: 16px 0;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 215, 0, 0.1);
+  border-radius: $radius-md;
+}
+
+.split-group-header {
+  @include flex-between;
+  margin-bottom: 12px;
+}
+
+.split-group-label {
+  color: $accent-gold;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.split-remove-btn {
+  padding: 4px 12px;
+  background: rgba(255, 80, 80, 0.15);
+  border-radius: $radius-sm;
+  color: #ff8080;
+  font-size: 12px;
+  transition: all $transition-fast;
+
+  &:hover {
+    background: rgba(255, 80, 80, 0.25);
+  }
+}
+
+.split-materials {
+  margin-top: 12px;
+
+  label {
+    display: block;
+    margin-bottom: 8px;
+    color: $text-secondary;
+    font-size: 13px;
+  }
+}
+
+.split-mat-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.split-mat-item {
+  @include flex-center;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 2px solid transparent;
+  border-radius: $radius-sm;
+  cursor: pointer;
+  transition: all $transition-fast;
+  min-width: 72px;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  &.selected {
+    border-color: $accent-gold;
+    background: rgba(255, 215, 0, 0.08);
+  }
+}
+
+.split-mat-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: $radius-sm;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.3);
+  @include flex-center;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.split-mat-name {
+  font-size: 11px;
+  color: $text-secondary;
+  text-align: center;
+  max-width: 64px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.add-split-group-btn {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  margin: 8px 0 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  border-radius: $radius-sm;
+  color: $text-muted;
+  font-size: 13px;
+  transition: all $transition-fast;
+
+  &:hover {
+    background: rgba(255, 215, 0, 0.06);
+    border-color: rgba(255, 215, 0, 0.3);
+    color: $accent-gold;
+  }
 }

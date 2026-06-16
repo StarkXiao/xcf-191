@@ -32,7 +32,10 @@ export const timelineApi = {
   get: (id) => request.get(`/timelines/${id}`).then(r => r.data),
   create: (data) => request.post('/timelines', data).then(r => r.data),
   update: (id, data) => request.put(`/timelines/${id}`, data).then(r => r.data),
-  remove: (id) => request.delete(`/timelines/${id}`).then(r => r.data)
+  remove: (id) => request.delete(`/timelines/${id}`).then(r => r.data),
+  batchReorder: (orders) => request.post('/timelines/batch/reorder', { orders }).then(r => r.data),
+  batchMerge: (nodeIds, title, eventDate) => request.post('/timelines/batch/merge', { nodeIds, title, eventDate }).then(r => r.data),
+  split: (id, splitMaterialGroups) => request.post(`/timelines/${id}/split`, { splitMaterialGroups }).then(r => r.data)
 };
 
 export const messageApi = {

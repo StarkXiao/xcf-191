@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './MaterialManager.scss';
 
-function MaterialManager({ exhibitionId, materials, onMaterialsChange, fileApi, materialApi }) {
+function MaterialManager({ exhibitionId, materials, timelines, onMaterialsChange, fileApi, materialApi }) {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [textModal, setTextModal] = useState(false);
@@ -85,8 +85,14 @@ function MaterialManager({ exhibitionId, materials, onMaterialsChange, fileApi, 
     }
   };
 
+  const getLinkedNodes = (matId) => {
+    if (!timelines) return [];
+    return timelines.filter(t => (t.materialIds || []).includes(matId));
+  };
+
   const renderMaterialItem = (m) => {
     const isEditing = editingId === m.id;
+    const linkedNodes = getLinkedNodes(m.id);
 
     return (
       <div key={m.id} className="material-card">
@@ -133,6 +139,15 @@ function MaterialManager({ exhibitionId, materials, onMaterialsChange, fileApi, 
               <h4 className="material-title">{m.title || '未命名素材'}</h4>
               {m.type === 'text' && m.description && (
                 <p className="material-desc">{m.description}</p>
+              )}
+              {linkedNodes.length > 0 && (
+                <div className="material-linked-nodes">
+                  {linkedNodes.map(node => (
+                    <span key={node.id} className="linked-node-tag">
+                      ⌛ {node.title}
+                    </span>
+                  ))}
+                </div>
               )}
               <div className="material-actions">
                 <button onClick={() => startEdit(m)}>编辑</button>

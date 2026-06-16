@@ -114,6 +114,7 @@ function ExhibitionDetail() {
           <MaterialManager
             exhibitionId={id}
             materials={materials}
+            timelines={timelines}
             onMaterialsChange={setMaterials}
             fileApi={fileApi}
             materialApi={materialApi}

@@ -189,6 +189,28 @@
   overflow: hidden;
 }
 
+.material-linked-nodes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.linked-node-tag {
+  @include inline-flex-center;
+  gap: 4px;
+  padding: 3px 10px;
+  background: rgba(255, 215, 0, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: $radius-full;
+  color: $accent-gold;
+  font-size: 11px;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .material-actions {
   @include flex-center;
   gap: 8px;
