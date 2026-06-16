@@ -301,4 +301,157 @@ export default async function exhibitionRoutes(fastify) {
       revisitCount: exhibitions[index].revisitCount
     };
   });
+
+  fastify.get('/featured/memories', async (request) => {
+    const { limit = 6 } = request.query;
+    const exhibitions = getCollection('exhibitions');
+    const timelines = getCollection('timelines');
+    const messages = getCollection('messages');
+    const materials = getCollection('materials');
+
+    const calcTimelineHeat = (exhibitionId) => {
+      const exTimelines = timelines.filter(t => t.exhibitionId === exhibitionId);
+      if (exTimelines.length === 0) return { score: 0, detail: { nodeCount: 0, avgMaterials: 0, descRichness: 0 } };
+
+      let totalMaterials = 0;
+      let descCount = 0;
+      exTimelines.forEach(t => {
+        totalMaterials += (t.materialIds || []).length;
+        if (t.description && t.description.trim().length > 0) descCount++;
+      });
+
+      const nodeCount = exTimelines.length;
+      const avgMaterials = totalMaterials / nodeCount;
+      const descRichness = descCount / nodeCount;
+
+      const nodeScore = Math.min(nodeCount / 10, 1) * 40;
+      const materialScore = Math.min(avgMaterials / 5, 1) * 35;
+      const descScore = descRichness * 25;
+
+      return {
+        score: nodeScore + materialScore + descScore,
+        detail: { nodeCount, avgMaterials: Math.round(avgMaterials * 10) / 10, descRichness: Math.round(descRichness * 100) }
+      };
+    };
+
+    const calcMessageInteraction = (exhibitionId) => {
+      const exMessages = messages.filter(m => m.exhibitionId === exhibitionId && m.reviewStatus === 'approved');
+      if (exMessages.length === 0) return { score: 0, detail: { messageCount: 0, uniqueVisitors: 0, recentActivity: 0 } };
+
+      const uniqueVisitors = new Set(exMessages.map(m => m.visitorSessionId || m.author)).size;
+      const now = new Date();
+      const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const recentMessages = exMessages.filter(m => new Date(m.createdAt) >= weekAgo).length;
+
+      const countScore = Math.min(exMessages.length / 20, 1) * 40;
+      const visitorScore = Math.min(uniqueVisitors / 10, 1) * 35;
+      const recentScore = Math.min(recentMessages / 5, 1) * 25;
+
+      return {
+        score: countScore + visitorScore + recentScore,
+        detail: { messageCount: exMessages.length, uniqueVisitors, recentActivity: recentMessages }
+      };
+    };
+
+    const calcMaterialCompleteness = (exhibitionId) => {
+      const exMaterials = materials.filter(m => m.exhibitionId === exhibitionId);
+      if (exMaterials.length === 0) return { score: 0, detail: { totalCount: 0, typeDiversity: 0, qualityScore: 0 } };
+
+      const types = new Set(exMaterials.map(m => m.type));
+      const typeDiversity = types.size / 5;
+
+      let qualityCount = 0;
+      exMaterials.forEach(m => {
+        let hasQuality = false;
+        if (m.title && m.title.trim().length > 0) hasQuality = true;
+        if (m.description && m.description.trim().length > 20) hasQuality = true;
+        if (m.metadata && Object.keys(m.metadata).length > 0) hasQuality = true;
+        if (hasQuality) qualityCount++;
+      });
+      const qualityScore = qualityCount / exMaterials.length;
+
+      const countScore = Math.min(exMaterials.length / 30, 1) * 35;
+      const diversityScore = Math.min(typeDiversity, 1) * 35;
+      const qualityFinalScore = qualityScore * 30;
+
+      return {
+        score: countScore + diversityScore + qualityFinalScore,
+        detail: { totalCount: exMaterials.length, typeDiversity: Math.round(typeDiversity * 100), qualityScore: Math.round(qualityScore * 100) }
+      };
+    };
+
+    const featuredList = exhibitions
+      .map(ex => {
+        const timelineData = calcTimelineHeat(ex.id);
+        const messageData = calcMessageInteraction(ex.id);
+        const materialData = calcMaterialCompleteness(ex.id);
+
+        const totalScore = timelineData.score * 0.35 + messageData.score * 0.35 + materialData.score * 0.30;
+
+        const tags = [];
+        if (timelineData.detail.nodeCount >= 5) tags.push('时光沉淀');
+        if (messageData.detail.messageCount >= 5) tags.push('温情留言');
+        if (materialData.detail.totalCount >= 10) tags.push('素材丰富');
+        if (materialData.detail.typeDiversity >= 60) tags.push('多媒体');
+        if (messageData.detail.recentActivity >= 2) tags.push('近期活跃');
+
+        let highlightTimeline = null;
+        const exTimelines = timelines.filter(t => t.exhibitionId === ex.id);
+        if (exTimelines.length > 0) {
+          const sorted = [...exTimelines].sort((a, b) => (b.materialIds || []).length - (a.materialIds || []).length);
+          const best = sorted[0];
+          const exTimelineMaterials = materials.filter(m => (best.materialIds || []).includes(m.id));
+          const previewImage = exTimelineMaterials.find(m => m.type === 'image')?.url || null;
+          highlightTimeline = {
+            id: best.id,
+            title: best.title,
+            eventDate: best.eventDate,
+            previewImage,
+            materialCount: (best.materialIds || []).length
+          };
+        }
+
+        let topMessage = null;
+        const approvedMessages = messages.filter(m => m.exhibitionId === ex.id && m.reviewStatus === 'approved');
+        if (approvedMessages.length > 0) {
+          const sorted = [...approvedMessages].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+          const latest = sorted[0];
+          topMessage = {
+            author: latest.author,
+            content: latest.content,
+            avatar: latest.avatar,
+            createdAt: latest.createdAt
+          };
+        }
+
+        return {
+          exhibitionId: ex.id,
+          exhibitionTitle: ex.title,
+          exhibitionCover: ex.coverImage || '',
+          exhibitionDescription: ex.description || '',
+          memorialDate: ex.memorialDate || '',
+          totalScore: Math.round(totalScore * 10) / 10,
+          scores: {
+            timeline: Math.round(timelineData.score * 10) / 10,
+            message: Math.round(messageData.score * 10) / 10,
+            material: Math.round(materialData.score * 10) / 10
+          },
+          stats: {
+            timelineNodes: timelineData.detail.nodeCount,
+            messageCount: messageData.detail.messageCount,
+            materialCount: materialData.detail.totalCount
+          },
+          tags,
+          highlightTimeline,
+          topMessage,
+          revisitCount: ex.revisitCount || 0,
+          createdAt: ex.createdAt
+        };
+      })
+      .filter(item => item.totalScore > 5)
+      .sort((a, b) => b.totalScore - a.totalScore)
+      .slice(0, parseInt(limit));
+
+    return featuredList;
+  });
 }

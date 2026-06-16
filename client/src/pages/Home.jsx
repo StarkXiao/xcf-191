@@ -7,6 +7,7 @@ function Home() {
   const [exhibitions, setExhibitions] = useState([]);
   const [apptStats, setApptStats] = useState(null);
   const [anniversaries, setAnniversaries] = useState([]);
+  const [featuredMemories, setFeaturedMemories] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -16,14 +17,16 @@ function Home() {
 
   const loadData = async () => {
     try {
-      const [exs, stats, annivs] = await Promise.all([
+      const [exs, stats, annivs, featured] = await Promise.all([
         exhibitionApi.list(),
         appointmentApi.getStats().catch(() => null),
-        exhibitionApi.getUpcomingAnniversaries(30).catch(() => [])
+        exhibitionApi.getUpcomingAnniversaries(30).catch(() => []),
+        exhibitionApi.getFeaturedMemories(6).catch(() => [])
       ]);
       setExhibitions(exs);
       setApptStats(stats);
       setAnniversaries(annivs);
+      setFeaturedMemories(featured);
     } catch (err) {
       console.error('加载失败:', err);
     } finally {
@@ -152,6 +155,100 @@ function Home() {
                     >
                       🔔 提醒
                     </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {featuredMemories.length > 0 && (
+        <section className="featured-memories-section">
+          <div className="section-header">
+            <h2 className="section-title">
+              <span className="title-icon">✦</span>
+              回忆精选
+            </h2>
+            <span className="section-count">基于时光沉淀·温情留言·素材完整度推荐</span>
+          </div>
+          <div className="featured-memories-grid">
+            {featuredMemories.map((mem, idx) => (
+              <div
+                key={mem.exhibitionId}
+                className="featured-memory-card"
+                onClick={() => navigate(`/exhibition/${mem.exhibitionId}`)}
+              >
+                <div className="featured-rank">
+                  <span className={`rank-badge rank-${idx + 1}`}>TOP {idx + 1}</span>
+                  <span className="score-badge">{mem.totalScore}分</span>
+                </div>
+                <div className="featured-cover">
+                  {mem.exhibitionCover ? (
+                    <img src={mem.exhibitionCover} alt={mem.exhibitionTitle} />
+                  ) : (
+                    <div className="featured-cover-placeholder">
+                      <span>✧</span>
+                    </div>
+                  )}
+                  <div className="featured-score-bar">
+                    <div className="score-item">
+                      <span className="score-label">时光</span>
+                      <div className="score-track"><div className="score-fill timeline" style={{ width: `${mem.scores.timeline}%` }}></div></div>
+                    </div>
+                    <div className="score-item">
+                      <span className="score-label">留言</span>
+                      <div className="score-track"><div className="score-fill message" style={{ width: `${mem.scores.message}%` }}></div></div>
+                    </div>
+                    <div className="score-item">
+                      <span className="score-label">素材</span>
+                      <div className="score-track"><div className="score-fill material" style={{ width: `${mem.scores.material}%` }}></div></div>
+                    </div>
+                  </div>
+                </div>
+                <div className="featured-content">
+                  <h3 className="featured-title">{mem.exhibitionTitle}</h3>
+                  {mem.exhibitionDescription && (
+                    <p className="featured-desc">{mem.exhibitionDescription}</p>
+                  )}
+                  {mem.tags.length > 0 && (
+                    <div className="featured-tags">
+                      {mem.tags.map((tag, i) => (
+                        <span key={i} className="featured-tag">{tag}</span>
+                      ))}
+                    </div>
+                  )}
+                  {mem.highlightTimeline && (
+                    <div className="featured-highlight">
+                      <span className="highlight-icon">📌</span>
+                      <div className="highlight-content">
+                        <span className="highlight-title">{mem.highlightTimeline.title || '珍贵时刻'}</span>
+                        {mem.highlightTimeline.eventDate && (
+                          <span className="highlight-date">{formatDate(mem.highlightTimeline.eventDate)}</span>
+                        )}
+                      </div>
+                      <span className="highlight-count">{mem.highlightTimeline.materialCount}素材</span>
+                    </div>
+                  )}
+                  {mem.topMessage && (
+                    <div className="featured-message">
+                      <div className="message-avatar">
+                        {mem.topMessage.avatar ? (
+                          <img src={mem.topMessage.avatar} alt={mem.topMessage.author} />
+                        ) : (
+                          <span>{mem.topMessage.author?.[0] || '访'}</span>
+                        )}
+                      </div>
+                      <div className="message-body">
+                        <span className="message-author">{mem.topMessage.author}</span>
+                        <p className="message-text">{mem.topMessage.content}</p>
+                      </div>
+                    </div>
+                  )}
+                  <div className="featured-stats">
+                    <span>🕰️ {mem.stats.timelineNodes} 个时间节点</span>
+                    <span>💬 {mem.stats.messageCount} 条留言</span>
+                    <span>🖼️ {mem.stats.materialCount} 份素材</span>
                   </div>
                 </div>
               </div>
