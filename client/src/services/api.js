@@ -274,4 +274,34 @@ export const opsApi = {
   generateReviews: () => request.post('/ops/reviews/generate').then(r => r.data)
 };
 
+export const characterProfileApi = {
+  getMeta: () => request.get('/character-profiles/meta').then(r => r.data),
+  getDashboard: () => request.get('/character-profiles/dashboard').then(r => r.data),
+  getRelationshipMap: () => request.get('/character-profiles/relationship-map').then(r => r.data),
+
+  listProfiles: (params) => request.get('/character-profiles/profiles', { params }).then(r => r.data),
+  getProfile: (id) => request.get(`/character-profiles/profiles/${id}`).then(r => r.data),
+  createProfile: (data) => request.post('/character-profiles/profiles', data).then(r => r.data),
+  updateProfile: (id, data) => request.put(`/character-profiles/profiles/${id}`, data).then(r => r.data),
+  removeProfile: (id) => request.delete(`/character-profiles/profiles/${id}`).then(r => r.data),
+
+  addGrowth: (id, data) => request.post(`/character-profiles/profiles/${id}/growth`, data).then(r => r.data),
+  updateGrowth: (id, growthId, data) => request.put(`/character-profiles/profiles/${id}/growth/${growthId}`, data).then(r => r.data),
+  removeGrowth: (id, growthId) => request.delete(`/character-profiles/profiles/${id}/growth/${growthId}`).then(r => r.data),
+
+  addRelationship: (id, data) => request.post(`/character-profiles/profiles/${id}/relationships`, data).then(r => r.data),
+  updateRelationship: (id, relId, data) => request.put(`/character-profiles/profiles/${id}/relationships/${relId}`, data).then(r => r.data),
+  removeRelationship: (id, relId) => request.delete(`/character-profiles/profiles/${id}/relationships/${relId}`).then(r => r.data),
+
+  addDecision: (id, data) => request.post(`/character-profiles/profiles/${id}/decisions`, data).then(r => r.data),
+  updateDecision: (id, decisionId, data) => request.put(`/character-profiles/profiles/${id}/decisions/${decisionId}`, data).then(r => r.data),
+  removeDecision: (id, decisionId) => request.delete(`/character-profiles/profiles/${id}/decisions/${decisionId}`).then(r => r.data),
+
+  listEndings: () => request.get('/character-profiles/endings').then(r => r.data),
+  getEnding: (id) => request.get(`/character-profiles/endings/${id}`).then(r => r.data),
+  createEnding: (data) => request.post('/character-profiles/endings', data).then(r => r.data),
+  updateEnding: (id, data) => request.put(`/character-profiles/endings/${id}`, data).then(r => r.data),
+  removeEnding: (id) => request.delete(`/character-profiles/endings/${id}`).then(r => r.data)
+};
+
 export default request;

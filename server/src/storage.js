@@ -27,7 +27,9 @@ const defaultDB = {
   relics: [],
   archiveRules: [],
   reviewRecords: [],
-  fileRepairLogs: []
+  fileRepairLogs: [],
+  characterProfiles: [],
+  storylineEndings: []
 };
 
 export const initStorage = () => {

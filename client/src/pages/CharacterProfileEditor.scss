@@ -1,0 +1,221 @@
+@import '../styles/variables.scss';
+@import '../styles/mixins.scss';
+
+.character-profile-editor {
+  min-height: 100vh;
+  padding: 32px;
+  color: $text-primary;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.cpe-loading {
+  @include flex-center;
+  min-height: 100vh;
+  gap: 16px;
+  color: $text-secondary;
+}
+
+.cpe-header {
+  margin-bottom: 40px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid $border-color;
+
+  .back-btn {
+    padding: 8px 20px;
+    background: $bg-card;
+    border: 1px solid $border-color;
+    border-radius: $radius-full;
+    color: $text-secondary;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all $transition-fast;
+    margin-bottom: 16px;
+    display: inline-block;
+
+    &:hover {
+      background: $bg-card-hover;
+      color: $text-primary;
+    }
+  }
+}
+
+.cpe-title {
+  font-size: 28px;
+  font-family: $font-serif;
+  margin: 0;
+  background: linear-gradient(135deg, #b0c4de, #87ceeb);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.cpe-form {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.form-section {
+  background: $bg-card;
+  border: 1px solid $border-light;
+  border-radius: $radius-md;
+  padding: 24px;
+}
+
+.section-label {
+  font-size: 18px;
+  font-family: $font-serif;
+  margin: 0 0 20px 0;
+  padding-left: 14px;
+  border-left: 3px solid $accent-blue;
+  color: $text-primary;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  &.full-width {
+    grid-column: 1 / -1;
+  }
+}
+
+.form-label {
+  font-size: 13px;
+  color: $text-secondary;
+  font-weight: 500;
+}
+
+.form-input {
+  padding: 10px 14px;
+  background: $bg-secondary;
+  border: 1px solid $border-light;
+  border-radius: $radius-sm;
+  color: $text-primary;
+  font-size: 14px;
+
+  &:focus {
+    outline: none;
+    border-color: rgba(135, 206, 235, 0.5);
+  }
+
+  &::placeholder {
+    color: $text-muted;
+  }
+}
+
+.form-textarea {
+  padding: 10px 14px;
+  background: $bg-secondary;
+  border: 1px solid $border-light;
+  border-radius: $radius-sm;
+  color: $text-primary;
+  font-size: 14px;
+  resize: vertical;
+  min-height: 100px;
+  font-family: inherit;
+
+  &:focus {
+    outline: none;
+    border-color: rgba(135, 206, 235, 0.5);
+  }
+
+  &::placeholder {
+    color: $text-muted;
+  }
+}
+
+.radio-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.radio-item {
+  @include inline-flex-center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: $bg-secondary;
+  border: 2px solid $border-light;
+  border-radius: $radius-full;
+  cursor: pointer;
+  transition: all $transition-fast;
+  font-size: 13px;
+  color: $text-secondary;
+
+  input {
+    display: none;
+  }
+
+  &:hover {
+    border-color: rgba(135, 206, 235, 0.3);
+    color: $text-primary;
+  }
+
+  &.active {
+    border-color: $accent-blue;
+    background: rgba(135, 206, 235, 0.1);
+    color: $accent-blue;
+  }
+}
+
+.radio-icon {
+  font-size: 16px;
+}
+
+.radio-text {
+  font-size: 13px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: flex-end;
+  padding-top: 8px;
+}
+
+.cancel-btn {
+  padding: 12px 28px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid $border-light;
+  border-radius: $radius-full;
+  color: $text-secondary;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: $text-primary;
+  }
+}
+
+.submit-btn {
+  padding: 12px 36px;
+  background: linear-gradient(135deg, $accent-blue, $accent-purple);
+  border: none;
+  border-radius: $radius-full;
+  color: #000;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all $transition-normal;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(135, 206, 235, 0.3);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}

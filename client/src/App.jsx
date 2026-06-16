@@ -28,6 +28,11 @@ import OpsMessages from './pages/OpsMessages.jsx';
 import OpsMaterialInspect from './pages/OpsMaterialInspect.jsx';
 import OpsFileRepair from './pages/OpsFileRepair.jsx';
 import OpsReviewWorkflow from './pages/OpsReviewWorkflow.jsx';
+import CharacterProfileHome from './pages/CharacterProfileHome.jsx';
+import CharacterProfileDetail from './pages/CharacterProfileDetail.jsx';
+import CharacterProfileEditor from './pages/CharacterProfileEditor.jsx';
+import EndingDetail from './pages/EndingDetail.jsx';
+import EndingEditor from './pages/EndingEditor.jsx';
 import './styles/App.scss';
 
 function App() {
@@ -83,6 +88,13 @@ function App() {
           <Route path="/ops/material-inspect" element={<OpsMaterialInspect />} />
           <Route path="/ops/file-repair" element={<OpsFileRepair />} />
           <Route path="/ops/reviews" element={<OpsReviewWorkflow />} />
+          <Route path="/character-profiles" element={<CharacterProfileHome />} />
+          <Route path="/character-profiles/create" element={<CharacterProfileEditor />} />
+          <Route path="/character-profiles/:id" element={<CharacterProfileDetail />} />
+          <Route path="/character-profiles/:id/edit" element={<CharacterProfileEditor />} />
+          <Route path="/character-profiles/endings/create" element={<EndingEditor />} />
+          <Route path="/character-profiles/endings/:id" element={<EndingDetail />} />
+          <Route path="/character-profiles/endings/:id/edit" element={<EndingEditor />} />
         </Routes>
       </main>
     </div>
