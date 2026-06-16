@@ -303,7 +303,10 @@ export const applyThemeConfig = (themeConfig, theme) => {
   const fontOption = FONT_OPTIONS.find(f => f.value === (cfg.font || 'default'));
   if (fontOption) style['--theme-font'] = fontOption.family;
 
-  return style;
+  const hasCustomBgColor = !!background;
+  const hasCustomBgImage = !!cfg.backgroundImage;
+
+  return { style, hasCustomBgColor, hasCustomBgImage };
 };
 
 export const getDecorationClass = (themeConfig) => {

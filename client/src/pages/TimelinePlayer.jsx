@@ -111,11 +111,12 @@ function TimelinePlayer() {
   const currentNode = timelines[currentIdx];
   const nodeMaterials = (currentNode.materialIds || []).map(getMaterialById).filter(Boolean);
 
-  const themeStyle = applyThemeConfig(exhibition.themeConfig, exhibition.theme);
+  const { style: themeStyle, hasCustomBgColor } = applyThemeConfig(exhibition.themeConfig, exhibition.theme);
   const decoClass = getDecorationClass(exhibition.themeConfig);
+  const bgColorClass = hasCustomBgColor ? 'has-custom-bg-color' : '';
 
   return (
-    <div className={`timeline-player theme-${exhibition.theme} ${decoClass}`} style={themeStyle}>
+    <div className={`timeline-player theme-${exhibition.theme} ${decoClass} ${bgColorClass}`} style={themeStyle}>
       {exhibition.themeConfig?.backgroundImage && (
         <div className="player-bg-image" style={{ backgroundImage: `url(${exhibition.themeConfig.backgroundImage})` }}></div>
       )}

@@ -131,11 +131,15 @@ function ExhibitionDetail() {
 
   if (!exhibition) return null;
 
-  const themeStyle = applyThemeConfig(exhibition.themeConfig, exhibition.theme);
+  const { style: themeStyle, hasCustomBgColor } = applyThemeConfig(exhibition.themeConfig, exhibition.theme);
   const decoClass = getDecorationClass(exhibition.themeConfig);
+  const bgColorClass = hasCustomBgColor ? 'has-custom-bg-color' : '';
 
   return (
-    <div className={`exhibition-detail theme-${exhibition.theme} ${decoClass}`} style={themeStyle}>
+    <div className={`exhibition-detail theme-${exhibition.theme} ${decoClass} ${bgColorClass}`} style={themeStyle}>
+      {exhibition.themeConfig?.backgroundImage && (
+        <div className="detail-bg-image" style={{ backgroundImage: `url(${exhibition.themeConfig.backgroundImage})` }}></div>
+      )}
       <div className="detail-hero">
         <div className="hero-cover">
           {exhibition.coverImage ? (

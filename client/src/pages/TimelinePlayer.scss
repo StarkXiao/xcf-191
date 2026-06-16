@@ -33,7 +33,7 @@
     background: linear-gradient(135deg, rgba(255, 182, 193, 0.2), rgba(255, 192, 203, 0.1));
   }
 
-  &[style*="--theme-bg:"] {
+  &.has-custom-bg-color {
     background: var(--theme-bg);
   }
 
@@ -146,6 +146,15 @@
     background: var(--theme-primary);
     box-shadow: 0 0 8px var(--theme-primary);
   }
+
+  .player-main,
+  .player-title-bar,
+  .player-back,
+  .player-controls,
+  .player-dots {
+    position: relative;
+    z-index: 2;
+  }
 }
 
 .player-bg-image {
@@ -155,15 +164,6 @@
   background-position: center;
   opacity: 0.15;
   z-index: 0;
-
-  ~ .player-main,
-  ~ .player-title-bar,
-  ~ .player-back,
-  ~ .player-controls,
-  ~ .player-dots {
-    z-index: 2;
-    position: relative;
-  }
 }
 
 @keyframes player-twinkle {

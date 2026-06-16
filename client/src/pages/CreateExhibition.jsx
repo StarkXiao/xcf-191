@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { exhibitionApi, fileApi } from '../services/api.js';
-import ThemeConfigurator from '../components/ThemeConfigurator.jsx';
+import ThemeConfigurator, { applyThemeConfig, getDecorationClass } from '../components/ThemeConfigurator.jsx';
 import './CreateExhibition.scss';
 
 function CreateExhibition() {
@@ -59,8 +59,15 @@ function CreateExhibition() {
     }
   };
 
+  const { style: themeStyle, hasCustomBgColor } = applyThemeConfig(themeConfig, form.theme);
+  const decoClass = getDecorationClass(themeConfig);
+  const bgColorClass = hasCustomBgColor ? 'has-custom-bg-color' : '';
+
   return (
-    <div className="create-exhibition">
+    <div className={`create-exhibition theme-${form.theme} ${decoClass} ${bgColorClass}`} style={themeStyle}>
+      {themeConfig?.backgroundImage && (
+        <div className="page-bg-image" style={{ backgroundImage: `url(${themeConfig.backgroundImage})` }}></div>
+      )}
       <div className="page-header">
         <h1 className="page-title">
           <span className="title-icon">✦</span>
