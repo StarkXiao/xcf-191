@@ -254,6 +254,17 @@ export const opsApi = {
   reviewMessage: (id, data) => request.put(`/ops/messages/${id}/review`, data).then(r => r.data),
   batchReviewMessages: (data) => request.post('/ops/messages/batch-review', data).then(r => r.data),
 
+  listRitualMessages: (params) => request.get('/ops/ritual-messages', { params }).then(r => r.data),
+  reviewRitualMessage: (id, data) => request.put(`/ops/ritual-messages/${id}/review`, data).then(r => r.data),
+  batchReviewRitualMessages: (data) => request.post('/ops/ritual-messages/batch-review', data).then(r => r.data),
+
+  listSensitiveWords: (params) => request.get('/ops/sensitive-words', { params }).then(r => r.data),
+  createSensitiveWord: (data) => request.post('/ops/sensitive-words', data).then(r => r.data),
+  batchCreateSensitiveWords: (data) => request.post('/ops/sensitive-words/batch', data).then(r => r.data),
+  updateSensitiveWord: (id, data) => request.put(`/ops/sensitive-words/${id}`, data).then(r => r.data),
+  removeSensitiveWord: (id) => request.delete(`/ops/sensitive-words/${id}`).then(r => r.data),
+  checkSensitive: (content) => request.post('/ops/check-sensitive', { content }).then(r => r.data),
+
   inspectMaterials: () => request.get('/ops/materials/inspect').then(r => r.data),
 
   getAbnormalFiles: () => request.get('/ops/files/abnormal').then(r => r.data),

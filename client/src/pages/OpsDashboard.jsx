@@ -95,6 +95,13 @@ function OpsDashboard() {
             <div className="nav-badge warning">{summary.pendingReviewCount}</div>
           )}
         </div>
+        <div className="nav-card" onClick={() => navigate('/ops/sensitive-words')}>
+          <div className="nav-icon">🛡️</div>
+          <div className="nav-info">
+            <h3>敏感词管理</h3>
+            <p>词库配置与维护</p>
+          </div>
+        </div>
       </div>
 
       <div className="stats-section">

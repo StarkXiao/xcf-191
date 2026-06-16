@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { memorialRitualApi } from '../services/api.js';
+import { memorialRitualApi, opsApi } from '../services/api.js';
 import './RitualMessageWall.scss';
 
 const EMOJIS = ['🕯️', '💐', '🙏', '❤️', '✨', '🌸', '🕊️', '⭐', '🌙', '💫'];
@@ -23,6 +23,7 @@ function RitualMessageWall({ ritualId }) {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [submitNotice, setSubmitNotice] = useState(null);
   const listRef = useRef(null);
   const emojiPickerRef = useRef(null);
 
@@ -60,8 +61,9 @@ function RitualMessageWall({ ritualId }) {
       return;
     }
     setSubmitting(true);
+    setSubmitNotice(null);
     try {
-      await memorialRitualApi.addMessage(ritualId, {
+      const result = await memorialRitualApi.addMessage(ritualId, {
         author: author.trim() || '匿名访客',
         content: finalContent,
         avatar: selectedEmoji
@@ -69,6 +71,17 @@ function RitualMessageWall({ ritualId }) {
       setAuthor('');
       setContent('');
       setSelectedEmoji('');
+      if (result.sensitiveWords && result.sensitiveWords.length > 0) {
+        setSubmitNotice({
+          type: 'sensitive',
+          message: `祝福已提交，但包含敏感词（${result.sensitiveWords.map(s => s.word).join('、')}），需审核通过后才会展示`
+        });
+      } else {
+        setSubmitNotice({
+          type: 'pending',
+          message: '祝福已提交，需审核通过后才会展示'
+        });
+      }
       loadMessages();
     } catch (err) {
       console.error('留言失败:', err);
@@ -189,6 +202,13 @@ function RitualMessageWall({ ritualId }) {
             {submitting ? '发送中...' : '🕯️ 送上祝福'}
           </button>
         </div>
+
+        {submitNotice && (
+          <div className={`ritual-submit-notice ${submitNotice.type}`}>
+            {submitNotice.type === 'sensitive' ? '⚠️' : '🕐'} {submitNotice.message}
+            <button className="notice-close" onClick={() => setSubmitNotice(null)}>×</button>
+          </div>
+        )}
       </form>
 
       <div className="messages-list" ref={listRef}>
@@ -217,6 +237,15 @@ function RitualMessageWall({ ritualId }) {
               <div className="msg-body">
                 <div className="msg-meta">
                   <span className="msg-author">{msg.author}</span>
+                  {msg.reviewStatus === 'pending' && (
+                    <span className="msg-review-tag pending">待审核</span>
+                  )}
+                  {msg.reviewStatus === 'rejected' && (
+                    <span className="msg-review-tag rejected">已拒绝</span>
+                  )}
+                  {msg.sensitiveWords && msg.sensitiveWords.length > 0 && (
+                    <span className="msg-sensitive-tag" title={msg.sensitiveWords.map(s => s.word).join(', ')}>⚠️</span>
+                  )}
                   <span className="msg-time">{formatTime(msg.createdAt)}</span>
                 </div>
                 <p className="msg-text">{msg.content}</p>

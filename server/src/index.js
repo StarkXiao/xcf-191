@@ -24,6 +24,7 @@ import relicRoutes from './routes/relic.js';
 import opsRoutes from './routes/ops.js';
 import characterProfileRoutes from './routes/characterProfile.js';
 import { initStorage } from './storage.js';
+import { ensureDefaultWords } from './sensitiveWordFilter.js';
 import { UPLOADS_DIR } from './config.js';
 
 const fastify = Fastify({
@@ -49,6 +50,7 @@ await fastify.register(fastifyStatic, {
 });
 
 initStorage();
+ensureDefaultWords();
 
 fastify.register(exhibitionRoutes, { prefix: '/api/exhibitions' });
 fastify.register(materialRoutes, { prefix: '/api/materials' });

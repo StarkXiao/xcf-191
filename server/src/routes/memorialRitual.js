@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { getCollection, saveCollection } from '../storage.js';
+import { checkSensitiveWords } from '../sensitiveWordFilter.js';
 
 export default async function memorialRitualRoutes(fastify) {
   fastify.get('/', async (request) => {
@@ -267,7 +268,12 @@ export default async function memorialRitualRoutes(fastify) {
 
   fastify.get('/:id/messages', async (request) => {
     const { id } = request.params;
+    const { isAdmin } = request.query;
+    const adminFlag = isAdmin === 'true' || isAdmin === true;
     let messages = getCollection('ritualMessages').filter(m => m.ritualId === id);
+    if (!adminFlag) {
+      messages = messages.filter(m => (m.reviewStatus || 'pending') === 'approved');
+    }
     messages = messages.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     return messages;
   });
@@ -275,6 +281,7 @@ export default async function memorialRitualRoutes(fastify) {
   fastify.post('/:id/messages', async (request) => {
     const { id } = request.params;
     const { author, content, avatar } = request.body;
+    const sensitiveResult = checkSensitiveWords(content || '');
     const messages = getCollection('ritualMessages');
     const newMessage = {
       id: uuidv4(),
@@ -282,6 +289,10 @@ export default async function memorialRitualRoutes(fastify) {
       author: author || '匿名访客',
       content: content || '',
       avatar: avatar || '',
+      reviewStatus: 'pending',
+      sensitiveWords: sensitiveResult.matched,
+      reviewReason: '',
+      reviewedAt: null,
       createdAt: new Date().toISOString()
     };
     messages.push(newMessage);

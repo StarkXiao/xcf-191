@@ -29,7 +29,8 @@ const defaultDB = {
   reviewRecords: [],
   fileRepairLogs: [],
   characterProfiles: [],
-  storylineEndings: []
+  storylineEndings: [],
+  sensitiveWords: []
 };
 
 export const initStorage = () => {

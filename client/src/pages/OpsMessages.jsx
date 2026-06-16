@@ -9,8 +9,32 @@ const STATUS_MAP = {
   rejected: { label: '已拒绝', color: '#ff8080' }
 };
 
+const SOURCE_TABS = [
+  { key: 'exhibition', label: '展厅留言' },
+  { key: 'ritual', label: '仪式留言' }
+];
+
+const highlightText = (text, sensitiveWords) => {
+  if (!sensitiveWords || sensitiveWords.length === 0 || !text) return text;
+  let result = text;
+  const sorted = [...sensitiveWords].sort((a, b) => b.word.length - a.word.length);
+  for (const sw of sorted) {
+    const escaped = sw.word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    result = result.replace(new RegExp(escaped, 'gi'), (match) => `§§${match}§§`);
+  }
+  const parts = result.split('§§');
+  return parts.map((part, i) => {
+    const isSensitive = i % 2 === 1;
+    if (isSensitive) {
+      return <mark key={i} className="sensitive-highlight">{part}</mark>;
+    }
+    return part;
+  });
+};
+
 function OpsMessages() {
   const navigate = useNavigate();
+  const [sourceTab, setSourceTab] = useState('exhibition');
   const [messages, setMessages] = useState([]);
   const [exhibitions, setExhibitions] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -27,7 +51,7 @@ function OpsMessages() {
 
   useEffect(() => {
     loadMessages();
-  }, [filters.status, filters.exhibitionId, filters.page]);
+  }, [filters.status, filters.exhibitionId, filters.page, sourceTab]);
 
   const loadExhibitions = async () => {
     try {
@@ -46,7 +70,9 @@ function OpsMessages() {
       if (filters.exhibitionId) params.exhibitionId = filters.exhibitionId;
       params.page = filters.page;
       params.pageSize = filters.pageSize;
-      const data = await opsApi.listMessages(params);
+      const data = sourceTab === 'ritual'
+        ? await opsApi.listRitualMessages(params)
+        : await opsApi.listMessages(params);
       setMessages(data.items);
       setTotal(data.total);
     } catch (err) {
@@ -58,7 +84,11 @@ function OpsMessages() {
 
   const handleApprove = async (id) => {
     try {
-      await opsApi.reviewMessage(id, { status: 'approved' });
+      if (sourceTab === 'ritual') {
+        await opsApi.reviewRitualMessage(id, { status: 'approved' });
+      } else {
+        await opsApi.reviewMessage(id, { status: 'approved' });
+      }
       loadMessages();
     } catch (err) {
       alert(err.response?.data?.error || '操作失败');
@@ -73,7 +103,11 @@ function OpsMessages() {
 
   const handleRejectConfirm = async () => {
     try {
-      await opsApi.reviewMessage(rejectTarget, { status: 'rejected', reason: rejectReason });
+      if (sourceTab === 'ritual') {
+        await opsApi.reviewRitualMessage(rejectTarget, { status: 'rejected', reason: rejectReason });
+      } else {
+        await opsApi.reviewMessage(rejectTarget, { status: 'rejected', reason: rejectReason });
+      }
       setShowRejectModal(false);
       setRejectTarget(null);
       setRejectReason('');
@@ -86,7 +120,11 @@ function OpsMessages() {
   const handleBatchApprove = async () => {
     if (selectedIds.size === 0) return;
     try {
-      await opsApi.batchReviewMessages({ ids: Array.from(selectedIds), status: 'approved' });
+      if (sourceTab === 'ritual') {
+        await opsApi.batchReviewRitualMessages({ ids: Array.from(selectedIds), status: 'approved' });
+      } else {
+        await opsApi.batchReviewMessages({ ids: Array.from(selectedIds), status: 'approved' });
+      }
       setSelectedIds(new Set());
       loadMessages();
     } catch (err) {
@@ -97,7 +135,11 @@ function OpsMessages() {
   const handleBatchReject = async () => {
     if (selectedIds.size === 0) return;
     try {
-      await opsApi.batchReviewMessages({ ids: Array.from(selectedIds), status: 'rejected', reason: '批量拒绝' });
+      if (sourceTab === 'ritual') {
+        await opsApi.batchReviewRitualMessages({ ids: Array.from(selectedIds), status: 'rejected', reason: '批量拒绝' });
+      } else {
+        await opsApi.batchReviewMessages({ ids: Array.from(selectedIds), status: 'rejected', reason: '批量拒绝' });
+      }
       setSelectedIds(new Set());
       loadMessages();
     } catch (err) {
@@ -123,12 +165,17 @@ function OpsMessages() {
     }
   };
 
+  const handleSourceTabChange = (key) => {
+    setSourceTab(key);
+    setSelectedIds(new Set());
+    setFilters(f => ({ ...f, page: 1 }));
+  };
+
   const totalPages = Math.ceil(total / filters.pageSize);
 
-  const statusCounts = {
-    pending: filters.status === 'pending' ? total : '-',
-    approved: filters.status === 'approved' ? total : '-',
-    rejected: filters.status === 'rejected' ? total : '-'
+  const getOriginLabel = (msg) => {
+    if (sourceTab === 'ritual') return msg.ritualTitle || '未知仪式';
+    return msg.exhibitionTitle || '未知展厅';
   };
 
   return (
@@ -139,7 +186,22 @@ function OpsMessages() {
         </button>
         <div className="header-content">
           <h1>留言处理</h1>
+          <button className="btn-link" onClick={() => navigate('/ops/sensitive-words')}>
+            ⚙️ 敏感词管理
+          </button>
         </div>
+      </div>
+
+      <div className="source-tabs">
+        {SOURCE_TABS.map(tab => (
+          <button
+            key={tab.key}
+            className={`source-tab ${sourceTab === tab.key ? 'active' : ''}`}
+            onClick={() => handleSourceTabChange(tab.key)}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       <div className="status-tabs">
@@ -147,7 +209,7 @@ function OpsMessages() {
           <button
             key={key}
             className={`status-tab ${filters.status === key ? 'active' : ''}`}
-            onClick={() => setFilters(f => ({ ...f, status: key, page: 1 }))}
+            onClick={() => { setFilters(f => ({ ...f, status: key, page: 1 })); setSelectedIds(new Set()); }}
           >
             <span className="tab-dot" style={{ background: val.color }} />
             {val.label}
@@ -161,7 +223,7 @@ function OpsMessages() {
           onChange={(e) => setFilters(f => ({ ...f, exhibitionId: e.target.value, page: 1 }))}
           className="form-input"
         >
-          <option value="">全部展厅</option>
+          <option value="">全部{sourceTab === 'ritual' ? '仪式' : '展厅'}</option>
           {exhibitions.map(ex => (
             <option key={ex.id} value={ex.id}>{ex.title}</option>
           ))}
@@ -183,7 +245,7 @@ function OpsMessages() {
           <div className="empty">暂无留言</div>
         ) : (
           messages.map(msg => (
-            <div key={msg.id} className={`message-card ${selectedIds.has(msg.id) ? 'selected' : ''}`}>
+            <div key={msg.id} className={`message-card ${selectedIds.has(msg.id) ? 'selected' : ''} ${msg.sensitiveWords && msg.sensitiveWords.length > 0 ? 'has-sensitive' : ''}`}>
               <div className="msg-select">
                 <input
                   type="checkbox"
@@ -194,10 +256,15 @@ function OpsMessages() {
               <div className="msg-body">
                 <div className="msg-meta">
                   <span className="msg-author">{msg.author || '匿名访客'}</span>
-                  <span className="msg-exhibition">{msg.exhibitionTitle}</span>
+                  <span className="msg-origin">{getOriginLabel(msg)}</span>
+                  {msg.sensitiveWords && msg.sensitiveWords.length > 0 && (
+                    <span className="msg-sensitive-badge">
+                      ⚠️ {msg.sensitiveWords.map(s => s.word).join(', ')}
+                    </span>
+                  )}
                   <span className="msg-time">{new Date(msg.createdAt).toLocaleString('zh-CN')}</span>
                 </div>
-                <div className="msg-content">{msg.content}</div>
+                <div className="msg-content">{highlightText(msg.content, msg.sensitiveWords)}</div>
                 {msg.reviewStatus === 'rejected' && msg.reviewReason && (
                   <div className="msg-reject-reason">拒绝原因：{msg.reviewReason}</div>
                 )}

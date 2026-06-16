@@ -767,13 +767,14 @@ export default async function opsRoutes(fastify) {
       if (!msg.reviewStatus || msg.reviewStatus === 'pending') {
         const key = `message:${msg.id}`;
         if (!existingTargets.has(key)) {
+          const sensitiveFlag = msg.sensitiveWords && msg.sensitiveWords.length > 0;
           reviewRecords.push({
             id: uuidv4(),
             exhibitionId: msg.exhibitionId,
             type: 'message',
             targetId: msg.id,
             content: msg.content ? (msg.content.length > 50 ? msg.content.substring(0, 50) + '...' : msg.content) : '',
-            reason: '新留言待审核',
+            reason: sensitiveFlag ? `包含敏感词: ${msg.sensitiveWords.map(s => s.word).join(', ')}` : '新留言待审核',
             status: 'pending',
             reviewer: '',
             reviewNote: '',
@@ -823,5 +824,209 @@ export default async function opsRoutes(fastify) {
     const items = logs.slice(start, start + ps);
 
     return { total, page: p, pageSize: ps, items };
+  });
+
+  fastify.get('/sensitive-words', async (request) => {
+    const { category, enabled, page = '1', pageSize = '50' } = request.query;
+    let words = getCollection('sensitiveWords');
+
+    if (category) {
+      words = words.filter(w => w.category === category);
+    }
+    if (enabled === 'true') {
+      words = words.filter(w => w.enabled !== false);
+    } else if (enabled === 'false') {
+      words = words.filter(w => w.enabled === false);
+    }
+
+    words.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    const total = words.length;
+    const p = Math.max(1, parseInt(page));
+    const ps = Math.max(1, parseInt(pageSize));
+    const start = (p - 1) * ps;
+    const items = words.slice(start, start + ps);
+
+    const categories = [...new Set(getCollection('sensitiveWords').map(w => w.category).filter(Boolean))];
+
+    return { total, page: p, pageSize: ps, items, categories };
+  });
+
+  fastify.post('/sensitive-words', async (request, reply) => {
+    const { word, category } = request.body;
+    if (!word || !word.trim()) {
+      reply.code(400);
+      return { error: '敏感词不能为空' };
+    }
+
+    const words = getCollection('sensitiveWords');
+    const trimmedWord = word.trim().toLowerCase();
+    if (words.some(w => w.word.toLowerCase() === trimmedWord)) {
+      reply.code(409);
+      return { error: '该敏感词已存在' };
+    }
+
+    const newWord = {
+      id: uuidv4(),
+      word: word.trim(),
+      category: category || 'other',
+      enabled: true,
+      createdAt: new Date().toISOString()
+    };
+    words.push(newWord);
+    saveCollection('sensitiveWords', words);
+    return newWord;
+  });
+
+  fastify.post('/sensitive-words/batch', async (request) => {
+    const { words: wordList, category } = request.body;
+    if (!Array.isArray(wordList) || wordList.length === 0) {
+      return { error: '词列表不能为空' };
+    }
+
+    const words = getCollection('sensitiveWords');
+    const existingSet = new Set(words.map(w => w.word.toLowerCase()));
+    let added = 0;
+
+    for (const w of wordList) {
+      const trimmed = w.trim();
+      if (!trimmed) continue;
+      if (existingSet.has(trimmed.toLowerCase())) continue;
+
+      words.push({
+        id: uuidv4(),
+        word: trimmed,
+        category: category || 'other',
+        enabled: true,
+        createdAt: new Date().toISOString()
+      });
+      existingSet.add(trimmed.toLowerCase());
+      added++;
+    }
+
+    saveCollection('sensitiveWords', words);
+    return { success: true, added };
+  });
+
+  fastify.put('/sensitive-words/:id', async (request, reply) => {
+    const { id } = request.params;
+    const { word, category, enabled } = request.body;
+
+    const words = getCollection('sensitiveWords');
+    const index = words.findIndex(w => w.id === id);
+    if (index === -1) {
+      reply.code(404);
+      return { error: '敏感词不存在' };
+    }
+
+    words[index] = {
+      ...words[index],
+      word: word !== undefined ? word.trim() : words[index].word,
+      category: category !== undefined ? category : words[index].category,
+      enabled: enabled !== undefined ? enabled : words[index].enabled
+    };
+
+    saveCollection('sensitiveWords', words);
+    return words[index];
+  });
+
+  fastify.delete('/sensitive-words/:id', async (request, reply) => {
+    const { id } = request.params;
+    const words = getCollection('sensitiveWords');
+    const filtered = words.filter(w => w.id !== id);
+    if (filtered.length === words.length) {
+      reply.code(404);
+      return { error: '敏感词不存在' };
+    }
+    saveCollection('sensitiveWords', filtered);
+    return { success: true };
+  });
+
+  fastify.get('/ritual-messages', async (request) => {
+    const { status, page = '1', pageSize = '20' } = request.query;
+    let messages = getCollection('ritualMessages');
+
+    if (status && status !== 'all') {
+      messages = messages.filter(m => (m.reviewStatus || 'pending') === status);
+    }
+
+    messages.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    const total = messages.length;
+    const p = Math.max(1, parseInt(page));
+    const ps = Math.max(1, parseInt(pageSize));
+    const start = (p - 1) * ps;
+    const items = messages.slice(start, start + ps);
+
+    const rituals = getCollection('memorialRituals');
+    const rMap = {};
+    rituals.forEach(r => { rMap[r.id] = r.title; });
+
+    return {
+      total,
+      page: p,
+      pageSize: ps,
+      items: items.map(m => ({ ...m, ritualTitle: rMap[m.ritualId] || '未知仪式' }))
+    };
+  });
+
+  fastify.put('/ritual-messages/:id/review', async (request, reply) => {
+    const { id } = request.params;
+    const { status, reason } = request.body;
+    if (!['approved', 'rejected'].includes(status)) {
+      reply.code(400);
+      return { error: '无效审核状态' };
+    }
+
+    const messages = getCollection('ritualMessages');
+    const index = messages.findIndex(m => m.id === id);
+    if (index === -1) {
+      reply.code(404);
+      return { error: '留言不存在' };
+    }
+
+    messages[index] = {
+      ...messages[index],
+      reviewStatus: status,
+      reviewReason: reason || '',
+      reviewedAt: new Date().toISOString()
+    };
+    saveCollection('ritualMessages', messages);
+    return messages[index];
+  });
+
+  fastify.post('/ritual-messages/batch-review', async (request) => {
+    const { ids, status, reason } = request.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return { error: 'ids 不能为空' };
+    }
+    if (!['approved', 'rejected'].includes(status)) {
+      return { error: '无效审核状态' };
+    }
+
+    const messages = getCollection('ritualMessages');
+    const now = new Date().toISOString();
+    let updated = 0;
+
+    messages.forEach(m => {
+      if (ids.includes(m.id)) {
+        m.reviewStatus = status;
+        m.reviewReason = reason || '';
+        m.reviewedAt = now;
+        updated++;
+      }
+    });
+
+    saveCollection('ritualMessages', messages);
+    return { success: true, updated };
+  });
+
+  fastify.post('/check-sensitive', async (request) => {
+    const { content } = request.body;
+    if (!content) {
+      return { matched: [], hasSensitive: false };
+    }
+    const { checkSensitiveWords } = await import('../sensitiveWordFilter.js');
+    return checkSensitiveWords(content);
   });
 }

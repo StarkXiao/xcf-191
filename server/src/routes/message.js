@@ -1,8 +1,25 @@
 import { v4 as uuidv4 } from 'uuid';
 import { getCollection, saveCollection } from '../storage.js';
+import { checkSensitiveWords } from '../sensitiveWordFilter.js';
+
+const normalizeMessage = (message) => {
+  return {
+    ...message,
+    visibility: message.visibility || 'public',
+    visibleGroupIds: message.visibleGroupIds || [],
+    visitorGroupId: message.visitorGroupId || null,
+    reviewStatus: message.reviewStatus || 'pending',
+    sensitiveWords: message.sensitiveWords || [],
+    reviewReason: message.reviewReason || '',
+    reviewedAt: message.reviewedAt || null
+  };
+};
 
 const isMessageVisible = (message, visitorGroupId, visitorSessionId, isAdmin = false) => {
   if (isAdmin) return true;
+
+  const reviewStatus = message.reviewStatus || 'pending';
+  if (reviewStatus !== 'approved') return false;
 
   const visibility = message.visibility || 'public';
 
@@ -19,15 +36,6 @@ const isMessageVisible = (message, visitorGroupId, visitorSessionId, isAdmin = f
   }
 
   return true;
-};
-
-const normalizeMessage = (message) => {
-  return {
-    ...message,
-    visibility: message.visibility || 'public',
-    visibleGroupIds: message.visibleGroupIds || [],
-    visitorGroupId: message.visitorGroupId || null
-  };
 };
 
 export default async function messageRoutes(fastify) {
@@ -60,6 +68,7 @@ export default async function messageRoutes(fastify) {
       visitorSessionId
     } = request.body;
 
+    const sensitiveResult = checkSensitiveWords(content || '');
     const messages = getCollection('messages');
     const newMessage = {
       id: uuidv4(),
@@ -71,6 +80,10 @@ export default async function messageRoutes(fastify) {
       visibleGroupIds: visibleGroupIds || [],
       visitorGroupId: visitorGroupId || null,
       visitorSessionId: visitorSessionId || null,
+      reviewStatus: 'pending',
+      sensitiveWords: sensitiveResult.matched,
+      reviewReason: '',
+      reviewedAt: null,
       createdAt: new Date().toISOString()
     };
     messages.push(newMessage);
@@ -97,14 +110,25 @@ export default async function messageRoutes(fastify) {
     }
 
     const current = messages[index];
+    const newContent = content !== undefined ? content : current.content;
+    const sensitiveResult = checkSensitiveWords(newContent);
+
+    const shouldResetReview = content !== undefined && content !== current.content;
+
     messages[index] = {
       ...current,
       author: author !== undefined ? author : current.author,
-      content: content !== undefined ? content : current.content,
+      content: newContent,
       avatar: avatar !== undefined ? avatar : current.avatar,
       visibility: visibility !== undefined ? visibility : current.visibility,
       visibleGroupIds: visibleGroupIds !== undefined ? visibleGroupIds : current.visibleGroupIds,
       visitorGroupId: visitorGroupId !== undefined ? visitorGroupId : current.visitorGroupId,
+      ...(shouldResetReview ? {
+        reviewStatus: 'pending',
+        sensitiveWords: sensitiveResult.matched,
+        reviewReason: '',
+        reviewedAt: null
+      } : {}),
       updatedAt: new Date().toISOString()
     };
 

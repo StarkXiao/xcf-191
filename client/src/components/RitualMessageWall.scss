@@ -418,3 +418,66 @@
     color: #ff6b7a;
   }
 }
+
+.ritual-submit-notice {
+  padding: 10px 14px;
+  margin-top: 10px;
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+
+  &.pending {
+    background: rgba(255, 215, 0, 0.1);
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    color: #e6c200;
+  }
+
+  &.sensitive {
+    background: rgba(255, 152, 0, 0.1);
+    border: 1px solid rgba(255, 152, 0, 0.3);
+    color: #ff9800;
+  }
+
+  .notice-close {
+    background: none;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    font-size: 14px;
+    margin-left: auto;
+    padding: 0 4px;
+    opacity: 0.6;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+}
+
+.msg-review-tag {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 16px;
+  white-space: nowrap;
+
+  &.pending {
+    color: #ffd700;
+    background: rgba(255, 215, 0, 0.12);
+  }
+
+  &.rejected {
+    color: #f44336;
+    background: rgba(244, 67, 54, 0.12);
+  }
+}
+
+.msg-sensitive-tag {
+  cursor: help;
+  font-size: 12px;
+}

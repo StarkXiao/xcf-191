@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { messageApi, exhibitionApi } from '../services/api.js';
+import { messageApi, exhibitionApi, opsApi } from '../services/api.js';
 import './MessageBoard.scss';
 
 const VISIBILITY_OPTIONS = [
@@ -7,6 +7,12 @@ const VISIBILITY_OPTIONS = [
   { value: 'groups', label: '指定分组', desc: '仅选定分组可见' },
   { value: 'private', label: '私密', desc: '仅自己和管理员可见' }
 ];
+
+const REVIEW_STATUS_MAP = {
+  pending: { label: '待审核', color: '#ffd700', bg: '#fff8e1' },
+  approved: { label: '已通过', color: '#4caf50', bg: '#e8f5e9' },
+  rejected: { label: '已拒绝', color: '#f44336', bg: '#ffebee' }
+};
 
 const getVisitorSessionId = (exhibitionId) => {
   const key = `visitor_session_${exhibitionId}`;
@@ -42,6 +48,8 @@ function MessageBoard({ exhibitionId, isAdmin = false }) {
   const [visibleGroupIds, setVisibleGroupIds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [submitNotice, setSubmitNotice] = useState(null);
+  const [sensitiveHint, setSensitiveHint] = useState(null);
 
   const visitorSessionId = getVisitorSessionId(exhibitionId);
 
@@ -111,6 +119,19 @@ function MessageBoard({ exhibitionId, isAdmin = false }) {
     });
   };
 
+  const handleContentBlur = async () => {
+    if (!content.trim()) {
+      setSensitiveHint(null);
+      return;
+    }
+    try {
+      const result = await opsApi.checkSensitive(content.trim());
+      setSensitiveHint(result.hasSensitive ? result.matched : null);
+    } catch {
+      setSensitiveHint(null);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!content.trim()) {
@@ -122,8 +143,9 @@ function MessageBoard({ exhibitionId, isAdmin = false }) {
       return;
     }
     setSubmitting(true);
+    setSubmitNotice(null);
     try {
-      await messageApi.create({
+      const result = await messageApi.create({
         exhibitionId,
         author: author.trim() || '匿名访客',
         content: content.trim(),
@@ -136,7 +158,19 @@ function MessageBoard({ exhibitionId, isAdmin = false }) {
       setContent('');
       setVisibility('public');
       setVisibleGroupIds([]);
-      loadMessages();
+      setSensitiveHint(null);
+      if (result.sensitiveWords && result.sensitiveWords.length > 0) {
+        setSubmitNotice({
+          type: 'sensitive',
+          message: `留言已提交，但包含敏感词（${result.sensitiveWords.map(s => s.word).join('、')}），需审核通过后才会展示`
+        });
+      } else {
+        setSubmitNotice({
+          type: 'pending',
+          message: '留言已提交，需审核通过后才会展示'
+        });
+      }
+      if (isAdmin) loadMessages();
     } catch (err) {
       console.error('留言失败:', err);
       alert('留言失败，请重试');
@@ -188,6 +222,29 @@ function MessageBoard({ exhibitionId, isAdmin = false }) {
     if (v === 'private') return '私密';
     if (v === 'groups') return '分组可见';
     return '公开';
+  };
+
+  const renderReviewStatus = (msg) => {
+    const status = msg.reviewStatus || 'pending';
+    const info = REVIEW_STATUS_MAP[status];
+    if (!info) return null;
+    return (
+      <span
+        className="msg-review-tag"
+        style={{ color: info.color, backgroundColor: info.bg }}
+      >
+        {info.label}
+      </span>
+    );
+  };
+
+  const renderSensitiveTag = (msg) => {
+    if (!msg.sensitiveWords || msg.sensitiveWords.length === 0) return null;
+    return (
+      <span className="msg-sensitive-tag" title={msg.sensitiveWords.map(s => s.word).join(', ')}>
+        ⚠️ 含敏感词
+      </span>
+    );
   };
 
   return (
@@ -245,6 +302,7 @@ function MessageBoard({ exhibitionId, isAdmin = false }) {
             placeholder="写下你想说的话..."
             value={content}
             onChange={(e) => setContent(e.target.value)}
+            onBlur={handleContentBlur}
             maxLength={500}
             rows={4}
           />
@@ -299,6 +357,19 @@ function MessageBoard({ exhibitionId, isAdmin = false }) {
           </div>
         )}
 
+        {sensitiveHint && (
+          <div className="sensitive-hint">
+            ⚠️ 内容可能包含敏感词：{sensitiveHint.map(s => s.word).join('、')}，提交后将进入审核流程
+          </div>
+        )}
+
+        {submitNotice && (
+          <div className={`submit-notice ${submitNotice.type}`}>
+            {submitNotice.type === 'sensitive' ? '⚠️' : '🕐'} {submitNotice.message}
+            <button className="notice-close" onClick={() => setSubmitNotice(null)}>×</button>
+          </div>
+        )}
+
         <div className="form-actions">
           <span className="char-count">{content.length}/500</span>
           <button type="submit" className="submit-btn" disabled={submitting || !content.trim()}>
@@ -345,6 +416,8 @@ function MessageBoard({ exhibitionId, isAdmin = false }) {
                         {group.name}
                       </span>
                     )}
+                    {isAdmin && renderReviewStatus(msg)}
+                    {isAdmin && renderSensitiveTag(msg)}
                     <span className="msg-visibility-tag">{getVisibilityLabel(msg)}</span>
                     <span className="msg-time">{formatTime(msg.createdAt)}</span>
                   </div>
