@@ -272,7 +272,7 @@ export default async function memorialRitualRoutes(fastify) {
     const adminFlag = isAdmin === 'true' || isAdmin === true;
     let messages = getCollection('ritualMessages').filter(m => m.ritualId === id);
     if (!adminFlag) {
-      messages = messages.filter(m => (m.reviewStatus || 'pending') === 'approved');
+      messages = messages.filter(m => (m.reviewStatus ?? 'approved') === 'approved');
     }
     messages = messages.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     return messages;

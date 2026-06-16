@@ -11,6 +11,7 @@ export default async function opsRoutes(fastify) {
     const exhibitions = getCollection('exhibitions');
     const materials = getCollection('materials');
     const messages = getCollection('messages');
+    const ritualMessages = getCollection('ritualMessages');
     const shares = getCollection('shares');
     const shareViews = getCollection('shareViews');
     const appointments = getCollection('appointments');
@@ -23,9 +24,12 @@ export default async function opsRoutes(fastify) {
 
     const todayMessages = messages.filter(m => m.createdAt >= oneDayAgo);
     const weekMessages = messages.filter(m => m.createdAt >= sevenDaysAgo);
+    const todayRitualMessages = ritualMessages.filter(m => m.createdAt >= oneDayAgo);
     const pendingReviews = reviewRecords.filter(r => r.status === 'pending');
     const approvedReviews = reviewRecords.filter(r => r.status === 'approved');
     const rejectedReviews = reviewRecords.filter(r => r.status === 'rejected');
+
+    const pendingRitualMessages = ritualMessages.filter(m => m.reviewStatus === 'pending').length;
 
     const materialTypeMap = {};
     materials.forEach(m => {
@@ -52,13 +56,16 @@ export default async function opsRoutes(fastify) {
         exhibitionCount: exhibitions.length,
         materialCount: materials.length,
         messageCount: messages.length,
+        ritualMessageCount: ritualMessages.length,
         todayMessageCount: todayMessages.length,
+        todayRitualMessageCount: todayRitualMessages.length,
         weekMessageCount: weekMessages.length,
         shareCount: shares.length,
         shareViewCount: shareViews.length,
         appointmentCount: appointments.length,
         visitRecordCount: visitRecords.length,
         pendingReviewCount: pendingReviews.length,
+        pendingRitualMessageCount: pendingRitualMessages,
         approvedReviewCount: approvedReviews.length,
         rejectedReviewCount: rejectedReviews.length
       },
@@ -75,7 +82,7 @@ export default async function opsRoutes(fastify) {
       messages = messages.filter(m => m.exhibitionId === exhibitionId);
     }
     if (status && status !== 'all') {
-      messages = messages.filter(m => (m.reviewStatus || 'pending') === status);
+      messages = messages.filter(m => (m.reviewStatus ?? 'approved') === status);
     }
 
     messages.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -634,11 +641,19 @@ export default async function opsRoutes(fastify) {
     const exMap = {};
     exhibitions.forEach(e => { exMap[e.id] = e.title; });
 
+    const rituals = getCollection('memorialRituals');
+    const rMap = {};
+    rituals.forEach(r => { rMap[r.id] = r.title; });
+
     return {
       total,
       page: p,
       pageSize: ps,
-      items: items.map(r => ({ ...r, exhibitionTitle: exMap[r.exhibitionId] || '未知展厅' }))
+      items: items.map(r => ({
+        ...r,
+        exhibitionTitle: exMap[r.exhibitionId] || '未知展厅',
+        ritualTitle: r.ritualId ? (rMap[r.ritualId] || '未知仪式') : undefined
+      }))
     };
   });
 
@@ -695,6 +710,16 @@ export default async function opsRoutes(fastify) {
       }
     }
 
+    if (reviewRecords[index].type === 'ritual-message') {
+      const ritualMessages = getCollection('ritualMessages');
+      const mIndex = ritualMessages.findIndex(m => m.id === reviewRecords[index].targetId);
+      if (mIndex !== -1) {
+        ritualMessages[mIndex].reviewStatus = 'approved';
+        ritualMessages[mIndex].reviewedAt = new Date().toISOString();
+        saveCollection('ritualMessages', ritualMessages);
+      }
+    }
+
     return reviewRecords[index];
   });
 
@@ -727,12 +752,24 @@ export default async function opsRoutes(fastify) {
       }
     }
 
+    if (reviewRecords[index].type === 'ritual-message') {
+      const ritualMessages = getCollection('ritualMessages');
+      const mIndex = ritualMessages.findIndex(m => m.id === reviewRecords[index].targetId);
+      if (mIndex !== -1) {
+        ritualMessages[mIndex].reviewStatus = 'rejected';
+        ritualMessages[mIndex].reviewReason = note || '';
+        ritualMessages[mIndex].reviewedAt = new Date().toISOString();
+        saveCollection('ritualMessages', ritualMessages);
+      }
+    }
+
     return reviewRecords[index];
   });
 
   fastify.post('/reviews/generate', async () => {
     const materials = getCollection('materials');
     const messages = getCollection('messages');
+    const ritualMessages = getCollection('ritualMessages');
     const exhibitions = getCollection('exhibitions');
     const reviewRecords = getCollection('reviewRecords');
 
@@ -764,7 +801,7 @@ export default async function opsRoutes(fastify) {
     }
 
     for (const msg of messages) {
-      if (!msg.reviewStatus || msg.reviewStatus === 'pending') {
+      if (msg.reviewStatus === 'pending') {
         const key = `message:${msg.id}`;
         if (!existingTargets.has(key)) {
           const sensitiveFlag = msg.sensitiveWords && msg.sensitiveWords.length > 0;
@@ -775,6 +812,31 @@ export default async function opsRoutes(fastify) {
             targetId: msg.id,
             content: msg.content ? (msg.content.length > 50 ? msg.content.substring(0, 50) + '...' : msg.content) : '',
             reason: sensitiveFlag ? `包含敏感词: ${msg.sensitiveWords.map(s => s.word).join(', ')}` : '新留言待审核',
+            status: 'pending',
+            reviewer: '',
+            reviewNote: '',
+            createdAt: new Date().toISOString(),
+            reviewedAt: null
+          });
+          generated++;
+          existingTargets.add(key);
+        }
+      }
+    }
+
+    for (const msg of ritualMessages) {
+      if (msg.reviewStatus === 'pending') {
+        const key = `ritual-message:${msg.id}`;
+        if (!existingTargets.has(key)) {
+          const sensitiveFlag = msg.sensitiveWords && msg.sensitiveWords.length > 0;
+          reviewRecords.push({
+            id: uuidv4(),
+            exhibitionId: msg.exhibitionId || null,
+            ritualId: msg.ritualId,
+            type: 'ritual-message',
+            targetId: msg.id,
+            content: msg.content ? (msg.content.length > 50 ? msg.content.substring(0, 50) + '...' : msg.content) : '',
+            reason: sensitiveFlag ? `包含敏感词: ${msg.sensitiveWords.map(s => s.word).join(', ')}` : '仪式留言待审核',
             status: 'pending',
             reviewer: '',
             reviewNote: '',
@@ -947,7 +1009,7 @@ export default async function opsRoutes(fastify) {
     let messages = getCollection('ritualMessages');
 
     if (status && status !== 'all') {
-      messages = messages.filter(m => (m.reviewStatus || 'pending') === status);
+      messages = messages.filter(m => (m.reviewStatus ?? 'approved') === status);
     }
 
     messages.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));

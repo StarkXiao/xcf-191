@@ -67,9 +67,9 @@ function OpsDashboard() {
           <div className="nav-icon">💬</div>
           <div className="nav-info">
             <h3>留言处理</h3>
-            <p>今日 {summary.todayMessageCount} 条新留言</p>
+            <p>今日 {summary.todayMessageCount + (summary.todayRitualMessageCount || 0)} 条新留言</p>
           </div>
-          <div className="nav-badge">{summary.todayMessageCount}</div>
+          <div className="nav-badge">{summary.todayMessageCount + (summary.todayRitualMessageCount || 0)}</div>
         </div>
         <div className="nav-card" onClick={() => navigate('/ops/material-inspect')}>
           <div className="nav-icon">🔍</div>
@@ -120,7 +120,12 @@ function OpsDashboard() {
           <div className="stat-card blue">
             <span className="stat-icon">💬</span>
             <span className="stat-value">{summary.messageCount}</span>
-            <span className="stat-label">留言总数</span>
+            <span className="stat-label">展厅留言</span>
+          </div>
+          <div className="stat-card purple">
+            <span className="stat-icon">🕯️</span>
+            <span className="stat-value">{summary.ritualMessageCount || 0}</span>
+            <span className="stat-label">仪式留言</span>
           </div>
           <div className="stat-card green">
             <span className="stat-icon">📅</span>
@@ -202,6 +207,11 @@ function OpsDashboard() {
               <span className="review-label">已拒绝</span>
             </div>
           </div>
+          {summary.pendingRitualMessageCount > 0 && (
+            <div className="ritual-pending-notice">
+              🕯️ 其中仪式留言待审核 {summary.pendingRitualMessageCount} 条
+            </div>
+          )}
         </div>
       </div>
 

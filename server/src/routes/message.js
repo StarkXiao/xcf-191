@@ -8,7 +8,7 @@ const normalizeMessage = (message) => {
     visibility: message.visibility || 'public',
     visibleGroupIds: message.visibleGroupIds || [],
     visitorGroupId: message.visitorGroupId || null,
-    reviewStatus: message.reviewStatus || 'pending',
+    reviewStatus: message.reviewStatus ?? 'approved',
     sensitiveWords: message.sensitiveWords || [],
     reviewReason: message.reviewReason || '',
     reviewedAt: message.reviewedAt || null

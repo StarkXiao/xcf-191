@@ -11,7 +11,8 @@ const STATUS_MAP = {
 
 const TYPE_LABELS = {
   material: '素材',
-  message: '留言',
+  message: '展厅留言',
+  'ritual-message': '仪式留言',
   exhibition: '展厅'
 };
 
@@ -198,7 +199,11 @@ function OpsReviewWorkflow() {
               <div className="review-body">
                 <div className="review-meta">
                   <span className="review-type">{TYPE_LABELS[review.type] || review.type}</span>
-                  <span className="review-exhibition">{review.exhibitionTitle}</span>
+                  {review.type === 'ritual-message' && review.ritualTitle ? (
+                    <span className="review-exhibition">{review.ritualTitle}</span>
+                  ) : (
+                    <span className="review-exhibition">{review.exhibitionTitle}</span>
+                  )}
                   <span className="review-time">{new Date(review.createdAt).toLocaleString('zh-CN')}</span>
                 </div>
                 <div className="review-content">{review.content}</div>
