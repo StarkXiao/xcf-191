@@ -4,7 +4,7 @@
 .material-manager {
   .manager-header {
     @include flex-between;
-    margin-bottom: 32px;
+    margin-bottom: 24px;
     flex-wrap: wrap;
     gap: 16px;
   }
@@ -13,6 +13,56 @@
     @include flex-center;
     gap: 12px;
     flex-wrap: wrap;
+  }
+
+  .header-actions {
+    @include flex-center;
+    gap: 16px;
+  }
+
+  .filter-toggle {
+    @include flex-center;
+    gap: 6px;
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid $border-color;
+    border-radius: $radius-full;
+    color: $text-primary;
+    font-size: 13px;
+    transition: all $transition-fast;
+    cursor: pointer;
+
+    &:hover {
+      background: rgba(255, 215, 0, 0.1);
+      border-color: $accent-gold;
+      color: $accent-gold;
+    }
+
+    &.active {
+      background: rgba(255, 215, 0, 0.15);
+      border-color: $accent-gold;
+      color: $accent-gold;
+    }
+
+    &.has-filters {
+      .filter-badge {
+        display: inline-flex;
+      }
+    }
+  }
+
+  .filter-badge {
+    display: none;
+    @include inline-flex-center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    background: $accent-gold;
+    color: $bg-primary;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: $radius-full;
+    margin-left: 4px;
   }
 
   .upload-btn {
@@ -57,6 +107,121 @@
   .progress-text {
     color: $text-muted;
     font-size: 12px;
+  }
+
+  .filter-panel {
+    @include glass;
+    border-radius: $radius-md;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    border: 1px solid $border-light;
+  }
+
+  .filter-section {
+    margin-bottom: 16px;
+
+    &:last-of-type {
+      margin-bottom: 0;
+    }
+  }
+
+  .filter-label {
+    display: block;
+    font-size: 13px;
+    color: $text-secondary;
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+
+  .filter-options {
+    @include flex-center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .filter-chip {
+    @include inline-flex-center;
+    gap: 4px;
+    padding: 6px 16px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid $border-color;
+    border-radius: $radius-full;
+    color: $text-secondary;
+    font-size: 12px;
+    transition: all $transition-fast;
+    cursor: pointer;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: $text-primary;
+    }
+
+    &.active {
+      background: rgba(255, 215, 0, 0.15);
+      border-color: $accent-gold;
+      color: $accent-gold;
+    }
+  }
+
+  .filter-select,
+  .filter-input {
+    width: 100%;
+    max-width: 320px;
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid $border-color;
+    border-radius: $radius-sm;
+    color: $text-primary;
+    font-size: 13px;
+    outline: none;
+    transition: border-color $transition-fast;
+
+    &:focus {
+      border-color: $accent-gold;
+    }
+
+    &::placeholder {
+      color: $text-muted;
+    }
+  }
+
+  .date-range {
+    @include flex-center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .date-separator {
+    color: $text-muted;
+    font-size: 13px;
+  }
+
+  .filter-actions {
+    @include flex-between;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid $border-light;
+  }
+
+  .reset-btn {
+    padding: 8px 20px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid $border-color;
+    border-radius: $radius-sm;
+    color: $text-secondary;
+    font-size: 13px;
+    transition: all $transition-fast;
+    cursor: pointer;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: $text-primary;
+    }
+  }
+
+  .filter-result-count {
+    color: $text-muted;
+    font-size: 13px;
   }
 }
 
@@ -209,6 +374,15 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.material-meta {
+  margin-bottom: 10px;
+}
+
+.material-date {
+  color: $text-muted;
+  font-size: 12px;
 }
 
 .material-actions {

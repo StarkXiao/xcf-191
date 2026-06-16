@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './MaterialManager.scss';
 
 function MaterialManager({ exhibitionId, materials, timelines, onMaterialsChange, fileApi, materialApi }) {
@@ -8,6 +8,78 @@ function MaterialManager({ exhibitionId, materials, timelines, onMaterialsChange
   const [textForm, setTextForm] = useState({ title: '', content: '' });
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({ title: '', description: '' });
+
+  const [filters, setFilters] = useState({
+    type: [],
+    timelineNodeId: '',
+    startDate: '',
+    endDate: '',
+    keyword: ''
+  });
+  const [filteredMaterials, setFilteredMaterials] = useState([]);
+  const [showFilters, setShowFilters] = useState(false);
+
+  useEffect(() => {
+    setFilteredMaterials(materials);
+  }, [materials]);
+
+  useEffect(() => {
+    fetchFilteredMaterials();
+  }, [filters, exhibitionId]);
+
+  const fetchFilteredMaterials = async () => {
+    try {
+      const params = {};
+      if (filters.type.length > 0) {
+        params.type = filters.type;
+      }
+      if (filters.timelineNodeId) {
+        params.timelineNodeId = filters.timelineNodeId;
+      }
+      if (filters.startDate) {
+        params.startDate = filters.startDate;
+      }
+      if (filters.endDate) {
+        params.endDate = filters.endDate;
+      }
+      if (filters.keyword) {
+        params.keyword = filters.keyword;
+      }
+      const data = await materialApi.list(exhibitionId, params);
+      setFilteredMaterials(data);
+    } catch (err) {
+      console.error('筛选素材失败:', err);
+    }
+  };
+
+  const handleFilterChange = (key, value) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleTypeToggle = (type) => {
+    setFilters(prev => {
+      const newTypes = prev.type.includes(type)
+        ? prev.type.filter(t => t !== type)
+        : [...prev.type, type];
+      return { ...prev, type: newTypes };
+    });
+  };
+
+  const resetFilters = () => {
+    setFilters({
+      type: [],
+      timelineNodeId: '',
+      startDate: '',
+      endDate: '',
+      keyword: ''
+    });
+  };
+
+  const hasActiveFilters = filters.type.length > 0 ||
+    filters.timelineNodeId ||
+    filters.startDate ||
+    filters.endDate ||
+    filters.keyword;
 
   const handleFileUpload = async (e) => {
     const files = Array.from(e.target.files);
@@ -29,6 +101,7 @@ function MaterialManager({ exhibitionId, materials, timelines, onMaterialsChange
       }
       const updated = await materialApi.list(exhibitionId);
       onMaterialsChange(updated);
+      fetchFilteredMaterials();
     } catch (err) {
       console.error('上传失败:', err);
       alert('上传失败，请重试');
@@ -51,6 +124,7 @@ function MaterialManager({ exhibitionId, materials, timelines, onMaterialsChange
       });
       const updated = await materialApi.list(exhibitionId);
       onMaterialsChange(updated);
+      fetchFilteredMaterials();
       setTextModal(false);
       setTextForm({ title: '', content: '' });
     } catch (err) {
@@ -64,6 +138,7 @@ function MaterialManager({ exhibitionId, materials, timelines, onMaterialsChange
       await materialApi.remove(id);
       const updated = await materialApi.list(exhibitionId);
       onMaterialsChange(updated);
+      fetchFilteredMaterials();
     } catch (err) {
       console.error('删除失败:', err);
     }
@@ -79,6 +154,7 @@ function MaterialManager({ exhibitionId, materials, timelines, onMaterialsChange
       await materialApi.update(id, editForm);
       const updated = await materialApi.list(exhibitionId);
       onMaterialsChange(updated);
+      fetchFilteredMaterials();
       setEditingId(null);
     } catch (err) {
       console.error('更新失败:', err);
@@ -149,6 +225,11 @@ function MaterialManager({ exhibitionId, materials, timelines, onMaterialsChange
                   ))}
                 </div>
               )}
+              <div className="material-meta">
+                <span className="material-date">
+                  {new Date(m.createdAt).toLocaleDateString('zh-CN')}
+                </span>
+              </div>
               <div className="material-actions">
                 <button onClick={() => startEdit(m)}>编辑</button>
                 <button className="danger" onClick={() => handleDelete(m.id)}>删除</button>
@@ -161,12 +242,19 @@ function MaterialManager({ exhibitionId, materials, timelines, onMaterialsChange
   };
 
   const filtered = {
-    all: materials,
-    image: materials.filter(m => m.type === 'image'),
-    audio: materials.filter(m => m.type === 'audio'),
-    text: materials.filter(m => m.type === 'text'),
-    video: materials.filter(m => m.type === 'video')
+    all: filteredMaterials,
+    image: filteredMaterials.filter(m => m.type === 'image'),
+    audio: filteredMaterials.filter(m => m.type === 'audio'),
+    text: filteredMaterials.filter(m => m.type === 'text'),
+    video: filteredMaterials.filter(m => m.type === 'video')
   };
+
+  const typeOptions = [
+    { value: 'image', label: '📷 照片' },
+    { value: 'audio', label: '🎵 语音' },
+    { value: 'video', label: '🎬 视频' },
+    { value: 'text', label: '✎ 文字' }
+  ];
 
   return (
     <div className="material-manager">
@@ -180,19 +268,107 @@ function MaterialManager({ exhibitionId, materials, timelines, onMaterialsChange
             <input type="file" accept="audio/*" multiple onChange={handleFileUpload} hidden />
             <span>🎵 上传语音</span>
           </label>
+          <label className="upload-btn">
+            <input type="file" accept="video/*" multiple onChange={handleFileUpload} hidden />
+            <span>🎬 上传视频</span>
+          </label>
           <button className="upload-btn" onClick={() => setTextModal(true)}>
             ✎ 添加文字
           </button>
         </div>
-        {uploading && (
-          <div className="upload-progress">
-            <div className="progress-bar">
-              <div className="progress-fill" style={{ width: `${uploadProgress}%` }}></div>
+        <div className="header-actions">
+          <button
+            className={`filter-toggle ${showFilters ? 'active' : ''} ${hasActiveFilters ? 'has-filters' : ''}`}
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            🔍 筛选 {hasActiveFilters && <span className="filter-badge">{filters.type.length + (filters.timelineNodeId ? 1 : 0) + (filters.startDate || filters.endDate ? 1 : 0) + (filters.keyword ? 1 : 0)}</span>}
+          </button>
+          {uploading && (
+            <div className="upload-progress">
+              <div className="progress-bar">
+                <div className="progress-fill" style={{ width: `${uploadProgress}%` }}></div>
+              </div>
+              <span className="progress-text">上传中 {uploadProgress}%</span>
             </div>
-            <span className="progress-text">上传中 {uploadProgress}%</span>
-          </div>
-        )}
+          )}
+        </div>
       </div>
+
+      {showFilters && (
+        <div className="filter-panel">
+          <div className="filter-section">
+            <label className="filter-label">类型</label>
+            <div className="filter-options">
+              {typeOptions.map(opt => (
+                <button
+                  key={opt.value}
+                  className={`filter-chip ${filters.type.includes(opt.value) ? 'active' : ''}`}
+                  onClick={() => handleTypeToggle(opt.value)}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="filter-section">
+            <label className="filter-label">时间节点</label>
+            <select
+              className="filter-select"
+              value={filters.timelineNodeId}
+              onChange={(e) => handleFilterChange('timelineNodeId', e.target.value)}
+            >
+              <option value="">全部时间节点</option>
+              {timelines && timelines.map(node => (
+                <option key={node.id} value={node.id}>
+                {node.title}
+              </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="filter-section">
+            <label className="filter-label">上传时间</label>
+            <div className="date-range">
+              <input
+                type="date"
+                className="filter-input"
+                value={filters.startDate}
+                onChange={(e) => handleFilterChange('startDate', e.target.value)}
+                placeholder="开始日期"
+              />
+              <span className="date-separator">至</span>
+              <input
+                type="date"
+                className="filter-input"
+                value={filters.endDate}
+                onChange={(e) => handleFilterChange('endDate', e.target.value)}
+                placeholder="结束日期"
+              />
+            </div>
+          </div>
+
+          <div className="filter-section">
+            <label className="filter-label">关键词</label>
+            <input
+              type="text"
+              className="filter-input"
+              placeholder="搜索标题或描述..."
+              value={filters.keyword}
+              onChange={(e) => handleFilterChange('keyword', e.target.value)}
+            />
+          </div>
+
+          <div className="filter-actions">
+            <button className="reset-btn" onClick={resetFilters}>
+              重置筛选
+            </button>
+            <span className="filter-result-count">
+              共 {filteredMaterials.length} 个素材
+            </span>
+          </div>
+        </div>
+      )}
 
       {['image', 'audio', 'text', 'video'].map(type => (
         filtered[type].length > 0 && (
@@ -209,10 +385,17 @@ function MaterialManager({ exhibitionId, materials, timelines, onMaterialsChange
         )
       ))}
 
-      {materials.length === 0 && (
+      {filteredMaterials.length === 0 && (
         <div className="empty-state">
           <div className="empty-icon">❋</div>
-          <p>还没有素材，上传照片、语音或添加文字来开始</p>
+          {hasActiveFilters ? (
+            <p>没有找到符合条件的素材，试试调整筛选条件</p>
+          ) : (
+            <p>还没有素材，上传照片、语音或添加文字来开始</p>
+          )}
+          {hasActiveFilters && (
+            <button className="reset-btn" onClick={resetFilters}>清除筛选</button>
+          )}
         </div>
       )}
 

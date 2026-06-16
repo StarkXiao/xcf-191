@@ -23,7 +23,8 @@ export const exhibitionApi = {
 };
 
 export const materialApi = {
-  list: (exhibitionId) => request.get('/materials', { params: { exhibitionId } }).then(r => r.data),
+  list: (exhibitionId, filters = {}) =>
+    request.get('/materials', { params: { exhibitionId, ...filters } }).then(r => r.data),
   get: (id) => request.get(`/materials/${id}`).then(r => r.data),
   create: (data) => request.post('/materials', data).then(r => r.data),
   update: (id, data) => request.put(`/materials/${id}`, data).then(r => r.data),

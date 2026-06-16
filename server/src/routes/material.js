@@ -3,11 +3,54 @@ import { getCollection, saveCollection } from '../storage.js';
 
 export default async function materialRoutes(fastify) {
   fastify.get('/', async (request) => {
-    const { exhibitionId } = request.query;
+    const {
+      exhibitionId,
+      type,
+      timelineNodeId,
+      startDate,
+      endDate,
+      keyword
+    } = request.query;
+
     let materials = getCollection('materials');
+
     if (exhibitionId) {
       materials = materials.filter(m => m.exhibitionId === exhibitionId);
     }
+
+    if (type) {
+      const typeList = Array.isArray(type) ? type : [type];
+      materials = materials.filter(m => typeList.includes(m.type));
+    }
+
+    if (timelineNodeId) {
+      const timelines = getCollection('timelines');
+      const node = timelines.find(t => t.id === timelineNodeId);
+      if (node && node.materialIds) {
+        materials = materials.filter(m => node.materialIds.includes(m.id));
+      } else {
+        materials = [];
+      }
+    }
+
+    if (startDate) {
+      const start = new Date(startDate).getTime();
+      materials = materials.filter(m => new Date(m.createdAt).getTime() >= start);
+    }
+
+    if (endDate) {
+      const end = new Date(endDate).getTime();
+      materials = materials.filter(m => new Date(m.createdAt).getTime() <= end);
+    }
+
+    if (keyword) {
+      const kw = keyword.toLowerCase();
+      materials = materials.filter(m =>
+        (m.title && m.title.toLowerCase().includes(kw)) ||
+        (m.description && m.description.toLowerCase().includes(kw))
+      );
+    }
+
     return materials.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   });
 
