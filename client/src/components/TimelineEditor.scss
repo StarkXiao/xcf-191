@@ -650,6 +650,71 @@
   white-space: nowrap;
 }
 
+.split-overview {
+  @include flex-between;
+  margin-bottom: 8px;
+  padding: 10px 14px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: $radius-sm;
+}
+
+.split-overview-text {
+  font-size: 13px;
+  color: $text-secondary;
+}
+
+.split-status {
+  padding: 4px 10px;
+  border-radius: $radius-full;
+  font-size: 12px;
+  font-weight: 500;
+
+  &.complete {
+    background: rgba(152, 251, 152, 0.15);
+    color: $accent-green;
+  }
+
+  &.pending {
+    background: rgba(255, 215, 0, 0.15);
+    color: $accent-gold;
+  }
+}
+
+.split-group-count {
+  margin-left: 8px;
+  padding: 2px 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: $radius-full;
+  font-size: 11px;
+  color: $text-muted;
+  font-weight: normal;
+}
+
+.split-mat-item {
+  position: relative;
+
+  &.in-other-group {
+    opacity: 0.5;
+
+    &:hover {
+      opacity: 0.85;
+    }
+  }
+}
+
+.mat-other-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  padding: 2px 6px;
+  background: rgba(135, 206, 235, 0.85);
+  border-radius: $radius-full;
+  font-size: 9px;
+  color: $bg-primary;
+  font-weight: 600;
+  z-index: 1;
+}
+
 .add-split-group-btn {
   display: block;
   width: 100%;

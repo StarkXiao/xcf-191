@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef } from 'react';
 import './TimelineEditor.scss';
 
 function TimelineEditor({ exhibitionId, materials, timelines, onTimelinesChange, timelineApi }) {
@@ -220,28 +220,77 @@ function TimelineEditor({ exhibitionId, materials, timelines, onTimelinesChange,
 
   const removeSplitGroup = (idx) => {
     if (splitGroups.length <= 2) return;
-    setSplitGroups(prev => prev.filter((_, i) => i !== idx));
+    const groupToRemove = splitGroups[idx];
+    if (groupToRemove && groupToRemove.materialIds.length > 0) {
+      if (!confirm(`删除此分组后，其 ${groupToRemove.materialIds.length} 个素材将移动到第一个分组，确定继续？`)) return;
+    }
+    setSplitGroups(prev => {
+      const removed = prev[idx];
+      const remaining = prev.filter((_, i) => i !== idx);
+      if (removed && removed.materialIds.length > 0 && remaining.length > 0) {
+        remaining[0] = {
+          ...remaining[0],
+          materialIds: [...remaining[0].materialIds, ...removed.materialIds]
+        };
+      }
+      return remaining;
+    });
   };
 
   const updateSplitGroup = (idx, field, value) => {
     setSplitGroups(prev => prev.map((g, i) => i === idx ? { ...g, [field]: value } : g));
   };
 
+  const findMaterialGroup = (matId) => {
+    for (let i = 0; i < splitGroups.length; i++) {
+      if (splitGroups[i].materialIds.includes(matId)) return i;
+    }
+    return -1;
+  };
+
   const toggleSplitMaterial = (groupIdx, matId) => {
-    setSplitGroups(prev => prev.map((g, i) => {
-      if (i !== groupIdx) return g;
-      const ids = g.materialIds.includes(matId)
-        ? g.materialIds.filter(id => id !== matId)
-        : [...g.materialIds, matId];
-      return { ...g, materialIds: ids };
-    }));
+    setSplitGroups(prev => {
+      const currentGroupIdx = prev.findIndex(g => g.materialIds.includes(matId));
+      if (currentGroupIdx === groupIdx) {
+        return prev.map((g, i) => {
+          if (i !== groupIdx) return g;
+          return { ...g, materialIds: g.materialIds.filter(id => id !== matId) };
+        });
+      }
+      return prev.map((g, i) => {
+        if (i === groupIdx) {
+          return { ...g, materialIds: [...g.materialIds, matId] };
+        }
+        if (i === currentGroupIdx) {
+          return { ...g, materialIds: g.materialIds.filter(id => id !== matId) };
+        }
+        return g;
+      });
+    });
   };
 
   const confirmSplit = async () => {
     if (!splitTarget) return;
+    const originalMaterialIds = splitTarget.materialIds || [];
     const allAssigned = splitGroups.every(g => g.materialIds.length > 0);
     if (!allAssigned) {
       alert('每个分组至少需要一个素材');
+      return;
+    }
+    const allFlatIds = splitGroups.reduce((acc, g) => acc.concat(g.materialIds), []);
+    const uniqueIds = [...new Set(allFlatIds)];
+    if (allFlatIds.length !== uniqueIds.length) {
+      alert('存在重复分配的素材，请检查后重试');
+      return;
+    }
+    const missingIds = originalMaterialIds.filter(id => !allFlatIds.includes(id));
+    if (missingIds.length > 0) {
+      alert(`还有 ${missingIds.length} 个素材未分配，请将所有素材分配到分组中`);
+      return;
+    }
+    const extraIds = allFlatIds.filter(id => !originalMaterialIds.includes(id));
+    if (extraIds.length > 0) {
+      alert('存在不属于此节点的素材，请检查后重试');
       return;
     }
     try {
@@ -573,11 +622,27 @@ function TimelineEditor({ exhibitionId, materials, timelines, onTimelinesChange,
         <div className="modal-overlay" onClick={() => setSplitModal(false)}>
           <div className="modal modal-lg" onClick={(e) => e.stopPropagation()}>
             <h3 className="modal-title">拆分节点：{splitTarget.title}</h3>
-            <p className="hint-text">将此节点的素材拆分到多个新节点中</p>
+            <div className="split-overview">
+              <span className="split-overview-text">
+                共 {splitTarget.materialIds?.length || 0} 个素材，
+                已分配 {splitGroups.reduce((acc, g) => acc + g.materialIds.length, 0)} 个
+              </span>
+              {splitGroups.reduce((acc, g) => acc + g.materialIds.length, 0) === (splitTarget.materialIds?.length || 0) ? (
+                <span className="split-status complete">✓ 全部已分配</span>
+              ) : (
+                <span className="split-status pending">
+                  还有 {(splitTarget.materialIds?.length || 0) - splitGroups.reduce((acc, g) => acc + g.materialIds.length, 0)} 个未分配
+                </span>
+              )}
+            </div>
+            <p className="hint-text">将此节点的素材拆分到多个新节点中，每个素材只能属于一个分组</p>
             {splitGroups.map((group, gIdx) => (
               <div key={gIdx} className="split-group">
                 <div className="split-group-header">
-                  <span className="split-group-label">分组 {gIdx + 1}</span>
+                  <span className="split-group-label">
+                    分组 {gIdx + 1}
+                    <span className="split-group-count">{group.materialIds.length} 个素材</span>
+                  </span>
                   {splitGroups.length > 2 && (
                     <button className="split-remove-btn" onClick={() => removeSplitGroup(gIdx)}>删除分组</button>
                   )}
@@ -601,18 +666,24 @@ function TimelineEditor({ exhibitionId, materials, timelines, onTimelinesChange,
                   />
                 </div>
                 <div className="split-materials">
-                  <label>选择素材</label>
+                  <label>选择素材（点击移动到当前分组）</label>
                   <div className="split-mat-grid">
                     {(splitTarget.materialIds || []).map(matId => {
                       const mat = getMaterialById(matId);
                       if (!mat) return null;
                       const inGroup = group.materialIds.includes(matId);
+                      const assignedGroup = findMaterialGroup(matId);
+                      const inOther = assignedGroup !== -1 && assignedGroup !== gIdx;
                       return (
                         <div
                           key={matId}
-                          className={`split-mat-item ${inGroup ? 'selected' : ''}`}
+                          className={`split-mat-item ${inGroup ? 'selected' : ''} ${inOther ? 'in-other-group' : ''}`}
                           onClick={() => toggleSplitMaterial(gIdx, matId)}
+                          title={inOther ? `当前在分组 ${assignedGroup + 1}，点击移动到此分组` : ''}
                         >
+                          {inOther && (
+                            <span className="mat-other-badge">分组{assignedGroup + 1}</span>
+                          )}
                           <div className="split-mat-thumb">{renderMaterialThumb(mat)}</div>
                           <span className="split-mat-name">{mat.title || '未命名'}</span>
                         </div>

@@ -96,7 +96,34 @@ export default async function timelineRoutes(fastify) {
     }
     const sourceNode = timelines[index];
     if (!Array.isArray(splitMaterialGroups) || splitMaterialGroups.length < 2) {
+      reply.code(400);
       return { error: '至少需要两组素材才能拆分' };
+    }
+    const sourceMatIds = sourceNode.materialIds || [];
+    if (sourceMatIds.length < 2) {
+      reply.code(400);
+      return { error: '该节点素材数量不足，无法拆分' };
+    }
+    const allAssignedMatIds = splitMaterialGroups.reduce((acc, g) => acc.concat(g.materialIds || []), []);
+    const uniqueAssignedIds = [...new Set(allAssignedMatIds)];
+    if (allAssignedMatIds.length !== uniqueAssignedIds.length) {
+      reply.code(400);
+      return { error: '存在重复分配的素材' };
+    }
+    const missingIds = sourceMatIds.filter(mid => !allAssignedMatIds.includes(mid));
+    if (missingIds.length > 0) {
+      reply.code(400);
+      return { error: `有 ${missingIds.length} 个素材未分配` };
+    }
+    const extraIds = allAssignedMatIds.filter(mid => !sourceMatIds.includes(mid));
+    if (extraIds.length > 0) {
+      reply.code(400);
+      return { error: '存在不属于该节点的素材' };
+    }
+    const emptyGroup = splitMaterialGroups.find(g => !g.materialIds || g.materialIds.length === 0);
+    if (emptyGroup) {
+      reply.code(400);
+      return { error: '每个分组至少需要一个素材' };
     }
     const newNodes = splitMaterialGroups.map((group, i) => ({
       id: uuidv4(),
