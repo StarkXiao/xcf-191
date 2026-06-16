@@ -31,7 +31,7 @@ function MaterialManager({ exhibitionId, materials, timelines, onMaterialsChange
     try {
       const params = {};
       if (filters.type.length > 0) {
-        params.type = filters.type;
+        params.type = filters.type.join(',');
       }
       if (filters.timelineNodeId) {
         params.timelineNodeId = filters.timelineNodeId;

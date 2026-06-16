@@ -19,7 +19,14 @@ export default async function materialRoutes(fastify) {
     }
 
     if (type) {
-      const typeList = Array.isArray(type) ? type : [type];
+      let typeList;
+      if (Array.isArray(type)) {
+        typeList = type;
+      } else if (typeof type === 'string') {
+        typeList = type.split(',').map(t => t.trim()).filter(Boolean);
+      } else {
+        typeList = [type];
+      }
       materials = materials.filter(m => typeList.includes(m.type));
     }
 
@@ -39,7 +46,16 @@ export default async function materialRoutes(fastify) {
     }
 
     if (endDate) {
-      const end = new Date(endDate).getTime();
+      const endDateObj = new Date(endDate);
+      const end = new Date(
+        endDateObj.getFullYear(),
+        endDateObj.getMonth(),
+        endDateObj.getDate(),
+        23,
+        59,
+        59,
+        999
+      ).getTime();
       materials = materials.filter(m => new Date(m.createdAt).getTime() <= end);
     }
 
