@@ -29,6 +29,7 @@ import OpsMaterialInspect from './pages/OpsMaterialInspect.jsx';
 import OpsFileRepair from './pages/OpsFileRepair.jsx';
 import OpsReviewWorkflow from './pages/OpsReviewWorkflow.jsx';
 import OpsSensitiveWords from './pages/OpsSensitiveWords.jsx';
+import OpsRecycleBin from './pages/OpsRecycleBin.jsx';
 import CharacterProfileHome from './pages/CharacterProfileHome.jsx';
 import CharacterProfileDetail from './pages/CharacterProfileDetail.jsx';
 import CharacterProfileEditor from './pages/CharacterProfileEditor.jsx';
@@ -90,6 +91,7 @@ function App() {
           <Route path="/ops/file-repair" element={<OpsFileRepair />} />
           <Route path="/ops/reviews" element={<OpsReviewWorkflow />} />
           <Route path="/ops/sensitive-words" element={<OpsSensitiveWords />} />
+          <Route path="/ops/recycle-bin" element={<OpsRecycleBin />} />
           <Route path="/character-profiles" element={<CharacterProfileHome />} />
           <Route path="/character-profiles/create" element={<CharacterProfileEditor />} />
           <Route path="/character-profiles/:id" element={<CharacterProfileDetail />} />

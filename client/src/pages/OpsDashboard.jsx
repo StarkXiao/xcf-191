@@ -102,6 +102,13 @@ function OpsDashboard() {
             <p>词库配置与维护</p>
           </div>
         </div>
+        <div className="nav-card" onClick={() => navigate('/ops/recycle-bin')}>
+          <div className="nav-icon">🗑️</div>
+          <div className="nav-info">
+            <h3>素材回收站</h3>
+            <p>误删恢复与永久删除</p>
+          </div>
+        </div>
       </div>
 
       <div className="stats-section">

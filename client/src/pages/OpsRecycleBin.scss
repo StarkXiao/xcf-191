@@ -1,0 +1,434 @@
+@import '../styles/variables.scss';
+@import '../styles/mixins.scss';
+
+.ops-recycle-bin {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+
+  .loading,
+  .empty {
+    @include flex-center;
+    min-height: 200px;
+    color: $text-muted;
+    font-size: 14px;
+  }
+}
+
+.ops-header {
+  margin-bottom: 24px;
+
+  .back-btn {
+    background: none;
+    border: none;
+    color: $text-secondary;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: $radius-sm;
+    transition: all $transition-fast;
+    margin-bottom: 16px;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: $text-primary;
+    }
+  }
+
+  .header-content {
+    @include flex-between;
+
+    h1 {
+      font-family: $font-serif;
+      color: $text-primary;
+      font-size: 28px;
+      margin: 0;
+      font-weight: 500;
+    }
+  }
+}
+
+.btn-primary {
+  padding: 10px 20px;
+  background: linear-gradient(135deg, $accent-gold, $accent-warm);
+  color: $bg-primary;
+  border: none;
+  border-radius: $radius-sm;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all $transition-fast;
+  font-family: inherit;
+  font-weight: 500;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: $shadow-glow;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.summary-card {
+  @include glass;
+  border-radius: $radius-md;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  &.total {
+    cursor: default;
+    .summary-value { color: $accent-gold; }
+  }
+
+  &.size .summary-value {
+    font-size: 24px;
+    color: $accent-blue;
+  }
+
+  .summary-value {
+    display: block;
+    font-family: $font-serif;
+    font-size: 28px;
+    font-weight: 600;
+    color: $text-primary;
+    margin-bottom: 4px;
+  }
+
+  .summary-label {
+    display: block;
+    color: $text-muted;
+    font-size: 13px;
+  }
+}
+
+.filter-bar {
+  @include flex-between;
+  margin-bottom: 20px;
+  gap: 16px;
+  flex-wrap: wrap;
+
+  .filter-left {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .filter-right {
+    flex-shrink: 0;
+  }
+
+  .filter-btn {
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid $border-color;
+    border-radius: $radius-full;
+    color: $text-secondary;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all $transition-fast;
+    font-family: inherit;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: $text-primary;
+    }
+
+    &.active {
+      background: linear-gradient(135deg, $accent-gold, $accent-warm);
+      color: $bg-primary;
+      border-color: transparent;
+      font-weight: 500;
+    }
+  }
+
+  .search-input {
+    padding: 8px 14px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid $border-color;
+    border-radius: $radius-full;
+    color: $text-primary;
+    font-size: 13px;
+    width: 240px;
+    outline: none;
+    transition: all $transition-fast;
+    font-family: inherit;
+
+    &:focus {
+      border-color: $accent-gold;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    &::placeholder {
+      color: $text-muted;
+    }
+  }
+}
+
+.batch-bar {
+  @include flex-between;
+  padding: 12px 20px;
+  background: rgba(255, 215, 0, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: $radius-md;
+  margin-bottom: 16px;
+
+  span {
+    color: $accent-gold;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .batch-actions {
+    display: flex;
+    gap: 12px;
+  }
+
+  .btn-restore,
+  .btn-delete {
+    padding: 8px 16px;
+    border-radius: $radius-sm;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all $transition-fast;
+    font-family: inherit;
+    border: none;
+    font-weight: 500;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  .btn-restore {
+    background: rgba(152, 251, 152, 0.15);
+    color: $accent-green;
+    border: 1px solid rgba(152, 251, 152, 0.3);
+
+    &:hover:not(:disabled) {
+      background: rgba(152, 251, 152, 0.25);
+    }
+  }
+
+  .btn-delete {
+    background: rgba(255, 128, 128, 0.15);
+    color: #ff8080;
+    border: 1px solid rgba(255, 128, 128, 0.3);
+
+    &:hover:not(:disabled) {
+      background: rgba(255, 128, 128, 0.25);
+    }
+  }
+}
+
+.data-table {
+  @include glass;
+  border-radius: $radius-md;
+  overflow: hidden;
+  margin-bottom: 20px;
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+
+    th, td {
+      padding: 14px 16px;
+      text-align: left;
+      border-bottom: 1px solid $border-color;
+    }
+
+    th {
+      background: rgba(255, 255, 255, 0.04);
+      color: $text-secondary;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    td {
+      color: $text-primary;
+      font-size: 14px;
+    }
+
+    tr {
+      transition: background $transition-fast;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      &.selected {
+        background: rgba(255, 215, 0, 0.08);
+      }
+
+      &:last-child td {
+        border-bottom: none;
+      }
+    }
+  }
+
+  .material-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .material-icon {
+      font-size: 24px;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: $radius-sm;
+      flex-shrink: 0;
+    }
+
+    .material-meta {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .material-title {
+      color: $text-primary;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 2px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .material-url {
+      color: $text-muted;
+      font-size: 12px;
+      font-family: monospace;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  .type-tag {
+    display: inline-block;
+    padding: 3px 10px;
+    background: rgba(135, 206, 235, 0.15);
+    color: $accent-blue;
+    border-radius: $radius-full;
+    font-size: 12px;
+  }
+
+  .relation-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+
+    .relation-tag {
+      padding: 2px 8px;
+      background: rgba(255, 215, 0, 0.1);
+      color: $accent-gold;
+      border-radius: $radius-sm;
+      font-size: 12px;
+
+      &.more {
+        background: rgba(255, 255, 255, 0.06);
+        color: $text-muted;
+      }
+    }
+  }
+
+  .no-relation {
+    color: $text-muted;
+    font-size: 13px;
+  }
+
+  .actions-cell {
+    display: flex;
+    gap: 12px;
+
+    .btn-link {
+      background: none;
+      border: none;
+      font-size: 13px;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: $radius-sm;
+      transition: all $transition-fast;
+      font-family: inherit;
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      &.restore {
+        color: $accent-green;
+
+        &:hover:not(:disabled) {
+          background: rgba(152, 251, 152, 0.1);
+        }
+      }
+
+      &.danger {
+        color: #ff8080;
+
+        &:hover:not(:disabled) {
+          background: rgba(255, 128, 128, 0.1);
+        }
+      }
+    }
+  }
+}
+
+.pagination {
+  @include flex-center;
+  gap: 16px;
+  margin-top: 20px;
+
+  .page-btn {
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid $border-color;
+    border-radius: $radius-sm;
+    color: $text-secondary;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all $transition-fast;
+    font-family: inherit;
+
+    &:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.1);
+      color: $text-primary;
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
+
+  .page-info {
+    color: $text-muted;
+    font-size: 13px;
+  }
+}

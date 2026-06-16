@@ -29,7 +29,19 @@ export const materialApi = {
   get: (id) => request.get(`/materials/${id}`).then(r => r.data),
   create: (data) => request.post('/materials', data).then(r => r.data),
   update: (id, data) => request.put(`/materials/${id}`, data).then(r => r.data),
-  remove: (id) => request.delete(`/materials/${id}`).then(r => r.data)
+  remove: (id) => request.delete(`/materials/${id}`).then(r => r.data),
+  recycleList: (params = {}) =>
+    request.get('/materials/recycle/list', { params }).then(r => r.data),
+  recycleRestore: (id) =>
+    request.post(`/materials/recycle/${id}/restore`).then(r => r.data),
+  recyclePermanentDelete: (id) =>
+    request.delete(`/materials/recycle/${id}`).then(r => r.data),
+  recycleBatchRestore: (ids) =>
+    request.post('/materials/recycle/batch-restore', { ids }).then(r => r.data),
+  recycleBatchDelete: (ids) =>
+    request.post('/materials/recycle/batch-delete', { ids }).then(r => r.data),
+  recycleStats: () =>
+    request.get('/materials/recycle/stats').then(r => r.data)
 };
 
 export const timelineApi = {
