@@ -75,14 +75,17 @@ function ExhibitionDetail() {
     if (!dateStr) return null;
     const d = new Date(dateStr);
     const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const currentYear = now.getFullYear();
-    let next = new Date(currentYear, d.getMonth(), d.getDate());
-    if (next < now) {
-      next.setFullYear(currentYear + 1);
+    const anniversaryEndOfDay = new Date(currentYear, d.getMonth(), d.getDate(), 23, 59, 59);
+    let anniversaryYear = currentYear;
+    if (anniversaryEndOfDay < today) {
+      anniversaryYear = currentYear + 1;
     }
-    const diffMs = next - now;
-    const daysUntil = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-    const yearsSince = next.getFullYear() - d.getFullYear();
+    const next = new Date(anniversaryYear, d.getMonth(), d.getDate());
+    const diffMs = next - today;
+    const daysUntil = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const yearsSince = anniversaryYear - d.getFullYear();
     return { date: next, daysUntil, yearsSince };
   };
 

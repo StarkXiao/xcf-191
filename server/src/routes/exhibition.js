@@ -210,28 +210,30 @@ export default async function exhibitionRoutes(fastify) {
     const { days = 30 } = request.query;
     const exhibitions = getCollection('exhibitions');
     const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const currentYear = now.getFullYear();
-    const rangeEnd = new Date(now);
-    rangeEnd.setDate(rangeEnd.getDate() + parseInt(days));
 
     const results = exhibitions
       .filter(ex => ex.memorialDate)
       .map(ex => {
         const memDate = new Date(ex.memorialDate);
         const thisYearAnniversary = new Date(currentYear, memDate.getMonth(), memDate.getDate());
-        if (thisYearAnniversary < now) {
-          thisYearAnniversary.setFullYear(currentYear + 1);
+        const anniversaryEndOfDay = new Date(currentYear, memDate.getMonth(), memDate.getDate(), 23, 59, 59);
+        let anniversaryYear = currentYear;
+        if (anniversaryEndOfDay < today) {
+          anniversaryYear = currentYear + 1;
         }
-        const diffMs = thisYearAnniversary - now;
-        const daysUntil = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-        const yearsSince = thisYearAnniversary.getFullYear() - memDate.getFullYear();
+        const nextAnniversary = new Date(anniversaryYear, memDate.getMonth(), memDate.getDate());
+        const diffMs = nextAnniversary - today;
+        const daysUntil = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+        const yearsSince = anniversaryYear - memDate.getFullYear();
 
         return {
           exhibitionId: ex.id,
           exhibitionTitle: ex.title,
           exhibitionCover: ex.coverImage || '',
           memorialDate: ex.memorialDate,
-          anniversaryDate: thisYearAnniversary.toISOString().split('T')[0],
+          anniversaryDate: nextAnniversary.toISOString().split('T')[0],
           daysUntil,
           yearsSince,
           revisitCount: ex.revisitCount || 0,
@@ -262,12 +264,14 @@ export default async function exhibitionRoutes(fastify) {
 
     const memDate = new Date(exhibitions[index].memorialDate);
     const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const currentYear = now.getFullYear();
-    const thisYearAnniversary = new Date(currentYear, memDate.getMonth(), memDate.getDate());
-    if (thisYearAnniversary < now) {
-      thisYearAnniversary.setFullYear(currentYear + 1);
+    const anniversaryEndOfDay = new Date(currentYear, memDate.getMonth(), memDate.getDate(), 23, 59, 59);
+    let anniversaryYear = currentYear;
+    if (anniversaryEndOfDay < today) {
+      anniversaryYear = currentYear + 1;
     }
-    const yearsSince = thisYearAnniversary.getFullYear() - memDate.getFullYear();
+    const yearsSince = anniversaryYear - memDate.getFullYear();
 
     return {
       reminded: true,
