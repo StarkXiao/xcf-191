@@ -304,13 +304,45 @@ export default async function characterProfileRoutes(fastify) {
       reply.code(404);
       return { error: '关系不存在' };
     }
-    if (type) rels[ri].currentType = type;
-    if (description) rels[ri].description = description;
+    if (type) {
+      rels[ri].type = type;
+      rels[ri].currentType = type;
+    }
+    if (description !== undefined) rels[ri].description = description;
     if (newEvolution) {
       if (!rels[ri].evolution) rels[ri].evolution = [];
       rels[ri].evolution.push(newEvolution);
     }
     profiles[index].updatedAt = new Date().toISOString();
+
+    const targetId = rels[ri].targetCharacterId;
+    const targetIdx = profiles.findIndex(p => p.id === targetId);
+    if (targetIdx !== -1) {
+      const targetRels = profiles[targetIdx].relationships || [];
+      const targetRi = targetRels.findIndex(r => r.targetCharacterId === id);
+      if (targetRi !== -1) {
+        if (type) {
+          const reverseType = (RELATION_TYPES.find(r => r.key === type) || {}).reverse || type;
+          targetRels[targetRi].type = reverseType;
+          targetRels[targetRi].currentType = reverseType;
+        }
+        if (description !== undefined) {
+          targetRels[targetRi].description = description;
+        }
+        if (newEvolution) {
+          if (!targetRels[targetRi].evolution) targetRels[targetRi].evolution = [];
+          const reverseFrom = (RELATION_TYPES.find(r => r.key === newEvolution.from) || {}).reverse || newEvolution.from;
+          const reverseTo = (RELATION_TYPES.find(r => r.key === newEvolution.to) || {}).reverse || newEvolution.to;
+          targetRels[targetRi].evolution.push({
+            ...newEvolution,
+            from: reverseFrom,
+            to: reverseTo
+          });
+        }
+        profiles[targetIdx].updatedAt = new Date().toISOString();
+      }
+    }
+
     saveCollection('characterProfiles', profiles);
     return rels[ri];
   });

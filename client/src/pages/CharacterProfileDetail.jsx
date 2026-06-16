@@ -49,11 +49,13 @@ function CharacterProfileDetail() {
   const [showGrowthForm, setShowGrowthForm] = useState(false);
   const [showRelForm, setShowRelForm] = useState(false);
   const [showDecForm, setShowDecForm] = useState(false);
+  const [showRelEditor, setShowRelEditor] = useState(null);
   const [allProfiles, setAllProfiles] = useState([]);
 
   const [growthForm, setGrowthForm] = useState({ title: '', description: '', year: '', age: '', stage: 'origin', impact: 'moderate' });
   const [relForm, setRelForm] = useState({ targetCharacterId: '', type: 'ally', description: '' });
   const [decForm, setDecForm] = useState({ title: '', description: '', year: '', impact: 'major', options: '', chosenOption: '', consequence: '' });
+  const [evoForm, setEvoForm] = useState({ year: '', newType: 'ally', reason: '' });
 
   useEffect(() => {
     loadData();
@@ -119,6 +121,47 @@ function CharacterProfileDetail() {
       loadData();
     } catch (err) {
       console.error('删除失败:', err);
+    }
+  };
+
+  const handleOpenRelEditor = (rel, e) => {
+    if (e) e.stopPropagation();
+    setShowRelEditor(rel);
+    setEvoForm({ year: '', newType: rel.currentType || rel.type, reason: '' });
+  };
+
+  const handleAddEvolution = async () => {
+    if (!showRelEditor || !evoForm.newType) return;
+    try {
+      const newEvolution = {
+        year: evoForm.year ? parseInt(evoForm.year) : null,
+        from: showRelEditor.currentType || showRelEditor.type,
+        to: evoForm.newType,
+        reason: evoForm.reason || ''
+      };
+      await characterProfileApi.updateRelationship(id, showRelEditor.id, {
+        type: evoForm.newType,
+        currentType: evoForm.newType,
+        newEvolution
+      });
+      setShowRelEditor(null);
+      setEvoForm({ year: '', newType: 'ally', reason: '' });
+      loadData();
+    } catch (err) {
+      console.error('添加关系变化失败:', err);
+    }
+  };
+
+  const handleUpdateRelDesc = async (newDesc) => {
+    if (!showRelEditor) return;
+    try {
+      await characterProfileApi.updateRelationship(id, showRelEditor.id, {
+        description: newDesc
+      });
+      loadData();
+      setShowRelEditor({ ...showRelEditor, description: newDesc });
+    } catch (err) {
+      console.error('更新关系描述失败:', err);
     }
   };
 
@@ -360,22 +403,26 @@ function CharacterProfileDetail() {
             <div className="relationships-grid">
               {relationships.map(rel => {
                 const relIcon = RELATION_ICON_MAP[rel.currentType || rel.type] || '🔗';
+                const evolutions = rel.evolution || [];
                 return (
-                  <div key={rel.id} className="rel-card" onClick={() => rel.targetCharacterId && navigate(`/character-profiles/${rel.targetCharacterId}`)}>
-                    <div className="rel-avatar">
-                      {rel.targetAvatar ? <img src={rel.targetAvatar} alt={rel.targetName} /> : <span>👤</span>}
-                    </div>
-                    <div className="rel-info">
-                      <h4 className="rel-name">{rel.targetName}</h4>
-                      <span className="rel-type">{relIcon} {(meta?.relationTypes || []).find(r => r.key === (rel.currentType || rel.type))?.name || rel.currentType || rel.type}</span>
-                      {rel.description && <p className="rel-desc">{rel.description}</p>}
-                      {rel.evolution && rel.evolution.length > 0 && (
-                        <div className="rel-evolution">
-                          {(meta?.relationTypes || []).find(r => r.key === (rel.currentType || rel.type))?.name !== rel.evolution[0]?.to && (
-                            <span className="evo-tag">从「{rel.evolution[0]?.to || '?'}」→「{(meta?.relationTypes || []).find(r => r.key === (rel.currentType || rel.type))?.name || rel.currentType}」</span>
-                          )}
+                  <div key={rel.id} className="rel-card">
+                    <div className="rel-card-inner" onClick={() => rel.targetCharacterId && navigate(`/character-profiles/${rel.targetCharacterId}`)}>
+                      <div className="rel-avatar">
+                        {rel.targetAvatar ? <img src={rel.targetAvatar} alt={rel.targetName} /> : <span>👤</span>}
+                      </div>
+                      <div className="rel-info">
+                        <div className="rel-name-row">
+                          <h4 className="rel-name">{rel.targetName}</h4>
+                          <button className="rel-edit-btn" onClick={(e) => handleOpenRelEditor(rel, e)}>✎ 编辑</button>
                         </div>
-                      )}
+                        <span className="rel-type">{relIcon} {(meta?.relationTypes || []).find(r => r.key === (rel.currentType || rel.type))?.name || rel.currentType || rel.type}</span>
+                        {rel.description && <p className="rel-desc">{rel.description}</p>}
+                        {evolutions.length > 0 && (
+                          <div className="rel-evo-preview">
+                            <span className="evo-count">📜 {evolutions.length} 次关系变化</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                     <button className="item-delete" onClick={(e) => { e.stopPropagation(); handleDeleteRelationship(rel.id); }}>✕</button>
                   </div>
@@ -463,6 +510,107 @@ function CharacterProfileDetail() {
               })}
             </div>
           )}
+        </div>
+      )}
+
+      {showRelEditor && (
+        <div className="rel-editor-modal" onClick={() => setShowRelEditor(null)}>
+          <div className="rel-editor-content" onClick={e => e.stopPropagation()}>
+            <div className="rel-editor-header">
+              <h3 className="rel-editor-title">关系编辑 - {showRelEditor.targetName}</h3>
+              <button className="rel-editor-close" onClick={() => setShowRelEditor(null)}>✕</button>
+            </div>
+
+            <div className="rel-editor-body">
+              <div className="rel-editor-section">
+                <h4 className="sub-title">关系描述</h4>
+                <textarea
+                  className="form-textarea"
+                  value={showRelEditor.description || ''}
+                  onChange={e => setShowRelEditor({ ...showRelEditor, description: e.target.value })}
+                  onBlur={e => handleUpdateRelDesc(e.target.value)}
+                  placeholder="描述这段关系的特点..."
+                  rows={2}
+                />
+              </div>
+
+              <div className="rel-editor-section">
+                <div className="section-header-row">
+                  <h4 className="sub-title">关系变化时间线</h4>
+                  <span className="current-relation-badge">
+                    当前：{(meta?.relationTypes || []).find(r => r.key === (showRelEditor.currentType || showRelEditor.type))?.icon || '🔗'}
+                    {(meta?.relationTypes || []).find(r => r.key === (showRelEditor.currentType || showRelEditor.type))?.name || showRelEditor.currentType || showRelEditor.type}
+                  </span>
+                </div>
+
+                {(showRelEditor.evolution || []).length === 0 ? (
+                  <div className="timeline-empty">
+                    <span>📜 暂无关系变化记录</span>
+                  </div>
+                ) : (
+                  <div className="evo-timeline">
+                    {[...(showRelEditor.evolution || [])].reverse().map((evo, idx) => {
+                      const typeInfo = (meta?.relationTypes || []).find(r => r.key === evo.to);
+                      const fromInfo = (meta?.relationTypes || []).find(r => r.key === evo.from);
+                      return (
+                        <div key={idx} className="evo-timeline-item">
+                          <div className="evo-dot"></div>
+                          <div className="evo-content">
+                            <div className="evo-header">
+                              <span className="evo-year">{evo.year ? `${evo.year}年` : '不明时间'}</span>
+                              <span className="evo-type-change">
+                                {fromInfo?.icon || '❓'} {fromInfo?.name || evo.from || '初始'}
+                                <span className="evo-arrow">→</span>
+                                {typeInfo?.icon || '❓'} {typeInfo?.name || evo.to}
+                              </span>
+                            </div>
+                            {evo.reason && <p className="evo-reason">{evo.reason}</p>}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              <div className="rel-editor-section">
+                <h4 className="sub-title">记录新的关系变化</h4>
+                <div className="evo-form">
+                  <div className="evo-form-row">
+                    <input
+                      className="form-input short"
+                      placeholder="年份"
+                      type="number"
+                      value={evoForm.year}
+                      onChange={e => setEvoForm({ ...evoForm, year: e.target.value })}
+                    />
+                    <select
+                      className="form-select"
+                      value={evoForm.newType}
+                      onChange={e => setEvoForm({ ...evoForm, newType: e.target.value })}
+                    >
+                      {(meta?.relationTypes || []).map(r => (
+                        <option key={r.key} value={r.key}>{r.icon} {r.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <input
+                    className="form-input"
+                    placeholder="变化原因..."
+                    value={evoForm.reason}
+                    onChange={e => setEvoForm({ ...evoForm, reason: e.target.value })}
+                  />
+                  <button
+                    className="form-submit full-width"
+                    onClick={handleAddEvolution}
+                    disabled={!evoForm.newType || evoForm.newType === (showRelEditor.currentType || showRelEditor.type)}
+                  >
+                    添加关系变化记录
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -27,6 +27,7 @@ function EndingEditor() {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(isEdit);
   const [profiles, setProfiles] = useState([]);
+  const [profileDetails, setProfileDetails] = useState({});
 
   const [form, setForm] = useState({
     name: '',
@@ -44,6 +45,12 @@ function EndingEditor() {
     try {
       const allProfiles = await characterProfileApi.listProfiles();
       setProfiles(allProfiles);
+      const detailMap = {};
+      for (const p of allProfiles) {
+        const detail = await characterProfileApi.getProfile(p.id);
+        detailMap[p.id] = detail;
+      }
+      setProfileDetails(detailMap);
       if (isEdit) {
         const ending = await characterProfileApi.getEnding(id);
         setForm({
@@ -88,9 +95,12 @@ function EndingEditor() {
 
   const updateCondition = (index, field, value) => {
     const newConditions = [...form.conditions];
-    newConditions[index] = { ...newConditions[index], [field]: value };
     if (field === 'type') {
       newConditions[index] = { type: value, characterId: '', requiredOption: '', targetId: '', requiredType: '', requiredStatus: 'alive', growthId: '', decisionId: '' };
+    } else if (field === 'characterId') {
+      newConditions[index] = { ...newConditions[index], characterId: value, decisionId: '', growthId: '', requiredOption: '', targetId: '', requiredType: '' };
+    } else {
+      newConditions[index] = { ...newConditions[index], [field]: value };
     }
     setForm({ ...form, conditions: newConditions });
   };
@@ -100,12 +110,12 @@ function EndingEditor() {
   };
 
   const getProfileDecisions = (profileId) => {
-    const profile = profiles.find(p => p.id === profileId);
+    const profile = profileDetails[profileId];
     return profile ? (profile.keyDecisions || []) : [];
   };
 
   const getProfileGrowth = (profileId) => {
-    const profile = profiles.find(p => p.id === profileId);
+    const profile = profileDetails[profileId];
     return profile ? (profile.growthExperiences || []) : [];
   };
 
@@ -187,13 +197,27 @@ function EndingEditor() {
                     </div>
 
                     {cond.type === 'decision' && cond.characterId && (
-                      <div className="cond-row">
-                        <select className="form-select" value={cond.decisionId} onChange={e => updateCondition(idx, 'decisionId', e.target.value)}>
-                          <option value="">选择抉择</option>
-                          {getProfileDecisions(cond.characterId).map(d => <option key={d.id} value={d.id}>{d.title}</option>)}
-                        </select>
-                        <input className="form-input" placeholder="要求选择的选项" value={cond.requiredOption} onChange={e => updateCondition(idx, 'requiredOption', e.target.value)} />
-                      </div>
+                      <>
+                        <div className="cond-row">
+                          <select className="form-select" value={cond.decisionId} onChange={e => updateCondition(idx, 'decisionId', e.target.value)}>
+                            <option value="">选择抉择</option>
+                            {getProfileDecisions(cond.characterId).map(d => <option key={d.id} value={d.id}>{d.title}</option>)}
+                          </select>
+                        </div>
+                        {cond.decisionId && (
+                          <div className="cond-row">
+                            <select className="form-select" value={cond.requiredOption} onChange={e => updateCondition(idx, 'requiredOption', e.target.value)}>
+                              <option value="">选择要求的选项</option>
+                              {(() => {
+                                const dec = getProfileDecisions(cond.characterId).find(d => d.id === cond.decisionId);
+                                return dec?.options?.map((opt, i) => (
+                                  <option key={i} value={opt.label}>{opt.label}</option>
+                                )) || [];
+                              })()}
+                            </select>
+                          </div>
+                        )}
+                      </>
                     )}
 
                     {cond.type === 'relationship' && cond.characterId && (
@@ -202,7 +226,21 @@ function EndingEditor() {
                           <option value="">选择目标角色</option>
                           {profiles.filter(p => p.id !== cond.characterId).map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                         </select>
-                        <input className="form-input" placeholder="要求的关系类型 (如: ally)" value={cond.requiredType} onChange={e => updateCondition(idx, 'requiredType', e.target.value)} />
+                        <select className="form-select" value={cond.requiredType} onChange={e => updateCondition(idx, 'requiredType', e.target.value)}>
+                          <option value="">要求的关系类型</option>
+                          {[
+                            { key: 'ally', name: '🤝 盟友' },
+                            { key: 'rival', name: '⚔️ 宿敌' },
+                            { key: 'mentor', name: '🎓 师徒' },
+                            { key: 'student', name: '📖 弟子' },
+                            { key: 'family', name: '👨‍👩‍👧 血亲' },
+                            { key: 'lover', name: '💕 恋人' },
+                            { key: 'comrade', name: '🛡️ 战友' },
+                            { key: 'suspect', name: '🔍 嫌疑' },
+                            { key: 'benefactor', name: '🌟 恩人' },
+                            { key: 'beneficiary', name: '🙏 受恩者' }
+                          ].map(r => <option key={r.key} value={r.key}>{r.name}</option>)}
+                        </select>
                       </div>
                     )}
 

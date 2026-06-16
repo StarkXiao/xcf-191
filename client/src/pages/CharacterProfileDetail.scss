@@ -711,3 +711,262 @@
     color: $accent-purple;
   }
 }
+
+.rel-card-inner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+  min-width: 0;
+}
+
+.rel-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.rel-edit-btn {
+  padding: 4px 12px;
+  background: rgba(135, 206, 235, 0.1);
+  border: 1px solid rgba(135, 206, 235, 0.3);
+  border-radius: $radius-full;
+  color: $accent-blue;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    background: rgba(135, 206, 235, 0.2);
+  }
+}
+
+.rel-evo-preview {
+  margin-top: 6px;
+
+  .evo-count {
+    font-size: 11px;
+    color: $accent-gold;
+    background: rgba(255, 215, 0, 0.1);
+    padding: 2px 8px;
+    border-radius: $radius-full;
+    display: inline-block;
+  }
+}
+
+.rel-editor-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  @include flex-center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.rel-editor-content {
+  background: $bg-card;
+  border-radius: $radius-lg;
+  width: 90%;
+  max-width: 520px;
+  max-height: 85vh;
+  overflow-y: auto;
+  border: 1px solid $border-light;
+  animation: slideUp 0.25s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.rel-editor-header {
+  @include flex-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid $border-light;
+  position: sticky;
+  top: 0;
+  background: $bg-card;
+  z-index: 1;
+}
+
+.rel-editor-title {
+  font-size: 18px;
+  font-family: $font-serif;
+  margin: 0;
+  color: $text-primary;
+}
+
+.rel-editor-close {
+  width: 32px;
+  height: 32px;
+  @include flex-center;
+  background: transparent;
+  border: none;
+  color: $text-muted;
+  font-size: 18px;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: all $transition-fast;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: $text-primary;
+  }
+}
+
+.rel-editor-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.rel-editor-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sub-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
+  color: $text-primary;
+  padding-left: 12px;
+  border-left: 3px solid $accent-purple;
+}
+
+.section-header-row {
+  @include flex-between;
+  align-items: center;
+}
+
+.current-relation-badge {
+  padding: 4px 14px;
+  background: rgba(221, 160, 221, 0.1);
+  border: 1px solid rgba(221, 160, 221, 0.3);
+  border-radius: $radius-full;
+  font-size: 12px;
+  color: $accent-purple;
+  font-weight: 500;
+}
+
+.timeline-empty {
+  @include flex-center;
+  padding: 32px;
+  color: $text-muted;
+  font-size: 13px;
+  background: $bg-secondary;
+  border-radius: $radius-sm;
+}
+
+.evo-timeline {
+  position: relative;
+  padding-left: 24px;
+  border-left: 2px solid $border-light;
+  margin-left: 8px;
+}
+
+.evo-timeline-item {
+  position: relative;
+  padding: 0 0 18px 12px;
+
+  &:last-child {
+    padding-bottom: 0;
+  }
+}
+
+.evo-dot {
+  position: absolute;
+  left: -30px;
+  top: 4px;
+  width: 12px;
+  height: 12px;
+  background: $accent-purple;
+  border: 3px solid $bg-card;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(221, 160, 221, 0.3);
+}
+
+.evo-content {
+  background: $bg-secondary;
+  padding: 12px 16px;
+  border-radius: $radius-sm;
+}
+
+.evo-header {
+  @include flex-between;
+  align-items: center;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.evo-year {
+  font-size: 13px;
+  font-weight: 600;
+  color: $accent-gold;
+}
+
+.evo-type-change {
+  font-size: 13px;
+  color: $text-secondary;
+}
+
+.evo-arrow {
+  margin: 0 6px;
+  color: $accent-purple;
+  font-weight: 700;
+}
+
+.evo-reason {
+  font-size: 12px;
+  color: $text-muted;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.evo-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  background: $bg-secondary;
+  border-radius: $radius-sm;
+}
+
+.evo-form-row {
+  display: flex;
+  gap: 10px;
+
+  .form-input.short {
+    max-width: 100px;
+  }
+
+  .form-select {
+    flex: 1;
+  }
+}
+
+.form-submit.full-width {
+  width: 100%;
+  padding: 10px;
+  margin-top: 4px;
+}
+
