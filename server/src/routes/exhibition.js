@@ -35,7 +35,7 @@ export default async function exhibitionRoutes(fastify) {
   });
 
   fastify.post('/', async (request) => {
-    const { title, description, coverImage, theme, visitorGroups } = request.body;
+    const { title, description, coverImage, theme, visitorGroups, memorialDate } = request.body;
     const exhibitions = getCollection('exhibitions');
     const newExhibition = {
       id: uuidv4(),
@@ -46,6 +46,9 @@ export default async function exhibitionRoutes(fastify) {
       visitorGroups: visitorGroups && visitorGroups.length > 0
         ? visitorGroups
         : [...defaultVisitorGroups],
+      memorialDate: memorialDate || '',
+      lastRemindedAt: null,
+      revisitCount: 0,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -56,7 +59,7 @@ export default async function exhibitionRoutes(fastify) {
 
   fastify.put('/:id', async (request, reply) => {
     const { id } = request.params;
-    const { title, description, coverImage, theme, visitorGroups } = request.body;
+    const { title, description, coverImage, theme, visitorGroups, memorialDate } = request.body;
     const exhibitions = getCollection('exhibitions');
     const index = exhibitions.findIndex(e => e.id === id);
     if (index === -1) {
@@ -71,6 +74,9 @@ export default async function exhibitionRoutes(fastify) {
       coverImage: coverImage !== undefined ? coverImage : current.coverImage,
       theme: theme !== undefined ? theme : current.theme,
       visitorGroups: visitorGroups !== undefined ? visitorGroups : current.visitorGroups,
+      memorialDate: memorialDate !== undefined ? memorialDate : (current.memorialDate || ''),
+      lastRemindedAt: current.lastRemindedAt || null,
+      revisitCount: current.revisitCount || 0,
       updatedAt: new Date().toISOString()
     };
     saveCollection('exhibitions', exhibitions);
@@ -198,5 +204,95 @@ export default async function exhibitionRoutes(fastify) {
     saveCollection('messages', updatedMessages);
 
     return { success: true };
+  });
+
+  fastify.get('/anniversaries/upcoming', async (request) => {
+    const { days = 30 } = request.query;
+    const exhibitions = getCollection('exhibitions');
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const rangeEnd = new Date(now);
+    rangeEnd.setDate(rangeEnd.getDate() + parseInt(days));
+
+    const results = exhibitions
+      .filter(ex => ex.memorialDate)
+      .map(ex => {
+        const memDate = new Date(ex.memorialDate);
+        const thisYearAnniversary = new Date(currentYear, memDate.getMonth(), memDate.getDate());
+        if (thisYearAnniversary < now) {
+          thisYearAnniversary.setFullYear(currentYear + 1);
+        }
+        const diffMs = thisYearAnniversary - now;
+        const daysUntil = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+        const yearsSince = thisYearAnniversary.getFullYear() - memDate.getFullYear();
+
+        return {
+          exhibitionId: ex.id,
+          exhibitionTitle: ex.title,
+          exhibitionCover: ex.coverImage || '',
+          memorialDate: ex.memorialDate,
+          anniversaryDate: thisYearAnniversary.toISOString().split('T')[0],
+          daysUntil,
+          yearsSince,
+          revisitCount: ex.revisitCount || 0,
+          lastRemindedAt: ex.lastRemindedAt || null
+        };
+      })
+      .filter(item => item.daysUntil <= parseInt(days))
+      .sort((a, b) => a.daysUntil - b.daysUntil);
+
+    return results;
+  });
+
+  fastify.post('/:id/anniversary-remind', async (request, reply) => {
+    const { id } = request.params;
+    const exhibitions = getCollection('exhibitions');
+    const index = exhibitions.findIndex(e => e.id === id);
+    if (index === -1) {
+      reply.code(404);
+      return { error: '展厅不存在' };
+    }
+    if (!exhibitions[index].memorialDate) {
+      reply.code(400);
+      return { error: '该展厅未设置纪念日' };
+    }
+    exhibitions[index].lastRemindedAt = new Date().toISOString();
+    exhibitions[index].updatedAt = new Date().toISOString();
+    saveCollection('exhibitions', exhibitions);
+
+    const memDate = new Date(exhibitions[index].memorialDate);
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const thisYearAnniversary = new Date(currentYear, memDate.getMonth(), memDate.getDate());
+    if (thisYearAnniversary < now) {
+      thisYearAnniversary.setFullYear(currentYear + 1);
+    }
+    const yearsSince = thisYearAnniversary.getFullYear() - memDate.getFullYear();
+
+    return {
+      reminded: true,
+      exhibitionId: id,
+      exhibitionTitle: exhibitions[index].title,
+      memorialDate: exhibitions[index].memorialDate,
+      yearsSince,
+      lastRemindedAt: exhibitions[index].lastRemindedAt
+    };
+  });
+
+  fastify.post('/:id/revisit', async (request, reply) => {
+    const { id } = request.params;
+    const exhibitions = getCollection('exhibitions');
+    const index = exhibitions.findIndex(e => e.id === id);
+    if (index === -1) {
+      reply.code(404);
+      return { error: '展厅不存在' };
+    }
+    exhibitions[index].revisitCount = (exhibitions[index].revisitCount || 0) + 1;
+    exhibitions[index].updatedAt = new Date().toISOString();
+    saveCollection('exhibitions', exhibitions);
+    return {
+      success: true,
+      revisitCount: exhibitions[index].revisitCount
+    };
   });
 }

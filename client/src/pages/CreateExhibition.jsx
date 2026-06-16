@@ -8,7 +8,8 @@ function CreateExhibition() {
   const [form, setForm] = useState({
     title: '',
     description: '',
-    theme: 'warm'
+    theme: 'warm',
+    memorialDate: ''
   });
   const [coverFile, setCoverFile] = useState(null);
   const [coverPreview, setCoverPreview] = useState('');
@@ -116,6 +117,17 @@ function CreateExhibition() {
             onChange={(e) => setForm({ ...form, description: e.target.value })}
             maxLength={500}
           />
+        </div>
+
+        <div className="form-section">
+          <label className="field-label">纪念日 <span className="field-optional">（可选，如忌日、生日等重要日期）</span></label>
+          <input
+            type="date"
+            className="field-input"
+            value={form.memorialDate}
+            onChange={(e) => setForm({ ...form, memorialDate: e.target.value })}
+          />
+          <p className="field-hint">设置后将在此日期临近时自动提醒，方便回访追思</p>
         </div>
 
         <div className="form-section">

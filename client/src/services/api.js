@@ -16,7 +16,10 @@ export const exhibitionApi = {
   getVisitorGroups: (id) => request.get(`/exhibitions/${id}/visitor-groups`).then(r => r.data),
   addVisitorGroup: (id, data) => request.post(`/exhibitions/${id}/visitor-groups`, data).then(r => r.data),
   updateVisitorGroup: (id, groupId, data) => request.put(`/exhibitions/${id}/visitor-groups/${groupId}`, data).then(r => r.data),
-  removeVisitorGroup: (id, groupId) => request.delete(`/exhibitions/${id}/visitor-groups/${groupId}`).then(r => r.data)
+  removeVisitorGroup: (id, groupId) => request.delete(`/exhibitions/${id}/visitor-groups/${groupId}`).then(r => r.data),
+  getUpcomingAnniversaries: (days) => request.get('/exhibitions/anniversaries/upcoming', { params: { days } }).then(r => r.data),
+  sendAnniversaryRemind: (id) => request.post(`/exhibitions/${id}/anniversary-remind`).then(r => r.data),
+  revisit: (id) => request.post(`/exhibitions/${id}/revisit`).then(r => r.data)
 };
 
 export const materialApi = {

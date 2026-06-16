@@ -84,8 +84,147 @@
 .hero-desc {
   color: $text-secondary;
   font-size: 15px;
-  margin-bottom: 24px;
+  margin-bottom: 12px;
   max-width: 600px;
+}
+
+.hero-memorial {
+  margin-bottom: 20px;
+}
+
+.memorial-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.memorial-label {
+  color: $accent-pink;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.memorial-date {
+  color: $text-primary;
+  font-size: 14px;
+}
+
+.memorial-countdown {
+  padding: 3px 12px;
+  border-radius: $radius-full;
+  font-size: 12px;
+  background: rgba(135, 206, 235, 0.12);
+  color: $accent-blue;
+
+  &.soon {
+    background: rgba(255, 215, 0, 0.15);
+    color: $accent-gold;
+    animation: pulse-urgent 2s ease-in-out infinite;
+  }
+}
+
+@keyframes pulse-urgent {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.memorial-edit-btn {
+  padding: 3px 12px;
+  border-radius: $radius-full;
+  font-size: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  color: $text-muted;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: $text-primary;
+  }
+}
+
+.memorial-add-btn {
+  padding: 6px 18px;
+  border-radius: $radius-full;
+  font-size: 13px;
+  background: rgba(255, 182, 193, 0.1);
+  color: $accent-pink;
+  border: 1px dashed rgba(255, 182, 193, 0.3);
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    background: rgba(255, 182, 193, 0.2);
+    border-color: $accent-pink;
+  }
+}
+
+.memorial-edit-form {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.memorial-date-input {
+  padding: 6px 12px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid $border-color;
+  border-radius: $radius-sm;
+  color: $text-primary;
+  font-size: 14px;
+  outline: none;
+
+  &:focus {
+    border-color: $accent-gold;
+  }
+}
+
+.memorial-save-btn {
+  padding: 6px 16px;
+  border-radius: $radius-full;
+  font-size: 13px;
+  background: linear-gradient(135deg, $accent-gold, $accent-warm);
+  color: $bg-primary;
+  border: none;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+}
+
+.memorial-cancel-btn {
+  padding: 6px 16px;
+  border-radius: $radius-full;
+  font-size: 13px;
+  background: rgba(255, 255, 255, 0.08);
+  color: $text-secondary;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.15);
+  }
+}
+
+.revisit-action-btn {
+  background: rgba(255, 182, 193, 0.15);
+  color: $accent-pink;
+  border: 1px solid rgba(255, 182, 193, 0.3);
+
+  &:hover {
+    background: rgba(255, 182, 193, 0.25);
+    transform: translateY(-2px);
+  }
+}
+
+.revisit-stat b {
+  color: $accent-green !important;
 }
 
 .hero-actions {

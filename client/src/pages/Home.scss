@@ -306,3 +306,196 @@
     }
   }
 }
+
+.anniversary-section {
+  margin-bottom: 48px;
+
+  .section-header {
+    margin-bottom: 24px;
+  }
+}
+
+.anniversary-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.anniversary-card {
+  @include glass;
+  border-radius: $radius-lg;
+  display: flex;
+  gap: 24px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all $transition-normal;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: $shadow-lg;
+  }
+
+  &.urgent {
+    border-color: rgba(255, 100, 100, 0.3);
+    background: linear-gradient(135deg, rgba(255, 100, 100, 0.1), rgba(221, 160, 221, 0.06));
+  }
+
+  &.soon {
+    border-color: rgba(255, 215, 0, 0.3);
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.08), rgba(244, 164, 96, 0.06));
+  }
+
+  &.normal {
+    border-color: rgba(135, 206, 235, 0.3);
+    background: linear-gradient(135deg, rgba(135, 206, 235, 0.08), rgba(221, 160, 221, 0.06));
+  }
+}
+
+.anniversary-cover {
+  width: 80px;
+  height: 80px;
+  border-radius: $radius-md;
+  overflow: hidden;
+  flex-shrink: 0;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.anniversary-cover-placeholder {
+  width: 100%;
+  height: 100%;
+  @include flex-center;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(221, 160, 221, 0.15));
+  font-size: 28px;
+  color: $accent-gold;
+  opacity: 0.6;
+}
+
+.anniversary-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.anniversary-header {
+  @include flex-between;
+}
+
+.anniversary-title {
+  margin: 0;
+  font-size: 18px;
+  color: $text-primary;
+  font-family: $font-serif;
+}
+
+.anniversary-badge {
+  padding: 4px 14px;
+  border-radius: $radius-full;
+  font-size: 13px;
+  font-weight: 500;
+
+  &.urgent {
+    background: rgba(255, 100, 100, 0.2);
+    color: #ff8888;
+    animation: pulse-urgent 2s ease-in-out infinite;
+  }
+
+  &.soon {
+    background: rgba(255, 215, 0, 0.15);
+    color: $accent-gold;
+  }
+
+  &.normal {
+    background: rgba(135, 206, 235, 0.15);
+    color: $accent-blue;
+  }
+}
+
+@keyframes pulse-urgent {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.anniversary-info {
+  display: flex;
+  gap: 16px;
+  font-size: 14px;
+}
+
+.anniversary-date {
+  color: $text-secondary;
+}
+
+.anniversary-revisit {
+  color: $accent-green;
+  font-size: 13px;
+}
+
+.anniversary-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.anniversary-btn {
+  padding: 6px 18px;
+  border-radius: $radius-full;
+  font-size: 13px;
+  border: none;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &.revisit-btn {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(244, 164, 96, 0.15));
+    color: $accent-gold;
+    border: 1px solid rgba(255, 215, 0, 0.25);
+
+    &:hover {
+      background: linear-gradient(135deg, rgba(255, 215, 0, 0.25), rgba(244, 164, 96, 0.25));
+      transform: translateY(-1px);
+    }
+  }
+
+  &.remind-btn {
+    background: rgba(255, 255, 255, 0.06);
+    color: $text-secondary;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: $text-primary;
+      transform: translateY(-1px);
+    }
+  }
+}
+
+.card-memorial {
+  color: $accent-pink;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: $radius-full;
+  background: rgba(255, 182, 193, 0.1);
+}
+
+@media (max-width: 600px) {
+  .anniversary-card {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .anniversary-cover {
+    width: 100%;
+    height: 120px;
+  }
+
+  .anniversary-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
